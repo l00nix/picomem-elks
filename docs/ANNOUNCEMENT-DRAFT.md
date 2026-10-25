@@ -28,7 +28,7 @@ It's experimental and currently restricts editing to the tested PicoMEM 2 / BIOS
 but haven't independently read back the SD configuration or tested a full power
 cycle. I developed it with AI coding assistance and tested it on the real hardware.
 
-Project: https://github.com/l00nix/picomem-elks-public
+Project: https://github.com/l00nix/picomem-elks
 
 I'd welcome your thoughts on the supported way to identify configuration layouts,
 save settings and verify persistence from an OS like ELKS, and whether there are

@@ -5,7 +5,7 @@ https://github.com/ghaerr/elks/discussions/2841
 
 The screenshots are GitHub discussion attachments. The source repository
 was private at the time of that post. The text below is a historical record;
-the current public snapshot is [picomem-elks-public](https://github.com/l00nix/picomem-elks-public).
+the current public snapshot is [picomem-elks](https://github.com/l00nix/picomem-elks).
 
 ---
 
