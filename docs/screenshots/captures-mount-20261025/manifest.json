@@ -1,0 +1,10 @@
+{
+  "source": "PPC512 B800:0000 text VRAM",
+  "capture_bytes": 4000,
+  "native_mount_command_direct_to_console": true,
+  "context_labels_added": true,
+  "cell_sha256": "8d165fb785199029a6df55778efa7136d1977f484b0ae170ccd4f67b382aa803",
+  "text_sha256": "7834f34c96819bcbfeb3e3a32b19052a8576e14d7022a1b6d3cf8aeb964e6310",
+  "kernel_sha256": "1d044390cf48e182d03dc277c9c449dd2cafba509d353668f0b6c743ab265a3c",
+  "mount_sha256": "3b766f73266ec999557b36c1d1458b7459161ffa3ff2ece15bf7e97af79c1dab"
+}

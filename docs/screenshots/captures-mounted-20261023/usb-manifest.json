@@ -1,0 +1,10 @@
+{
+  "source": "PPC512 B800:0000 text VRAM",
+  "capture_bytes": 4000,
+  "drive": "usb",
+  "rows_verified": 23,
+  "native_output_replayed": true,
+  "cell_sha256": "ba92243f7ee3af502fa2c1ddd92654ef422ca6f4b60bc84e4a1828d8a5382807",
+  "text_sha256": "d75c44e33f23543b94a612b9b6731cbef6d236886c6a5c0df42d35b73b532560",
+  "kernel_sha256": "b807a1a567b647b7c4daad13e112c553bdff80b68ba2fdfd6779e3cfe2eb8d2e"
+}

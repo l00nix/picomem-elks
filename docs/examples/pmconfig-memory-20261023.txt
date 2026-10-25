@@ -1,0 +1,11 @@
+PMMEM 0.4-dev - querying active memory types (CMD 05)
+Each character = 16 KiB; physical 00000h to FFFFFh
+Active card map:
+................................rrrrrrrrrrrrrr......Bd..eeee....
+Configured map (also describes PC-owned RAM/video/ROM):
+ssssssssssssssssssssssssssssssssrrrrrrrrrrrrrrvv....BB..eeeeoooo
+r=card RAM p=PSRAM e=EMS B=BIOS d=buffer R=ROM .=not emulated
+s/v/o describe the PC; active '.' is expected for these blocks.
+Emulated blocks: 20  Configuration differences: 1
+  D400:0000 active 02  configured 08
+Sampled across 64 queries. No RAM write probes or remapping.

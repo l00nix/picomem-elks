@@ -1,0 +1,8 @@
+{
+  "capture": "PPC512 B800:0000, 80x25 text cells, 4000 bytes",
+  "note": "Live mount and ls -l /mnt/usb output, with explanatory title and labels. No file contents displayed.",
+  "sha256": {
+    "usb-lfn.bin": "b81c6dc625021578554076ea26edb5966aa3160432c4da0e726bc88155c3d353",
+    "bios-font.bin": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6"
+  }
+}

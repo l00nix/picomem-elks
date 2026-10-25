@@ -1,0 +1,8 @@
+{
+  "capture": "PPC512 B800:0000, 80x25 text cells, 4000 bytes",
+  "note": "Live mount and directory listing; saved native test output explicitly labelled before restart. Titles and labels added for context.",
+  "sha256": {
+    "usb-rw.bin": "ba6ab37bad857e40366926b598336fdfc3a955bca8989269f92e25327c4adb12",
+    "bios-font.bin": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6"
+  }
+}

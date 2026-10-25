@@ -1,0 +1,2 @@
+PASS /mnt/sd/PICOMEM.CFG: 644 bytes, FNV1a=85e479d3
+257/73-byte reads agree; seek/EOF pass; write-only open refused.

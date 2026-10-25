@@ -1,0 +1,16 @@
+{
+  "source": "PPC512 physical B8000h, 4000 bytes per 80x25 screen",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "captures": [
+    {
+      "image": "20261023-pmstat-usb.png",
+      "cells_sha256": "401860c54268b0534ae0e002c85e138c9abd89e531736b4319cccc0148f89cfc",
+      "text_sha256": "a8dc3bab285129ea9e0a5444e3e6f12a4f6cbb03d38e15aba5cbaaee229a04d9"
+    },
+    {
+      "image": "20261023-pmstat-disks.png",
+      "cells_sha256": "8065f27eef6986977cfbf40ba760e8ac89923afb9d806e55ac3a278256c80a0e",
+      "text_sha256": "3b5ba63df25ef9e41c355b85dd97a075fc7c9bccf6d9b61cec3ccddd85a66fb9"
+    }
+  ]
+}

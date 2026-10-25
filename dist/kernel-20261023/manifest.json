@@ -1,0 +1,23 @@
+{
+  "elks_commit": "e7a56a4334e0ef9a2261d1c2de54db31ba40fdf0",
+  "segments": {
+    "text": 64880,
+    "fartext": 36400,
+    "data": 10704,
+    "bss": 9952
+  },
+  "sha256": {
+    "pmmouse": "f72e784a9eb777524ec1ccc6b9f31ea7fea99c281290a4744f901b6afbef8f88",
+    "pmmount": "5f407811b6a1d1262295dcfc44ee2317dcf340576cadf4bff322456caf30710c",
+    "system.map": "823adf9449b5851cb837f2fd4d72cd3140671064ac2332e25a1eb4110e5af7c4",
+    "linux": "b807a1a567b647b7c4daad13e112c553bdff80b68ba2fdfd6779e3cfe2eb8d2e",
+    "kernel.config": "02ee7fc915f975f747023d4b18dae5b9193d28635c578d7fa2aa021bcaa29eda",
+    "pmfstest": "3c96ed83c9a8b2e33b395965d9a992f46011ce69ec06c79d8f4b87ce77e08bdb"
+  },
+  "integration_diff_sha256": "a71c779c5d2b75f5ea9d35f90cfafc377b6aea3192af8351cd3c73366bcc35cc",
+  "source_sha256": {
+    "elks/fs/picofs.c": "efa342afaaddecdb83952460ba151fa03f39bc4a7b86895950c55b53e3288bc3",
+    "elks/arch/i86/drivers/char/mouse-picomem.c": "e43aa6b9dc6d4dd8c6f4ea7ef60c23772709a9ab7160b6b477054242c347e896",
+    "elks/arch/i86/drivers/char/pmmouse.h": "fda19d9101c33004ef5a4da18122237ed5f9f75f3d88215ffdf0a6bdc4a5f34c"
+  }
+}

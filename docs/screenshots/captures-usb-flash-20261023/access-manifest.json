@@ -1,0 +1,9 @@
+{
+  "image": "20261023-usb-access.png",
+  "source": "PPC512 physical B8000 video memory, 4000 bytes",
+  "cells_sha256": "a8b8f33294ce253c75c9fb0d98ce5bc16a6c87edd0bb053cb86c62a2ee700f94",
+  "text_sha256": "8ce95a6e37dacd3e4d8f9a00b8153b46adb17116f80e753ac89f761499ea2174",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "verification": "Each displayed row matches native detection/listing output; visually inspected",
+  "result": "Kingston detected after physical power cycle; native ELKS client retrieved 10 USB root entries."
+}

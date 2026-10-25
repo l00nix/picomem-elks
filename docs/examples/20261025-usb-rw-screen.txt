@@ -1,0 +1,25 @@
+PicoMEM USB read/write tests - ELKS on Amstrad PPC512
+25 October 2026 - l00nix
+
+$ mount
+/dev/hda  (minix) blocks  65535 free  54290 mount /
+picomem-usb (picofs, rw) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+
+Saved native pmrwtest result (before restart):
+PASS create/append/overwrite: 3073 bytes, FNV1a=fcd3aede
+PASS truncate/delete/directories; exclusive create and open-file guards
+Retained /mnt/usb/PMRW25A/KEEP.BIN for host/remount readback
+
+$ ls -l /mnt/usb/PMRW25A
+-rw-------  1 root     root         3073  Jan  1  1970 KEEP.BIN
+
+USB remains experimental; SD stays read-only.
+
+
+
+
+
+
+
+

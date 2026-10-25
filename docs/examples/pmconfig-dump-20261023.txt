@@ -1,0 +1,7 @@
+PMDUMP 0.4-dev - support snapshot
+Saved and verified 964 bytes: /root/pmfinal.dmp
+ROM D000  board 11  configuration 768 bytes
+Includes ROM identity, sampled BIOS variables and configuration.
+Excludes command parameters, WiFi keys and unrelated memory.
+Names and paths may be personal; review before sharing.
+Support file only; not a restore file or SD configuration backup.

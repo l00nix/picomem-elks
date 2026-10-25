@@ -1,0 +1,8 @@
+PPC512 - PicoMEM mount reporting
+
+$ mount
+/dev/hda  (minix) blocks  65535 free  54570 mount /
+picomem-usb (picofs, ro) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+
+USB and SD are mounted read-only.

@@ -1,0 +1,3 @@
+PASS create/append/overwrite: 3073 bytes, FNV1a=fcd3aede
+PASS truncate/delete/directories; exclusive create and open-file guards
+Retained /mnt/usb/PMRW25A/KEEP.BIN for host/remount readback

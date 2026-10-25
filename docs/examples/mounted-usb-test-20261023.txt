@@ -1,0 +1,2 @@
+PASS /mnt/usb/PATCHS~1.SH: 1826 bytes, FNV1a=f607c100
+257/73-byte reads agree; seek/EOF pass; write-only open refused.

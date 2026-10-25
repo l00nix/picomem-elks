@@ -1,0 +1,13 @@
+Snapshot about 5 seconds after launch
+PIC mask 0C; IRQ7 vector 1ACE:3F3C
+PicoMEM IRQ bytes: 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Snapshot about 15 seconds after launch
+PIC mask 0C; IRQ7 vector 1ACE:3F3C
+PicoMEM IRQ bytes: 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Snapshot about 25 seconds after launch
+PIC mask 0C; IRQ7 vector 1ACE:3F3C
+PicoMEM IRQ bytes: 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Capture exit status: 0
+State after capture
+PIC mask 0C; IRQ7 vector D000:2C1E
+PicoMEM IRQ bytes: 00 00 00 00 00 00 00 00 00 00 00 00 00 00

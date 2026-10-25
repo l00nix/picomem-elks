@@ -1,0 +1,3 @@
+# Preserve hardware captures as binary and native text transcripts verbatim.
+*.bin binary
+docs/examples/*.txt -whitespace

@@ -1,0 +1,67 @@
+PicoMEM configuration 0.4-dev  |  ELKS  |  READ ONLY
+ROM D000:0000  BIOS 2026-06-16  Shared D000:4000  ID 12
+Layout: 768-byte profile, board 11 / BIOS 2026-06-16
+Init: SD OK [00]  WiFi OK [00]  USB OK [00]
+Config init: OK [00]  PSRAM code: 08  HW IRQ: 7
+NE2000: enabled  port 0x300  IRQ 5  WiFi enable flag: 0
+ELKS bootopts candidate: ne0=5,0x300,,0x92 (verify IRQ routing)
+Hardware IRQ mask: 0xA8  NIC IRQ direct: available
+RAM extension: SRAM on  PSRAM off  Max conventional on
+EMS: port 0x268  frame E000h  USB on  Joystick off
+Configured map: each character = 16 KiB, from 00000h to FFFFFh
+ssssssssssssssssssssssssssssssssrrrrrrrrrrrrrrvv....BB..eeeeoooo
+s=PC RAM r=card RAM p=PSRAM e=EMS v=video B=BIOS o=PC ROM .=none
+Configured disks (names, not filesystem mount status):
+  FDD0 -                  0 KB  PC/off (attr 00)
+  FDD1 -                  0 KB  PC/off (attr 01)
+  HDD0 hd64-minix        63 MB  image (attr 80)
+  HDD1 -                  0 MB  PC/off (attr 01)
+  HDD2 -                  0 MB  PC/off (attr 02)
+  HDD3 -                  0 MB  PC/off (attr 03)
+Boot disk index: 0  Fast boot off  Card bootstrap on
+Snapshot only: no firmware commands, port I/O or config changes.
+
+Board and BIOS variables (sampled; not live ELKS driver status):
+  Board ID: 11  Pico ID: 0
+  Firmware revision: not reported (zero)
+  BIOS starts: 8  Bootstraps: 8  Base port init: OK [00]
+  BIOS disk counts: HDD 0 -> 1  FDD 2 -> 2
+  BIOS PC memory: 512 KB  Tandy mode: 0  RAM blocks: 0
+  Command sample: 00  Source: 00  SPI PSRAM flag: 0
+  USB device bits: 00 (unused; not a device inventory)
+
+Configured option ROMs (not proof of activation):
+  ROM0 -              size 0 KB  blocks 0 x 16 KB
+       address byte 00 -> segment 0000:0000 (no blocks assigned)
+  ROM1 -              size 0 KB  blocks 0 x 16 KB
+       address byte 00 -> segment 0000:0000 (no blocks assigned)
+
+Additional configured settings:
+  Ignore A/B segments: off  BIOS SRAM limit: 16 x 16 KB
+  BIOS ROM limit: 0 x 16 KB  Setup before boot: off
+  BIOS boot flag: 0  SD clock: 24 MHz  RAM clock: 100 MHz
+  RTC: off (0x2C0-0x2C7)  Menu colour profile: 0
+
+Configured audio (not an audio probe):
+  Rendering: on  AdLib: on (0x388-0x389)
+  Tandy        off  configured port 0x0000
+  CMS          off  configured port 0x0000
+  SoundBlaster off  configured port 0x0000
+  Mindscape    off  configured port 0x0000
+  SoundBlaster IRQ: 0 (only relevant when enabled)
+  Other audio bytes: 00 00 00 00 00
+
+Extended image settings (names/paths, not mount status):
+  CD-ROM: -  stored size word: 0
+  FDD0 directory:
+    (empty)
+  FDD1 directory:
+    (empty)
+  HDD0 directory:
+    (empty)
+  HDD1 directory:
+    (empty)
+  HDD2 directory:
+    (empty)
+  HDD3 directory:
+    (empty)

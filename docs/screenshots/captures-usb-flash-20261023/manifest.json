@@ -1,0 +1,9 @@
+{
+  "image": "20261023-usb-flash-status.png",
+  "source": "PPC512 physical B8000 video memory, 4000 bytes",
+  "cells_sha256": "c183e970f8970b9fe45a13365ef3cd2cefff1dc6440a8c3ba2841701023e380b",
+  "text_sha256": "92c5eefbc744b6134db6ca47311057d3516f4c6748d4064946b4a74dcf0cc672",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "verification": "Each native output row verified against captured video memory",
+  "result": "After user reported inserting USB flash drive, firmware still lists Logitech Mouse and only the existing boot disk; no flash access attempted."
+}

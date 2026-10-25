@@ -1,0 +1,8 @@
+{
+  "image": "20261023-pmmouse-check.png",
+  "source": "PPC512 /dev/kmem physical B8000, 4000 bytes",
+  "cells_sha256": "184dc04f421260754523d9a8191076550c9ef1994244d23c688f8a09fe6b9487",
+  "text_sha256": "bf696c92e6401052a0abaa1baf487b5e1957f79db6ef0b4dac19f5c85f6494c4",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "verification": "Each displayed row matches native pmmouse --check output; visually inspected"
+}

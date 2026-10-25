@@ -1,0 +1,21 @@
+PMSTAT 0.5-dev - USB status query (CMD 61)
+   USB  : 1 device 
+    1: USB Disk 984.0 MB Kingston DataTravelerMini
+Copied 72 bounded bytes; ready after 3 status polls.
+Firmware snapshot; not proof of input events or an ELKS mount.
+No WiFi query, mouse enable, configuration save or remapping.
+
+PMUSB experimental - PicoMEM USB files on ELKS
+PPC512 profile and DFS signature accepted.
+USB root U:\ - read-only, 8.3 names, maximum 32 entries
+TRASHE~1              0 DIR   attr=12
+_~1.TRA            4096 FILE  attr=22
+PATCHS~1.SH        1826 FILE  attr=20
+FSEVE~16              0 DIR   attr=12
+PAYLOADS              0 DIR   attr=10
+DS_STO~1           6148 FILE  attr=22
+SYSTEM~1              0 DIR   attr=16
+STUFF                 0 DIR   attr=10
+SPOTL~16              0 DIR   attr=12
+WIN                   0 DIR   attr=10
+End of listing (10 entries).

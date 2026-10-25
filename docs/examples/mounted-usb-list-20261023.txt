@@ -1,0 +1,10 @@
+-r--------  1 root     root         6148  Jan  1  1970 DS_STO~1
+dr-x------  1 root     root            0  Jan  1  1970 FSEVE~16
+-r--------  1 root     root         1826  Jan  1  1970 PATCHS~1.SH
+dr-x------  1 root     root            0  Jan  1  1970 PAYLOADS
+dr-x------  1 root     root            0  Jan  1  1970 SPOTL~16
+dr-x------  1 root     root            0  Jan  1  1970 STUFF
+dr-x------  1 root     root            0  Jan  1  1970 SYSTEM~1
+dr-x------  1 root     root            0  Jan  1  1970 TRASHE~1
+dr-x------  1 root     root            0  Jan  1  1970 WIN
+-r--------  1 root     root         4096  Jan  1  1970 _~1.TRA

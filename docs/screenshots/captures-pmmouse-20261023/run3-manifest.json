@@ -1,0 +1,9 @@
+{
+  "image": "20261023-pmmouse-run3.png",
+  "source": "PPC512 /dev/kmem physical B8000, 4000 bytes",
+  "cells_sha256": "b54f04e9d845d5d740ed052ef7e8efa1f4a4fda6c427558b353115c8060d9599",
+  "text_sha256": "607dce30d4ce4dd96afd7e0831e4aed8e91f326debe64cc92301c20174dfa90f",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "verification": "Each displayed row matches concatenated native capture and diagnostic output; visually inspected",
+  "result": "No reports; IRQ7 unmasked and ELKS vector retained at 5/15/25 seconds; shared bytes zero; clean restoration."
+}

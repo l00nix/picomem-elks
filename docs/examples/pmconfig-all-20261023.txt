@@ -1,0 +1,117 @@
+PicoMEM configuration 0.4-dev  |  ELKS  |  READ ONLY
+ROM D000:0000  BIOS 2026-06-16  Shared D000:4000  ID 12
+Layout: 768-byte profile, board 11 / BIOS 2026-06-16
+Init: SD OK [00]  WiFi OK [00]  USB OK [00]
+Config init: OK [00]  PSRAM code: 08  HW IRQ: 7
+NE2000: enabled  port 0x300  IRQ 5  WiFi enable flag: 0
+ELKS bootopts candidate: ne0=5,0x300,,0x92 (verify IRQ routing)
+Hardware IRQ mask: 0xA8  NIC IRQ direct: available
+RAM extension: SRAM on  PSRAM off  Max conventional on
+EMS: port 0x268  frame E000h  USB on  Joystick off
+Configured map: each character = 16 KiB, from 00000h to FFFFFh
+ssssssssssssssssssssssssssssssssrrrrrrrrrrrrrrvv....BB..eeeeoooo
+s=PC RAM r=card RAM p=PSRAM e=EMS v=video B=BIOS o=PC ROM .=none
+Configured disks (names, not filesystem mount status):
+  FDD0 -                  0 KB  PC/off (attr 00)
+  FDD1 -                  0 KB  PC/off (attr 01)
+  HDD0 hd64-minix        63 MB  image (attr 80)
+  HDD1 -                  0 MB  PC/off (attr 01)
+  HDD2 -                  0 MB  PC/off (attr 02)
+  HDD3 -                  0 MB  PC/off (attr 03)
+Boot disk index: 0  Fast boot off  Card bootstrap on
+Snapshot only: no firmware commands, port I/O or config changes.
+
+Board and BIOS variables (sampled; not live ELKS driver status):
+  Board ID: 11  Pico ID: 0
+  Firmware revision: not reported (zero)
+  BIOS starts: 8  Bootstraps: 8  Base port init: OK [00]
+  BIOS disk counts: HDD 0 -> 1  FDD 2 -> 2
+  BIOS PC memory: 512 KB  Tandy mode: 0  RAM blocks: 0
+  Command sample: 00  Source: 00  SPI PSRAM flag: 0
+  USB device bits: 00 (unused; not a device inventory)
+
+Configured option ROMs (not proof of activation):
+  ROM0 -              size 0 KB  blocks 0 x 16 KB
+       address byte 00 -> segment 0000:0000 (no blocks assigned)
+  ROM1 -              size 0 KB  blocks 0 x 16 KB
+       address byte 00 -> segment 0000:0000 (no blocks assigned)
+
+Additional configured settings:
+  Ignore A/B segments: off  BIOS SRAM limit: 16 x 16 KB
+  BIOS ROM limit: 0 x 16 KB  Setup before boot: off
+  BIOS boot flag: 0  SD clock: 24 MHz  RAM clock: 100 MHz
+  RTC: off (0x2C0-0x2C7)  Menu colour profile: 0
+
+Configured audio (not an audio probe):
+  Rendering: on  AdLib: on (0x388-0x389)
+  Tandy        off  configured port 0x0000
+  CMS          off  configured port 0x0000
+  SoundBlaster off  configured port 0x0000
+  Mindscape    off  configured port 0x0000
+  SoundBlaster IRQ: 0 (only relevant when enabled)
+  Other audio bytes: 00 00 00 00 00
+
+Extended image settings (names/paths, not mount status):
+  CD-ROM: -  stored size word: 0
+  FDD0 directory:
+    (empty)
+  FDD1 directory:
+    (empty)
+  HDD0 directory:
+    (empty)
+  HDD1 directory:
+    (empty)
+  HDD2 directory:
+    (empty)
+  HDD3 directory:
+    (empty)
+
+Raw profile configuration (768 bytes):
+000: 00 00 00 4F 53 36 32 32 33 00 00 00 00 00 00 00
+010: 00 00 00 4F 53 36 32 32 32 00 00 00 00 00 00 00
+020: 3F 00 68 64 36 34 2D 6D 69 6E 69 78 00 00 00 00
+030: 00 00 00 4D 53 45 54 55 50 00 00 00 00 00 00 00
+040: 00 00 00 33 33 5F 54 45 53 54 00 00 00 00 00 00
+050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+060: 00 01 80 01 02 03 00 00 00 00 00 00 00 00 00 00
+070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+080: 00 00 00 00 00 00 00 00 00 00 20 20 20 20 20 20
+090: 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+0A0: 20 20 20 20 20 20 20 20 20 20 01 01 01 01 01 01
+0B0: 01 01 01 01 01 01 01 01 21 21 00 00 00 00 08 08
+0C0: 00 00 11 11 11 11 22 22 22 22 01 01 01 00 01 00
+0D0: 01 00 01 18 64 00 00 05 00 03 00 00 10 00 00 00
+0E0: 01 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00
+0F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1A0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1B0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1C0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1D0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1E0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2A0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2B0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2C0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2D0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2E0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00

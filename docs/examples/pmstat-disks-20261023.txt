@@ -1,0 +1,5 @@
+PMSTAT 0.5-dev - disk status query (CMD 62)
+   HDD0 : hd64-minix     [  63MB] - C:130 H:16 S:63
+Copied 53 bounded bytes; ready after 2 status polls.
+Firmware snapshot; not proof of input events or an ELKS mount.
+No WiFi query, mouse enable, configuration save or remapping.

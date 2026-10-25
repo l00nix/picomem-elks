@@ -1,0 +1,4 @@
+PMMOUSE experimental - PicoMEM USB input on ELKS
+Board/ROM/IRQ profile accepted. Open does not enable reporting.
+IRQ=0 reports=0 packets=0 drops=0 unexpected=0 ack=0
+errors=0 armed=0 fault=0; read=0 packets

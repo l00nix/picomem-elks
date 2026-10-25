@@ -1,0 +1,6 @@
+PMMOUSE experimental - PicoMEM USB input on ELKS
+Board/ROM/IRQ profile accepted. Open does not enable reporting.
+IRQ7 claimed. Move the mouse and click buttons; capture lasts 30 seconds.
+Reporting stopped; IRQ7 released.
+IRQ=0 reports=0 packets=0 drops=0 unexpected=0 ack=1
+errors=0 armed=0 fault=0; read=0 packets

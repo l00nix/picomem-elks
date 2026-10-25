@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "initial",
+    "source": "/root/rwkeep",
+    "size": 3073,
+    "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+  },
+  {
+    "phase": "copy",
+    "source": "/mnt/usb/PMRW25A/COPY.BIN",
+    "size": 3073,
+    "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+  },
+  {
+    "phase": "remount",
+    "source": "/mnt/usb/PMRW25A/KEEP.BIN",
+    "size": 3073,
+    "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+  },
+  {
+    "phase": "reboot",
+    "source": "/mnt/usb/PMRW25A/KEEP.BIN",
+    "size": 3073,
+    "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+  }
+]

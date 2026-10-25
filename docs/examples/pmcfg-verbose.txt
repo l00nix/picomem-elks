@@ -1,0 +1,40 @@
+PicoMEM configuration 0.2  |  ELKS  |  READ ONLY
+ROM D000:0000  BIOS 2026-06-16  Shared D000:4000  ID 12
+Layout: common 256-byte config prefix; extended fields not decoded
+Init: SD OK [00]  WiFi OK [00]  USB OK [00]
+Config init: OK [00]  PSRAM code: 08  HW IRQ: 7
+NE2000: enabled  port 0x300  IRQ 5  WiFi enable flag: 0
+ELKS bootopts candidate: ne0=5,0x300,,0x92 (verify IRQ routing)
+Hardware IRQ mask: 0xA8  NIC IRQ direct: available
+RAM extension: SRAM on  PSRAM off  Max conventional on
+EMS: port 0x268  frame E000h  USB on  Joystick off
+Configured map: each character = 16 KiB, from 00000h to FFFFFh
+ssssssssssssssssssssssssssssssssrrrrrrrrrrrrrrvv....BB..eeeeoooo
+s=PC RAM r=card RAM p=PSRAM e=EMS v=video B=BIOS o=PC ROM .=none
+Configured disks (names, not filesystem mount status):
+  FDD0 -                  0 KB  PC/off (attr 00)
+  FDD1 -                  0 KB  PC/off (attr 01)
+  HDD0 hd64-minix        63 MB  image (attr 80)
+  HDD1 -                  0 MB  PC/off (attr 01)
+  HDD2 -                  0 MB  PC/off (attr 02)
+  HDD3 -                  0 MB  PC/off (attr 03)
+Boot disk index: 0  Fast boot off  Card bootstrap on
+Snapshot only: no firmware commands, port I/O or config changes.
+
+Raw common configuration prefix (256 bytes):
+000: 00 00 00 4F 53 36 32 32 33 00 00 00 00 00 00 00
+010: 00 00 00 4F 53 36 32 32 32 00 00 00 00 00 00 00
+020: 3F 00 68 64 36 34 2D 6D 69 6E 69 78 00 00 00 00
+030: 00 00 00 4D 53 45 54 55 50 00 00 00 00 00 00 00
+040: 00 00 00 33 33 5F 54 45 53 54 00 00 00 00 00 00
+050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+060: 00 01 80 01 02 03 00 00 00 00 00 00 00 00 00 00
+070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+080: 00 00 00 00 00 00 00 00 00 00 20 20 20 20 20 20
+090: 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+0A0: 20 20 20 20 20 20 20 20 20 20 01 01 01 01 01 01
+0B0: 01 01 01 01 01 01 01 01 21 21 00 00 00 00 08 08
+0C0: 00 00 11 11 11 11 22 22 22 22 01 01 01 00 01 00
+0D0: 01 00 01 18 64 00 00 05 00 03 00 00 10 00 00 00
+0E0: 01 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00
+0F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00

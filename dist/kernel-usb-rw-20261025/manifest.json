@@ -1,0 +1,27 @@
+{
+  "elks_commit": "e7a56a4334e0ef9a2261d1c2de54db31ba40fdf0",
+  "segments": {
+    "text": 65264,
+    "fartext": 39968,
+    "data": 10736,
+    "bss": 10192
+  },
+  "sha256": {
+    "pmmouse": "f72e784a9eb777524ec1ccc6b9f31ea7fea99c281290a4744f901b6afbef8f88",
+    "pmmount": "b2cc502b6ad36ffbd4419162345e2af182c364cfb249a6aec5fb91a908872653",
+    "mount": "3b766f73266ec999557b36c1d1458b7459161ffa3ff2ece15bf7e97af79c1dab",
+    "system.map": "ae08d192b685debdd04d60618037332e132d6e26c011abbdffd72f0fc5ee9935",
+    "pmrwtest": "ade389adf5d2d694343ec36c415cf04ea6913300b350ed7c37c145f43997f299",
+    "linux": "28c6bc8d7970472aac51ca8089ce34870973642b0e72e01bdd0950a8a09e5dbf",
+    "kernel.config": "1cef35fce5b7b40076ea4da12cf72336a113874181c50ac967d998b931c635c3",
+    "pmfstest": "3c96ed83c9a8b2e33b395965d9a992f46011ce69ec06c79d8f4b87ce77e08bdb"
+  },
+  "integration_diff_sha256": "b36acbf8d3bda1d2e108a5ca806beef38298932804a12ac810e270c6190e0d9c",
+  "source_sha256": {
+    "elks/fs/picofs.c": "c58c59b39e7fe3d74ffbbdca2c260b4ad35a514310c90b34fceedc4bff05e602",
+    "elks/fs/picofs-write.inc": "caf7820148041cafa7861e9101f76f067e8ecf5d5c6e4b46124c0429e8d2f90f",
+    "elks/arch/i86/drivers/char/mouse-picomem.c": "e43aa6b9dc6d4dd8c6f4ea7ef60c23772709a9ab7160b6b477054242c347e896",
+    "elks/arch/i86/drivers/char/pmmouse.h": "fda19d9101c33004ef5a4da18122237ed5f9f75f3d88215ffdf0a6bdc4a5f34c",
+    "elkscmd/sys_utils/mount.c": "72976edef2b328fc1be7ac732d507e06ed5745c46b4921d4dab25bbb7a10bd38"
+  }
+}

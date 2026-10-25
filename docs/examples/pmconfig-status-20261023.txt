@@ -1,0 +1,10 @@
+PMSTAT 0.4-dev - sampled status, no firmware commands
+Board 11  primary IRQ 7  hardware IRQ mask A8
+SD: OK [00]  Config: OK [00]
+USB init: OK [00]  WiFi init: OK [00]
+NE2000 configured: port 300  IRQ 5
+BIOS disks: HDD 0 -> 1  FDD 2 -> 2
+USB configured: on  BIOS starts 8  Bootstraps 8
+Initialization flags do not prove a current connection or mount.
+USB inventory and disk-status queries await firmware validation.
+No WiFi query, reconnect, keys, reset or configuration changes.

@@ -1,0 +1,1 @@
+/dev/hda  (minix) blocks  65535 free  54573 mount /

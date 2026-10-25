@@ -1,0 +1,9 @@
+{
+  "image": "20261023-pmmouse-run2.png",
+  "source": "PPC512 /dev/kmem physical B8000, 4000 bytes",
+  "cells_sha256": "6e0076af9d26e180c123a2143c220e543155f77e2c95f60ce9ddcf1f92ec4dd7",
+  "text_sha256": "6ccbc859159ea9c79b3d1f28bb7d52f0bdcf3fc1d737e8f04ff49d1cd2a3c9e1",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "verification": "Each displayed row matches native pmmouse --run output; visually inspected",
+  "result": "One zero-motion, no-button report; clean stop. Movement/button validation not passed."
+}

@@ -1,0 +1,36 @@
+{
+  "source": "PPC512 physical B8000h, 4000 bytes per 80x25 screen",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "captures": [
+    {
+      "image": "20261023-details-1.png",
+      "cells_sha256": "946c5b2eed688e6d8e01990fc9696bca4c1bf138e3bfe5387ebf5311b712c71d",
+      "text_sha256": "11ba754834c7022ef2eb743d270ea455f29b7c743c9a106ef4bd41ea8c03f124"
+    },
+    {
+      "image": "20261023-details-2.png",
+      "cells_sha256": "395fe789814e5456dfaf639138ed43286047ea62278c39496690ea8a913758ce",
+      "text_sha256": "460d78b80346f0a1c3f3d3eb51e3ff510b16620e37c450d01d70c0f8fdb7d34e"
+    },
+    {
+      "image": "20261023-details-3.png",
+      "cells_sha256": "ffe1e929f45d70c9508844a049376dbaf7e7a6e16f5051fc59e6bac3762ef19b",
+      "text_sha256": "ca97f5a5462ccec11da832704b75a540ba78ff1863ab991a724b62f2b92815b3"
+    },
+    {
+      "image": "20261023-memory.png",
+      "cells_sha256": "659153e83157672887c4872cd43582212e635799d093aa71349583eccaa36fb0",
+      "text_sha256": "e9b8c748cd1195555780028d0dc2d4c5ef71f248494ee6d24796676c9f329ead"
+    },
+    {
+      "image": "20261023-status.png",
+      "cells_sha256": "734b806e8d0984a570c86ea17a296707816d7ee72a75b869c2439faaecf35a60",
+      "text_sha256": "c33ac73f2ddc0a93ac675be20fdeac42e6e1db15e3fcb1698e7c92fe6124e32c"
+    },
+    {
+      "image": "20261023-dump.png",
+      "cells_sha256": "4dd74748a4d7971da7d3cf33c96b94dd8689cb72d31c84770b833c3f530b5538",
+      "text_sha256": "b1fa0c4d388ef08e285266b5d978a9dd676076b51bc22f7912f0ba2537952591"
+    }
+  ]
+}
