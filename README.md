@@ -17,13 +17,12 @@ The supported extended/configuration profile is **PicoMEM 2, board ID 11,
 BIOS 2026-06-16**. Other profiles get the common inspection prefix only.
 
 The optional [kernel filesystem integration](kernel/README.md) already mounts
-USB and SD read-only. I have added experimental, opt-in USB writes while keeping SD read-only. The
+USB and SD read-only. I have added experimental, opt-in USB writes while keeping SD read-only. See
+[Mounting USB and SD in ELKS](#mounting-usb-and-sd-in-elks) for commands and screenshots. The
 [new build](dist/kernel-usb-rw-20261025/README.md) has passed host, emulator and
 PPC512 write tests, including independent readback after remount and normal
 reboot. [Hardware results and screenshot](docs/HARDWARE-USB-RW-20261025.md).
 Long filenames remain pending.
-
-![PPC512 USB mounts and current 8.3 filename aliases](docs/screenshots/20261025-usb-lfn.png)
 
 I published this source snapshot under `l00nix`, with fresh public commit history.
 The project credits, GPL license, tested binaries and hardware evidence are
@@ -38,10 +37,85 @@ firmware extension I would like to discuss with FreddyV.
 | `pmdump NEWFILE` | A bounded, CRC-checked 964-byte support file, created privately and verified by reading it back. Excludes command parameters and WiFi keys. |
 | `pmstat` | Passive summary by default; `--usb` queries cached USB inventory and `--disks` queries firmware disk/image geometry metadata. |
 | `pmmem` | Queries the card's active memory types and compares them with the configured map. `--probe` checks just the BIOS block first. No RAM write probes or remapping. |
+| `pmmount` | Mounts PicoMEM USB or SD read-only; `--rw usb` explicitly enables experimental USB writes; `-u` unmounts. Requires the optional PicoMEM kernel. |
+| `mount` (updated ELKS utility) | Lists mounted filesystems, including PicoMEM USB/SD mountpoints and their `ro`/`rw` status. Supplied with the kernel build. |
 
-These names select modes of one executable. `pmcfg` remains a compatible name
+`pmconfig`, `pmdump`, `pmstat` and `pmmem` select modes of one executable.
+`pmmount` and the updated `mount` are separate kernel-build utilities.
+`pmcfg` remains a compatible name
 for the configuration mode. I adopted `pmconfig` as the clearer primary name;
 all command names fit eight characters.
+
+## Mounting USB and SD in ELKS
+
+I have tested **USB read/write and SD read-only mounts on the PPC512** using
+the optional `picofs` kernel filesystem. Ordinary ELKS commands such as `ls`,
+`cat` and `cp` can access the mounted files. SD access exposes the PicoMEM
+card's outer filesystem, separate from the ELKS Minix root inside its disk image.
+
+**This requires the modified ELKS kernel, `pmmount` and the matching updated
+`mount` utility. Installing `pmconfig` alone does not add filesystem support.**
+The [tested USB-write build](dist/kernel-usb-rw-20261025/README.md) includes
+these binaries and their checksums. The [kernel build kit](kernel/README.md)
+provides the source, pinned ELKS revision, remote compilation and detailed
+installation notes.
+
+After booting that kernel and installing the utilities, run as root. Start
+with both mountpoints unmounted:
+
+```sh
+mkdir -p /mnt/usb /mnt/sd
+pmmount usb /mnt/usb
+pmmount sd /mnt/sd
+mount
+ls -l /mnt/usb
+ls -l /mnt/sd
+```
+
+`pmmount` defaults to read-only. This PPC512 console capture shows the updated
+`mount` command listing both volumes as `picofs, ro`:
+
+![PPC512 mount command listing PicoMEM USB and SD as read-only](docs/screenshots/20261025-mount.png)
+
+To enable experimental USB writes, leave the mounted directories, close files
+in use there and unmount USB before mounting it read/write:
+
+```sh
+cd /
+pmmount -u /mnt/usb
+pmmount --rw usb /mnt/usb
+mount
+ls -l /mnt/usb
+```
+
+The later PPC512 capture shows **USB as `rw` and SD as `ro`**, followed by a
+USB directory listing. Original long filenames are not yet exposed; the
+firmware currently supplies 8.3 aliases:
+
+![PPC512 mount command showing USB read/write and SD read-only, followed by ls with 8.3 aliases](docs/screenshots/20261025-usb-lfn.png)
+
+I verified USB creation, append, overwrite, truncate-to-empty, deletion and
+directory operations, with independent file readback after remount and normal
+reboot. SD writes remain disabled. Use backed-up test media for USB writes;
+the firmware interface does not provide a verified power-loss flush guarantee.
+Do not remove media while mounted. Unmount from outside both directories after
+closing files in use:
+
+```sh
+cd /
+pmmount -u /mnt/usb
+pmmount -u /mnt/sd
+mount
+```
+
+The optional mouse driver also requires both volumes to be unmounted; actual
+mouse movement/buttons remain unvalidated. These screenshots are hardware
+text-screen captures rendered with the PPC's BIOS font.
+
+[Mount-listing hardware results](docs/HARDWARE-MOUNT-20261025.md) ·
+[USB-write results](docs/HARDWARE-USB-RW-20261025.md) ·
+[Filesystem limits and build instructions](kernel/README.md) ·
+[Long-filename proposal](docs/LONG-FILENAMES.md)
 
 ## Screenshots from the PPC512
 
@@ -55,8 +129,9 @@ Firmware detection alone does not provide ELKS mouse input. I developed an
 The separate experimental [`pmusb`](usb/README.md) now lists USB root-directory
 entries directly from native ELKS through PicoMEM's file service. I tested it
 with a Kingston DataTravelerMini on the PPC512 after a cold power cycle. It
-provides bounded, read-only metadata access; file-content reads and an ELKS
-mount are not implemented. [Hardware results and screenshot](docs/HARDWARE-USB-FLASH-20261023.md).
+provides bounded, read-only metadata access only. For file-content access and
+ELKS mounts, use the separate [kernel filesystem integration](#mounting-usb-and-sd-in-elks)
+described above. [Earlier pmusb hardware results and screenshot](docs/HARDWARE-USB-FLASH-20261023.md).
 
 The complete decoded configuration report is captured across
 [three console pages](docs/HARDWARE-TEST-20261023.md#screenshots).
@@ -182,18 +257,6 @@ Restore the matching ELKS NIC boot option before rebooting.
 
 [Configuration/save design](docs/DESIGN.md) · [Other tools and porting priorities](docs/PORTING.md)
 
-## Experimental kernel integration
-
-I have tested the optional kernel on the PPC512 with **read-only USB and SD
-mounts**, directory browsing, file reads/copies, seek/EOF and write-open
-rejection. The [kernel build kit](kernel/README.md) pins the ELKS revision and
-supports remote compilation. It also includes the optional mouse driver;
-passive checks pass, but actual movement/buttons remain unvalidated. Unmount
-both volumes before using the mouse driver.
-
-[Hardware results and screenshots](docs/HARDWARE-KERNEL-FS-20261023.md) ·
-[Tested experimental binaries](dist/kernel-20261023/README.md).
-
 ## Build and test
 
 Supply a prepared ELKS tree containing its IA16 toolchain and libc:
@@ -228,11 +291,3 @@ AI coding assistance. Source references are recorded in
 [DESIGN.md](docs/DESIGN.md) and [PORTING.md](docs/PORTING.md).
 
 Licensed under **GPL-2.0-or-later**; see [COPYING](COPYING).
-
-The kernel integration now also builds an updated `mount` utility to display
-PicoMEM USB/SD mountpoints and read-only status. See the
-[installation and reporting notes](kernel/README.md#mounting-and-accessing-files).
-
-[25 October mount-reporting candidate and validation](dist/kernel-20261025/README.md)
-(installed and hardware-tested on the PPC512).
-[Mount listing hardware results and screenshot](docs/HARDWARE-MOUNT-20261025.md).
