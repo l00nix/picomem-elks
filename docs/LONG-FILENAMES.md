@@ -6,6 +6,16 @@ not working long-filename support.** No firmware update or long-name command
 probe was performed. The later screenshot below records the existing short-name
 behavior on the tested USB-write kernel.
 
+## Offline prototype, 27 October 2026
+
+I have added a [host-tested prototype](../experimental/lfn/README.md) for the
+metadata exchange, a separate FatFs directory cursor, and ELKS-side display-name
+and alias handling. Tests against the actual FatFs source showed that
+`f_stat(short_alias)` does not recover the original long name; a separate
+bounded directory scan is required by this prototype. The prototype is not yet
+wired into firmware or the mounted filesystem, and no hardware update has
+been performed. The linked README records the tests and integration work.
+
 ## What prevents an ELKS-only fix
 
 PicoMEM's FatFs configuration enables long filenames and uses UTF-8 at its API.
