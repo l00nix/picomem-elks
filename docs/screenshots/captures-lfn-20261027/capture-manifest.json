@@ -1,0 +1,6 @@
+{
+  "source": "PPC512 mode-3 video RAM at B800:0000, native mount and ls output",
+  "video_sha256": "f78d799a51084a37304093e47522dd357d50624d26c2aa6b2e6fde828dd4850f",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "png_sha256": "fc51a22610d501594e0e3f554ce3a4063b4973ee4b4ba5abeec934b55926d808"
+}

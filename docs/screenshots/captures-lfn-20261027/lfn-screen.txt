@@ -1,0 +1,25 @@
+PicoMEM long filenames / ELKS on Amstrad PPC512
+
+$ mount
+/dev/hda  (minix) blocks  65535 free  53124 mount /
+picomem-usb (picofs, ro) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+
+$ ls -l /mnt/usb
+dr-x------  1 root     root            0  Jan  1  1970 STUFF
+dr-x------  1 root     root            0  Jan  1  1970 System Volume Information
+-r--------  1 root     root         1826  Jan  1  1970 patchstick.sh
+dr-x------  1 root     root            0  Jan  1  1970 payloads
+dr-x------  1 root     root            0  Jan  1  1970 pmrw25a
+dr-x------  1 root     root            0  Jan  1  1970 test
+dr-x------  1 root     root            0  Jan  1  1970 win
+
+$ ls -l "/mnt/usb/System Volume Information"
+-r--------  1 root     root           76  Jan  1  1970 IndexerVolumeGuid
+-r--------  1 root     root           12  Jan  1  1970 WPSettings.dat
+
+
+
+
+
+

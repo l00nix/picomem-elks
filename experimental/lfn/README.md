@@ -4,8 +4,8 @@ I started this prototype on 27 October 2026, with AI coding assistance. It
 implements and tests a read-only metadata exchange and ELKS-side name helpers.
 These files remain a standalone test harness. The paired default-off firmware
 and actual ELKS driver are now integrated; see the [current implementation and
-validation status](../../docs/LONG-FILENAMES.md). No hardware LFN result is
-claimed. Default builds and the installed firmware remain unchanged.
+validation status](../../docs/LONG-FILENAMES.md). The first PPC512 read-only LFN tests now pass; the linked report distinguishes
+them from host-only edge-case tests. Default builds remain unchanged.
 
 The prototype demonstrates the key operation against the actual PicoMEM FatFs
 source and a generated FAT12 image: recover `Long Filename.txt` from

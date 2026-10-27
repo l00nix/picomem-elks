@@ -1,0 +1,26 @@
+{
+  "lfnlong1": {
+    "size": 1826,
+    "sha256": "ab0b9eb8a8791272805fa31f02662ce38ac7deebc8e28b829c4256c3352aaf2a"
+  },
+  "lfnalias1": {
+    "size": 1826,
+    "sha256": "ab0b9eb8a8791272805fa31f02662ce38ac7deebc8e28b829c4256c3352aaf2a"
+  },
+  "lfncase1": {
+    "size": 1826,
+    "sha256": "ab0b9eb8a8791272805fa31f02662ce38ac7deebc8e28b829c4256c3352aaf2a"
+  },
+  "lfnnest1": {
+    "size": 76,
+    "sha256": "a6331ec1c17386c9e953666876f6fac9592a74c34de387c46e97d028e9dc31c1"
+  },
+  "lfnnesa1": {
+    "size": 76,
+    "sha256": "a6331ec1c17386c9e953666876f6fac9592a74c34de387c46e97d028e9dc31c1"
+  },
+  "lfnsd1": {
+    "size": 76,
+    "sha256": "9f93244aa75c07117ac24bb8c9d0a67ca5ec918a5626e375a6686f3f9bf6f782"
+  }
+}

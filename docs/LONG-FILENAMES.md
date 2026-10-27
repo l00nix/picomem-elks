@@ -1,9 +1,50 @@
-# Long filenames: interface audit and proposed next step
+# Long filenames: experimental implementation and hardware tests
 
 I am implementing a paired firmware/ELKS extension, with AI coding assistance.
-**The code builds and passes host/emulator tests; long names have not yet been
-tested on the PPC.** Existing installed firmware and default builds remain
-alias-only. This is not yet a release or full FAT long-filename support.
+**The first real PPC512 tests pass:** long-name listings and reads work on
+read-only USB and SD mounts. This remains experimental, not full FAT long-name
+support. Default builds and writable mounts remain alias-only.
+
+## PPC512 hardware test, 27 October 2026
+
+I backed up and verified the board's complete 16 MiB flash, installed the
+experimental RP2350 firmware, and verified its readback and live ROM descriptor.
+The original firmware reports a June 21 build. The test kernel preserves the
+PPC's existing display extension; networking and the display status command
+work after reboot.
+
+- A Kingston DataTravelerMini (984 MB reported, user-formatted FAT32) mounts
+  read-only and lists `System Volume Information`, `patchstick.sh` and original
+  mixed-case directory names.
+- Reads of `patchstick.sh`, `PATCHS~1.SH` and `PATCHSTICK.SH` produce identical
+  1,826-byte files with SHA-256
+  `ab0b9eb8a8791272805fa31f02662ce38ac7deebc8e28b829c4256c3352aaf2a`.
+- A nested read through `System Volume Information/IndexerVolumeGuid` matches
+  `SYSTEM~1/INDEXE~1` byte-for-byte. The long nested path also reads on SD.
+- USB and SD unmount successfully after the reads, then remount successfully.
+  The earlier busy-unmount report did not recur in this controlled test; this
+  does not establish that every cause of busy mounts is resolved.
+- A USB read/write mount lists aliases, as designed, and unmounts successfully.
+  No USB/SD write operations were exercised during this LFN hardware session.
+- Both volumes are left mounted read-only for inspection. Dot-prefixed long
+  names follow normal `ls` hiding rules; use `ls -a` to include them.
+
+![Native PPC512 mount and long-name listings](screenshots/20261027-long-filenames.png)
+
+This is a rendered capture of the PPC's actual mode-3 video RAM, using its
+captured BIOS font. `mount` and `ls` ran on the PPC; no directory output was
+synthesized. [Capture evidence and checksums](screenshots/captures-lfn-20261027/).
+
+One unrelated behavior difference is recorded: the newer upstream firmware
+forces `PSRAM_Ext=0` when `USE_SPI_PSRAM` is disabled for PicoMEM 2. It now
+reports PSRAM extension off, while conventional SRAM emulation remains active.
+The LFN patch does not change that initialization code. This limits any claim
+of full equivalence to the original released firmware.
+
+The tested firmware UF2 SHA-256 is
+`e60d8a8a3067f45ff8dccd7b2209156fe0fe7712087ebca4bb72742c4f5d133f`;
+the PPC kernel SHA-256 is
+`7e2ced612d7dda3560355630cb97766ad28bc3810a8d8311831c6639e9eaec26`.
 
 ## Integrated experimental candidate, 27 October 2026
 
@@ -43,8 +84,10 @@ To build the generic candidate, set `KERNEL_CONFIG` to
 [original offline helpers](../experimental/lfn/README.md) retain the payload
 format and tests; the actual driver uses a smaller, separately allocated table.
 
-Hardware boot, legacy DOS compatibility, USB/FAT32 service time, interrupt
-latency, media changes and firmware recovery remain to be tested. A separate
+Legacy DOS compatibility, precise USB/FAT32 service time, interrupt latency,
+media changes and actually restoring the saved firmware remain to be tested.
+Name-length/Unicode/collision edge cases passed host tests, but have not yet
+been exercised with a controlled hardware fixture. A separate
 bounded scan for every directory entry can be expensive. Start with a small
 read-only USB fixture and retain the actual original firmware and kernel.
 
