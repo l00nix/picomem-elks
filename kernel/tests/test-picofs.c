@@ -40,6 +40,9 @@ static void reply_entry(unsigned char *p,unsigned index)
 #ifdef PICORW_TEST
 #include "rw-fixture.h"
 #endif
+#ifdef PICOLFN_TEST
+#include "lfn-fixture.h"
+#endif
 static void respond(void)
 {
     unsigned char *p=mmio+BASE;
@@ -49,6 +52,9 @@ static void respond(void)
     drv=p[58];assert(drv==18||drv==20);
 #ifdef PICORW_TEST
     if (rw_active) {respond_rw(cmd,req);return;}
+#endif
+#ifdef PICOLFN_TEST
+    if(cmd==0x70) {respond_lfn();return;}
 #endif
     if(cmd==0x1b) {
         assert(p[60]==0x37);
@@ -142,7 +148,7 @@ static struct inode *child(struct inode *dir,const char *name)
     struct inode *i=NULL;dir->i_count++;
     assert(lookup(dir,name,strlen(name),&i)==0);assert(i);return i;
 }
-static char names[16][13];static unsigned nn;
+static char names[16][27];static unsigned nn;
 static int fill(char *b,char *n,size_t len,long pos,unsigned long ino)
 {(void)b;(void)pos;assert(ino);assert(nn<16);memcpy(names[nn],n,len);names[nn++][len]=0;return 0;}
 static int fill_fail(char *b,char *n,size_t len,long pos,unsigned long ino)

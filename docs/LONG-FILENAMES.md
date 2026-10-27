@@ -1,20 +1,52 @@
 # Long filenames: interface audit and proposed next step
 
-I investigated long filenames for the mounted PicoMEM USB and SD volumes on
-25 October 2026, with AI coding assistance. **This is an implementation proposal,
-not working long-filename support.** No firmware update or long-name command
-probe was performed. The later screenshot below records the existing short-name
-behavior on the tested USB-write kernel.
+I am implementing a paired firmware/ELKS extension, with AI coding assistance.
+**The code builds and passes host/emulator tests; long names have not yet been
+tested on the PPC.** Existing installed firmware and default builds remain
+alias-only. This is not yet a release or full FAT long-filename support.
 
-## Offline prototype, 27 October 2026
+## Integrated experimental candidate, 27 October 2026
 
-I have added a [host-tested prototype](../experimental/lfn/README.md) for the
-metadata exchange, a separate FatFs directory cursor, and ELKS-side display-name
-and alias handling. Tests against the actual FatFs source showed that
-`f_stat(short_alias)` does not recover the original long name; a separate
-bounded directory scan is required by this prototype. The prototype is not yet
-wired into firmware or the mounted filesystem, and no hardware update has
-been performed. The linked README records the tests and integration work.
+The [firmware fork](https://github.com/l00nix/ISA-PicoMEM/tree/codex/dfs-long-names)
+now includes a default-off DFS handler, and `kernel/picofs-lfn.inc` connects it
+to mounted ELKS paths behind `CONFIG_FS_PICOMEM_LFN`. The
+[firmware build and protocol notes](https://github.com/l00nix/ISA-PicoMEM/blob/codex/dfs-long-names/LFN-EXPERIMENT.md)
+record dependencies, limits and remaining hardware checks.
+
+- Names up to 26 ASCII characters, including spaces and mixed case, appear in
+  ordinary directory listings and work in lookup. Aliases continue to work.
+- Longer names, Unicode and ambiguous display names fall back to 8.3 aliases.
+- Firmware operations always use aliases, including nested parent paths.
+- Long names are enabled only for **read-only** USB/SD mounts. USB read/write
+  mounts keep aliases; long-name creation/rename is not implemented.
+- Stock firmware receives **no new query**: the client requires the exact
+  experimental ROM descriptor before sending the provisional DFS subfunction.
+- Additional heap allocation is 1,728 bytes per enabled read-only mount, bounded
+  to 64 nodes. No table is allocated on stock firmware or writable mounts.
+
+The generic candidate kernel built with 65,280 bytes near code, 41,424 bytes
+far code, 10,768 bytes data and 10,192 bytes BSS. It boots in QEMU and refuses
+mounts when PicoMEM is absent. These results do not simulate the PicoMEM device.
+The separate hardware candidate also preserves the PPC's existing display
+extension; its final build manifest is retained with the local test artifacts.
+
+Validation includes 35 LFN driver scenarios plus existing filesystem, USB-write
+and mouse tests, 498 firmware payload checks, 10,000 malformed requests and
+692 dispatcher checks under sanitizers. A generated FAT12 image exercises the
+actual upstream FatFs code, both drive numbers, a nested alias-only read,
+fallback and cursor independence, with zero disk writes. Both complete ARM
+firmware variants build; the default variant has no LFN handler/ROM descriptor.
+
+To build the generic candidate, set `KERNEL_CONFIG` to
+`kernel/ppc512-lfn.config` with `kernel/build.sh`, or pass `--lfn` to
+`kernel/remote-build.py`. Default build settings remain unchanged. The
+[original offline helpers](../experimental/lfn/README.md) retain the payload
+format and tests; the actual driver uses a smaller, separately allocated table.
+
+Hardware boot, legacy DOS compatibility, USB/FAT32 service time, interrupt
+latency, media changes and firmware recovery remain to be tested. A separate
+bounded scan for every directory entry can be expensive. Start with a small
+read-only USB fixture and retain the actual original firmware and kernel.
 
 ## What prevents an ELKS-only fix
 
@@ -51,7 +83,7 @@ destination-length parameter. A new ELKS client must keep sending bounded short
 aliases through that existing path; a long-name display is not permission to
 send an arbitrary long name to the old firmware.
 
-## Proposed first implementation
+## Original implementation design
 
 1. Add a versioned, read-only PicoMEM extension that resolves an existing short
    path to its original long basename. Keep the existing DOS replies unchanged.
@@ -74,7 +106,8 @@ send an arbitrary long name to the old firmware.
 5. Enable the extension only after its capability/version and hardware profile
    are verified. Unsupported firmware continues with existing short names.
    Command numbers and capability advertisement need agreement with the firmware
-   implementation; this proposal assigns no opcode and probes no unknown command.
+   implementation. The candidate uses a provisional DFS subfunction 0x70, gated
+   by an exact ROM descriptor; it does not probe unknown commands on stock firmware.
 
 This would improve ordinary `ls`, `cat` and `cp` on both mounts for names that
 fit, without replacing every ELKS application. Longer names would still use
@@ -96,8 +129,8 @@ The separately tested USB-write support does not yet create long filenames.
 The tested USB-write kernel has only 272 bytes of near-code headroom. New logic
 must respect the near/far segment budget and bounded heap use, then pass native
 build, host tests and emulator boot before a planned firmware/kernel hardware
-test. The long-filename interface remains a proposal; the USB-write work does not
-change its 8.3-name restriction.
+test. The experimental interface still needs upstream review; writable mounts retain
+their 8.3-name restriction.
 
 ## Current PPC512 screenshot
 

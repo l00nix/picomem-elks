@@ -38,6 +38,18 @@
 #define DEV_SD MKDEV(0,2)
 #define END_DIR 1
 
+#ifdef CONFIG_FS_PICOMEM_LFN
+#define LFN_CMD 0x70
+#define LFN_SIZE 52
+static int FARPROC lfn_present(void)
+{
+    static const unsigned char sig[16]={'P','M','L','N',1,0x70,26,52,'l','0','0','n','i','x',0,0};
+    unsigned i;
+    for(i=0;i<16;i++)if(MEM[0x3fc0+i]!=sig[i])return 0;
+    return 1;
+}
+#endif
+
 struct pm_node {
     unsigned long size;
     char name[13];
@@ -45,6 +57,9 @@ struct pm_node {
 };
 struct pm_volume {
     unsigned used, drive, rw;
+#ifdef CONFIG_FS_PICOMEM_LFN
+    char (*lfn)[27]; /* Allocated only for RO mounts with the exact firmware descriptor. */
+#endif
     struct pm_node nodes[NODES];
 };
 static unsigned char packet[FRAME], saved[FRAME], config[768];
@@ -133,6 +148,13 @@ static int FARPROC transaction(unsigned drive, unsigned cmd, unsigned req,
     if ((drive!=20 && drive!=18) || req>CHUNK || response>CHUNK)
         return -EINVAL;
     switch (cmd) {
+#ifdef CONFIG_FS_PICOMEM_LFN
+    case LFN_CMD:
+        if(req<8 || req>PATHMAX+7 || response!=LFN_SIZE ||
+           memcmp(packet+60,"PMLN",4) || packet[64]!=1 || packet[65]>1 ||
+           packet[66]!=req-8 || packet[67] || (!packet[65] && req!=8))return -EINVAL;
+        break;
+#endif
     case 0x1b: if (req<2 || req>PATHMAX || packet[60]!=0x37 || response!=24) return -EINVAL; break;
     case 0x1c: if (req!=16 || packet[64]!=0x37 || response!=24) return -EINVAL; break;
     case 0x16:
@@ -181,6 +203,9 @@ static int FARPROC transaction(unsigned drive, unsigned cmd, unsigned req,
     save_flags(flags); clr_irq();
     r=profile();
     if (r) goto done;
+#ifdef CONFIG_FS_PICOMEM_LFN
+    if(cmd==LFN_CMD && !lfn_present()){r=-ENODEV;goto done;}
+#endif
     for (i=0;i<768;i++) if (config[i]!=MEM[CFG+i]) { r=-ENODEV; goto done; }
     for (i=0;i<FRAME;i++) saved[i]=MEM[BASE+i];
     for (i=0;i<60+req;i++) MEM[BASE+i]=packet[i];
@@ -248,6 +273,10 @@ static int FARPROC makepath(struct pm_volume *v, unsigned node)
     return 0;
 }
 
+#ifdef CONFIG_FS_PICOMEM_LFN
+#include "picofs-lfn.inc"
+#endif
+
 /* Snapshot a complete bounded directory before publishing any of its nodes.
  * The firmware ignores FINDNEXT's position and has one global cursor. No
  * sleeps/callbacks inside this loop: scans on USB and SD cannot interleave.
@@ -274,6 +303,9 @@ static int FARPROC scan(struct pm_volume *v, unsigned node)
     for (attempts=0;attempts<=NODES;attempts++) {
         if (r==END_DIR) {
             if (!node && v->used==start) { r=-ENODEV; break; }
+#ifdef CONFIG_FS_PICOMEM_LFN
+            if(v->lfn) {r=lfn_scan(v,start);if(r)break;}
+#endif
             v->nodes[node].scanned=1;
             return 0;
         }
@@ -320,9 +352,15 @@ static int FARPROC lookup_inner(struct inode *dir,const char *name,size_t len,
 {
     struct pm_volume *v=dir->i_sb->u.generic_sbp;
     unsigned node=(unsigned)dir->i_ino-1, i, j;
-    char part[13];
+    char part[27];
     int r;
-    if (len>12) return -ENAMETOOLONG;
+    if (len>
+#ifdef CONFIG_FS_PICOMEM_LFN
+        (v->lfn?26:12)
+#else
+        12
+#endif
+       ) return -ENAMETOOLONG;
     if (verified_memcpy_fromfs(part,(void *)name,len)) return -EFAULT;
     part[len]=0;
     if (!len || !strcmp(part,".")) { ++dir->i_count; *result=dir; return 0; }
@@ -333,7 +371,11 @@ static int FARPROC lookup_inner(struct inode *dir,const char *name,size_t len,
         r=scan(v,node); busy=0;
         if (r) return r;
         for (i=1;i<v->used;i++)
-            if (v->nodes[i].parent==node && !strcmp(v->nodes[i].name,part)) break;
+            if (v->nodes[i].parent==node && (!strcmp(v->nodes[i].name,part)
+#ifdef CONFIG_FS_PICOMEM_LFN
+                || (v->lfn && v->lfn[i][0] && lfn_equal(v->lfn[i],part))
+#endif
+               )) break;
         if (i==v->used) return -ENOENT;
     }
     *result=iget(dir->i_sb,i+1);
@@ -366,6 +408,11 @@ static int FARPROC readdir_inner(struct inode *i,struct file *f,char *buf,filldi
     if (f->f_pos>NODES+1) return 0;
     for (index=(unsigned)f->f_pos-1;index<v->used;index++) {
         if (!v->nodes[index].name[0] || v->nodes[index].parent!=node) continue;
+        #ifdef CONFIG_FS_PICOMEM_LFN
+        if(v->lfn && v->lfn[index][0])
+            r=fill(buf,v->lfn[index],strlen(v->lfn[index]),f->f_pos,index+1);
+        else
+#endif
         r=fill(buf,v->nodes[index].name,strlen(v->nodes[index].name),f->f_pos,index+1);
         if (!r) f->f_pos=index+2;
         return r;
@@ -451,6 +498,10 @@ static void put_super_pm(struct super_block *s)
 {
     /* Cached VFS inodes may survive iput; invalidate before freeing metadata. */
     invalidate_inodes(s->s_dev);
+#ifdef CONFIG_FS_PICOMEM_LFN
+    if (((struct pm_volume *)s->u.generic_sbp)->lfn)
+        heap_free(((struct pm_volume *)s->u.generic_sbp)->lfn);
+#endif
     heap_free(s->u.generic_sbp); s->u.generic_sbp=NULL;
     s->s_dev=0; --mounts;
 }
@@ -488,8 +539,23 @@ static struct super_block * FARPROC read_super_inner(struct super_block *s,void 
     v->used=1; v->drive=s->s_dev==DEV_USB?20:18;
     v->rw=!(s->s_flags&MS_RDONLY);
     v->nodes[0].attr=16;
+#ifdef CONFIG_FS_PICOMEM_LFN
+    /* Start read-only: no partially integrated long-name mutation paths. */
+    r=0;
+    if(!v->rw && lfn_present()) {
+        r=lfn_cap(v);
+        if(!r) {
+            v->lfn=heap_alloc(NODES*27,HEAP_TAG_DRVR|HEAP_TAG_CLEAR);
+            if(!v->lfn)r=-ENOMEM;
+        }
+    }
+    if(!r)
+#endif
     r=scan(v,0);
     if (r) {
+#ifdef CONFIG_FS_PICOMEM_LFN
+        if(v->lfn)heap_free(v->lfn);
+#endif
         heap_free(v); busy=0;
         printk("picofs: root query failed %d\n",r);
         return NULL;

@@ -67,9 +67,11 @@ edit('elkscmd/sys_utils/mount.c',
 edit('elkscmd/sys_utils/mount.c',
      'devname(statfs.f_dev, S_IFBLK), fs_typename[statfs.f_type], statfs.f_mntonname);',
      'name, typename, statfs.f_mntonname);')
+edit('elks/fs/config.in', "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n", "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n\n\t    bool 'Experimental paired-firmware long names (RO mounts)' CONFIG_FS_PICOMEM_LFN n")
 for name in ('mouse-picomem.c','pmmouse.h'):
     changes[root/char/name] = (kit.parent/'mouse'/name).read_text()
 changes[root/'elks/fs/picofs.c'] = (kit/'picofs.c').read_text()
+changes[root/'elks/fs/picofs-lfn.inc'] = (kit/'picofs-lfn.inc').read_text()
 changes[root/'elks/fs/picofs-write.inc'] = (kit/'picofs-write.inc').read_text()
 for p,s in changes.items(): p.write_text(s)
 print('Installed optional CONFIG_MOUSE_PICOMEM + CONFIG_FS_PICOMEM. No boot files changed.')

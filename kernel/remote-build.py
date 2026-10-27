@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Build over configured SSH; keys/agent/config supply credentials, never this repo.
-Usage: remote-build.py HOST ABSOLUTE_WORKDIR ABSOLUTE_CROSS_DIR [LOCAL_OUTPUT]
+Usage: remote-build.py HOST ABSOLUTE_WORKDIR ABSOLUTE_CROSS_DIR [LOCAL_OUTPUT] [--lfn]
 """
 from pathlib import Path
 import hashlib, json, shlex, subprocess, sys, tarfile, tempfile
+lfn = '--lfn' in sys.argv
+if lfn: sys.argv.remove('--lfn')
 if len(sys.argv) not in (4,5): raise SystemExit(__doc__)
 host, work, cross = sys.argv[1:4]
 if host.startswith('-') or any(c.isspace() for c in host): raise SystemExit('Invalid SSH host')
@@ -36,7 +38,7 @@ if ! test -d {w}/elks; then
  git clone https://github.com/ghaerr/elks.git {w}/elks
  git -C {w}/elks checkout --detach e7a56a4334e0ef9a2261d1c2de54db31ba40fdf0
 fi
-ELKS_TREE={w}/elks ELKS_TOOLCHAIN={c} bash {w}/src/kernel/build.sh > {w}/build.log 2>&1 || {{ tail -60 {w}/build.log; exit 1; }}
+KERNEL_CONFIG={w}/src/kernel/{'ppc512-lfn.config' if lfn else 'ppc512.config'} ELKS_TREE={w}/elks ELKS_TOOLCHAIN={c} bash {w}/src/kernel/build.sh > {w}/build.log 2>&1 || {{ tail -60 {w}/build.log; exit 1; }}
 cat {w}/src/kernel/build/manifest.json
 ''')
     out.mkdir(parents=True,exist_ok=True)

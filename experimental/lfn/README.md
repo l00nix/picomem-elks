@@ -1,10 +1,11 @@
-# Long-filename prototype — offline only
+# Long-filename protocol helpers and host tests
 
 I started this prototype on 27 October 2026, with AI coding assistance. It
 implements and tests a read-only metadata exchange and ELKS-side name helpers.
-**It is not connected to the PicoMEM command dispatcher or the ELKS mount
-driver. No firmware image or kernel with long-name support is supplied.**
-The existing binaries and default mount behavior are unchanged.
+These files remain a standalone test harness. The paired default-off firmware
+and actual ELKS driver are now integrated; see the [current implementation and
+validation status](../../docs/LONG-FILENAMES.md). No hardware LFN result is
+claimed. Default builds and the installed firmware remain unchanged.
 
 The prototype demonstrates the key operation against the actual PicoMEM FatFs
 source and a generated FAT12 image: recover `Long Filename.txt` from
@@ -122,7 +123,7 @@ through aliases. Existing kernel host suites also passed. The tests do not
 establish ARM firmware compilation, 8086 kernel fit, real USB/FAT32 timing,
 media-change behavior, or PPC hardware operation.
 
-## Remaining integration work
+## Original integration checklist (see current status above)
 
 1. Define an explicit, identifiable experimental firmware capability and wire
    a bounded dispatcher handler; retain all legacy DFS replies. Obtain an

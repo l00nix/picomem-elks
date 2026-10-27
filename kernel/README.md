@@ -212,3 +212,14 @@ Long filenames remain a separate firmware-interface task.
 The [USB-write hardware results](../docs/HARDWARE-USB-RW-20261025.md) record
 passing native write tests and independent readback after copy, remount and
 normal reboot on the PPC512. USB is left mounted read/write; SD stays read-only.
+
+## Experimental paired-firmware long names
+
+The `codex/long-filename-prototype` branch adds default-off
+`CONFIG_FS_PICOMEM_LFN`. Use `KERNEL_CONFIG=/absolute/path/ppc512-lfn.config`
+with `build.sh`, or append `--lfn` to `remote-build.py`. This requires the
+[matching firmware fork](https://github.com/l00nix/ISA-PicoMEM/tree/codex/dfs-long-names)
+and an exact ROM descriptor. Stock firmware stays alias-only without queries.
+Read-only mounts can display and open 26-byte ASCII names; writable mounts
+retain 8.3 names. See [limits, tests and hardware status](../docs/LONG-FILENAMES.md).
+The option adds a bounded 1,728-byte name table per active read-only mount.
