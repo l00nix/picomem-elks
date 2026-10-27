@@ -106,6 +106,7 @@ failed transport or resetting the hardware.
 ```sh
 sh experimental/lfn/test.sh
 python3 experimental/lfn/test-fatfs.py /path/to/ISA-PicoMEM
+python3 experimental/lfn/test-fatfs.py /path/to/ISA-PicoMEM --fat32
 sh kernel/test.sh
 ```
 

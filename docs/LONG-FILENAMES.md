@@ -32,7 +32,7 @@ extension; its final build manifest is retained with the local test artifacts.
 
 Validation includes 35 LFN driver scenarios plus existing filesystem, USB-write
 and mouse tests, 498 firmware payload checks, 10,000 malformed requests and
-692 dispatcher checks under sanitizers. A generated FAT12 image exercises the
+692 dispatcher checks under sanitizers. Generated FAT12 and FAT32 images exercise the
 actual upstream FatFs code, both drive numbers, a nested alias-only read,
 fallback and cursor independence, with zero disk writes. Both complete ARM
 firmware variants build; the default variant has no LFN handler/ROM descriptor.
