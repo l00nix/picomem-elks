@@ -80,7 +80,12 @@ static unsigned FARPROC find_child(struct pm_volume *v,unsigned parent,char *nam
 {
     unsigned j;
     for (j=1;j<v->used;j++)
-        if (v->nodes[j].parent==parent && !strcmp(v->nodes[j].name,name)) return j;
+        if (v->nodes[j].name[0] && v->nodes[j].parent==parent &&
+            (!strcmp(v->nodes[j].name,name)
+#ifdef CONFIG_FS_PICOMEM_LFN
+             || (v->lfn && v->lfn[j][0] && lfn_equal(v->lfn[j],name))
+#endif
+            )) return j;
     return 0;
 }
 static int FARPROC create_inner(struct inode *dir,const char *name,size_t len,
@@ -96,9 +101,13 @@ static int FARPROC create_inner(struct inode *dir,const char *name,size_t len,
     r=new_name(part,name,len);if (r) return r;
     r=begin_write(dir);if (r) return r;
     r=scan(v,parent);if (r) goto done;
+    if(v->nodes[parent].scanned!=1) {r=-EACCES;goto done;}
     if (find_child(v,parent,part)) {r=-EEXIST;goto done;}
     if (v->used==NODES) {r=-ENOSPC;goto done;}
     index=v->used++;node=&v->nodes[index];memset(node,0,sizeof(*node));
+#ifdef CONFIG_FS_PICOMEM_LFN
+    if(v->lfn)v->lfn[index][0]=0;
+#endif
     strcpy(node->name,part);node->parent=parent;node->attr=directory?16:32;
     r=makepath(v,index);if (r) goto rollback;
     r=attr_rw();
@@ -149,12 +158,22 @@ static int FARPROC remove_inner(struct inode *dir,const char *name,size_t len,
 {
     struct pm_volume *v=dir->i_sb->u.generic_sbp;
     struct inode *i=NULL;
-    char part[13];
+    char part[27];
     unsigned node,j,n;
     int r;
-    r=new_name(part,name,len);if (r) return r;
+#ifdef CONFIG_FS_PICOMEM_LFN
+    if(v->lfn) {
+        if(!len || len>26)return -ENAMETOOLONG;
+        if(verified_memcpy_fromfs(part,(void *)name,len))return -EFAULT;
+        if(!lfn_valid((unsigned char *)part,len))return -EINVAL;
+        part[len]=0;
+        for(j=0;j<len;j++)if(part[j]>='a'&&part[j]<='z')part[j]-=32;
+    } else
+#endif
+    {r=new_name(part,name,len);if (r) return r;}
     r=begin_write(dir);if (r) return r;
     r=scan(v,(unsigned)dir->i_ino-1);if (r) goto done;
+    if(v->nodes[(unsigned)dir->i_ino-1].scanned!=1) {r=-EACCES;goto done;}
     node=find_child(v,(unsigned)dir->i_ino-1,part);
     if (!node) {r=-ENOENT;goto done;}
     if (!!(v->nodes[node].attr&16)!=directory) {r=directory?-ENOTDIR:-EISDIR;goto done;}
@@ -163,6 +182,7 @@ static int FARPROC remove_inner(struct inode *dir,const char *name,size_t len,
     if (i->i_count>1) {r=-EBUSY;goto done;}
     if (directory) {
         r=scan(v,node);if (r) goto done;
+        if(v->nodes[node].scanned!=1) {r=-ENOTEMPTY;goto done;}
         for (j=1;j<v->used;j++) if (v->nodes[j].name[0] && v->nodes[j].parent==node) {
             r=-ENOTEMPTY;goto done;
         }
@@ -174,6 +194,9 @@ static int FARPROC remove_inner(struct inode *dir,const char *name,size_t len,
     r=attr_rw();
     if (r!=-ENOENT) {broken=1;r=-EIO;goto done;}
     v->nodes[node].name[0]=0;i->i_nlink=0;r=0;
+#ifdef CONFIG_FS_PICOMEM_LFN
+    if(v->lfn)v->lfn[node][0]=0;
+#endif
 done:
     if (i) iput(i);
     return end_write(r);

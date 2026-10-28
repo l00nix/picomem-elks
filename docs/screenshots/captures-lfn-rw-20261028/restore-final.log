@@ -1,0 +1,13 @@
+cat /root/lfnbak0 > "/mnt/usb/LFN271A/Name With Spaces.txt" || exit 1; cat /root/lfnbak1 > "/mnt/usb/LFN271A/N26-xxxxxxxxxxxxxxxxxx.txt" || exit 1; cat /root/lfnbak2 > "/mnt/usb/LFN271A/Nested Long Folder/Deeper Long Folder/Nested Read.txt" || exit 1; cmp /root/lfnbak0 "/mnt/usb/LFN271A/Name With Spaces.txt" || exit 1; cmp /root/lfnbak1 "/mnt/usb/LFN271A/N26-xxxxxxxxxxxxxxxxxx.txt" || exit 1; cmp /root/lfnbak2 "/mnt/usb/LFN271A/Nested Long Folder/Deeper Long Folder/Nested Read.txt" || exit 1; rm "/mnt/usb/LFN271A/Nested Long Folder/RW28/KEEP.BIN" || exit 1; rmdir "/mnt/usb/LFN271A/Nested Long Folder/RW28" || exit 1; rm "/mnt/usb/LFN271A/Nested Long Folder/RW28B/KEEP.BIN" || exit 1; rmdir "/mnt/usb/LFN271A/Nested Long Folder/RW28B" || exit 1; sync; cd /; pmmount -u /mnt/usb || exit 1; pmmount --rw usb /mnt/usb || exit 1; mount
+# /bin/sh /root/me76ed73c3e
+Files are identical
+Files are identical
+Files are identical
+Unmounted /mnt/usb
+Mounted USB read/write at /mnt/usb
+/dev/hda  (minix) blocks  65535 free  52742 mount /
+picomem-usb (picofs, rw) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+# echo PMDONE_d1a89c35c30f=$?
+PMDONE_d1a89c35c30f=0
+# 

@@ -50,11 +50,11 @@ static void respond(void)
     unsigned long offset;
     assert(!irq_enabled);
     drv=p[58];assert(drv==18||drv==20);
-#ifdef PICORW_TEST
-    if (rw_active) {respond_rw(cmd,req);return;}
-#endif
 #ifdef PICOLFN_TEST
     if(cmd==0x70) {respond_lfn();return;}
+#endif
+#ifdef PICORW_TEST
+    if (rw_active) {respond_rw(cmd,req);return;}
 #endif
     if(cmd==0x1b) {
         assert(p[60]==0x37);
@@ -120,6 +120,9 @@ static void outb(unsigned char value,unsigned port)
 }
 static void reset(void)
 {
+#ifdef PICORW_TEST
+    rw_active=0;
+#endif
     memset(mmio,0,sizeof(mmio));memset(inodes,0,sizeof(inodes));ninodes=0;
     memset(&usb,0,sizeof(usb));memset(&sd,0,sizeof(sd));
     mounts=busy=broken=sequence=0;

@@ -22,8 +22,8 @@ int main(void)
     assert(i==child(d,"SUB.TXT"));assert(!makepath(usb.u.generic_sbp,i->i_ino-1));
     assert(!strcmp(path,"\\DIR\\SUB.TXT"));same();pass();
     begin();marker();assert(read_super_pm(&sd,NULL,0));assert(child(sd.s_mounted,file_display));pass();
-    begin();marker();usb.s_flags=0;assert(read_super_pm(&usb,NULL,0));assert(!lfn_calls);
-    assert(!((struct pm_volume*)usb.u.generic_sbp)->lfn);pass();
+    begin();marker();usb.s_flags=0;assert(read_super_pm(&usb,NULL,0));assert(lfn_calls==3);
+    assert(((struct pm_volume*)usb.u.generic_sbp)->lfn);pass();
     for(k=1;k<=6;k++){begin();marker();lfn_fault=k;assert(!read_super_pm(&usb,NULL,0));
         assert(broken&&!busy&&!mounts);pass();}
     const unsigned fallback[]={1,3,4,5};

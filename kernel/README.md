@@ -207,7 +207,7 @@ ambiguous transport failure; reboot is required to clear the fault.
 operations and leaves a 3073-byte `KEEP.BIN` for independent readback and
 unmount/remount/reboot checks. It refuses an existing test directory. ELKS has
 no enabled `ftruncate` syscall on this baseline; the native test uses `O_TRUNC`.
-Long filenames remain a separate firmware-interface task.
+Creating new long filenames remains a separate firmware-interface task.
 
 The [USB-write hardware results](../docs/HARDWARE-USB-RW-20261025.md) record
 passing native write tests and independent readback after copy, remount and
@@ -220,6 +220,23 @@ The `codex/long-filename-prototype` branch adds default-off
 with `build.sh`, or append `--lfn` to `remote-build.py`. This requires the
 [matching firmware fork](https://github.com/l00nix/ISA-PicoMEM/tree/codex/dfs-long-names)
 and an exact ROM descriptor. Stock firmware stays alias-only without queries.
-Read-only mounts can display and open 26-byte ASCII names; writable mounts
-retain 8.3 names. See [limits, tests and hardware status](../docs/LONG-FILENAMES.md).
-The option adds a bounded 1,728-byte name table per active read-only mount.
+Read-only and USB writable mounts can display and open existing 26-byte ASCII
+names. Existing-file writes, append, truncate-to-empty and removal resolve the
+displayed name to the stored short alias, including every parent directory.
+New files/directories still require 8.3 names; rename is unsupported. Stock
+firmware remains alias-only. The option adds a bounded 1,728-byte name table
+per enabled mount. See [limits, tests and hardware status](../docs/LONG-FILENAMES.md).
+
+Unsupported non-ASCII short aliases are omitted with a kernel diagnostic.
+Other supported entries in that directory remain usable. Such a directory is
+marked incomplete: creating or removing entries in it is refused, and it
+cannot be removed as if empty. This is not full Unicode support; malformed
+entries still fail the scan. External changes still require unmount/remount.
+
+`pmlfnrw /mnt/usb/LFN271A/existing-name /root/backup` is a fixture-only native
+probe for existing long-name append/overwrite/readback. It requires the current
+file to match an independent backup (1–1024 bytes), leaves changed contents for
+independent verification, and does not restore them automatically. Preserve the
+backup and restore it after checking persistence. The host suite includes 14
+combined LFN/write scenarios, including collision, omission, deletion-cache,
+26-byte remount, SD protection and failed-write handling.

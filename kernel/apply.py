@@ -67,7 +67,13 @@ edit('elkscmd/sys_utils/mount.c',
 edit('elkscmd/sys_utils/mount.c',
      'devname(statfs.f_dev, S_IFBLK), fs_typename[statfs.f_type], statfs.f_mntonname);',
      'name, typename, statfs.f_mntonname);')
-edit('elks/fs/config.in', "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n", "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n\n\t    bool 'Experimental paired-firmware long names (RO mounts)' CONFIG_FS_PICOMEM_LFN n")
+# Migrate the old label before the idempotent option insertion below.
+lfn_config = root/'elks/fs/config.in'
+lfn_text = changes.get(lfn_config, lfn_config.read_text())
+if 'Experimental paired-firmware long names (RO mounts)' in lfn_text:
+    changes[lfn_config] = lfn_text.replace('Experimental paired-firmware long names (RO mounts)',
+                                          'Experimental paired-firmware long names')
+edit('elks/fs/config.in', "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n", "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n\n\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n")
 for name in ('mouse-picomem.c','pmmouse.h'):
     changes[root/char/name] = (kit.parent/'mouse'/name).read_text()
 changes[root/'elks/fs/picofs.c'] = (kit/'picofs.c').read_text()

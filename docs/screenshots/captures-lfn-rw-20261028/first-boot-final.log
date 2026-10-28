@@ -1,0 +1,17 @@
+uname -a; cmp /linux /root/linlrw2 || exit 1; pmmount --rw usb /mnt/usb || exit 1; pmmount sd /mnt/sd || exit 1; mount; /root/pmlfnrw --guards /mnt/usb/LFN271A/UNIBAD || exit 1; ls -l /mnt/usb/LFN271A/UNISAFE || exit 1
+# /bin/sh /root/me18387e0fc
+ELKS elks 0.9.2 commit e7a56a43 28 Oct 2026 15:27:38 +0000 ibmpc i8086
+Files are identical
+Mounted USB read/write at /mnt/usb
+Mounted read-only at /mnt/sd
+/dev/hda  (minix) blocks  65535 free  52742 mount /
+picomem-usb (picofs, rw) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+Unsupported-alias create: result=-1 errno=13
+Unsupported-alias rmdir: result=-1 errno=39
+PASS unsupported-alias creation and rmdir guards
+-rw-------  1 root     root           91  Jan  1  1970 UNICOD~2.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _UNICO~2.TXT
+# echo PMDONE_c57e0c4d5ce2=$?
+PMDONE_c57e0c4d5ce2=0
+

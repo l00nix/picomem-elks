@@ -1,0 +1,14 @@
+/root/pmlfnrw "/mnt/usb/LFN271A/Name With Spaces.txt" /root/lfnbak0 || exit 1; /root/pmlfnrw "/mnt/usb/LFN271A/N26-xxxxxxxxxxxxxxxxxx.txt" /root/lfnbak1 || exit 1; /root/pmlfnrw "/mnt/usb/LFN271A/Nested Long Folder/Deeper Long Folder/Nested Read.txt" /root/lfnbak2 || exit 1; sync
+# /bin/sh /root/m187be4848b
+PASS long-name append/overwrite/readback: 1086 bytes b70d903b
+Retained test contents in /mnt/usb/LFN271A/Name With Spaces.txt
+Restore from /root/lfnbak0 after independent verification.
+PASS long-name append/overwrite/readback: 1100 bytes 44cc8448
+Retained test contents in /mnt/usb/LFN271A/N26-xxxxxxxxxxxxxxxxxx.txt
+Restore from /root/lfnbak1 after independent verification.
+PASS long-name append/overwrite/readback: 1103 bytes e55ec5ef
+Retained test contents in /mnt/usb/LFN271A/Nested Long Folder/Deeper Long Folder/Nested Read.txt
+Restore from /root/lfnbak2 after independent verification.
+# echo PMDONE_9772e4faa319=$?
+PMDONE_9772e4faa319=0
+# 

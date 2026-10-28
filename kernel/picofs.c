@@ -58,7 +58,7 @@ struct pm_node {
 struct pm_volume {
     unsigned used, drive, rw;
 #ifdef CONFIG_FS_PICOMEM_LFN
-    char (*lfn)[27]; /* Allocated only for RO mounts with the exact firmware descriptor. */
+    char (*lfn)[27]; /* Exact experimental firmware descriptor required. */
 #endif
     struct pm_node nodes[NODES];
 };
@@ -241,7 +241,8 @@ done:
 /* SFNs only. Reject path separators, wildcards, controls and malformed FCBs. */
 static int FARPROC component(char *out, const unsigned char *fcb)
 {
-    unsigned i, j, n=0, end;
+    unsigned i, j, n=0, end, encoding=0;
+    for(i=0;i<11;i++)if(fcb[i]>=128)encoding=1;
     for (j=0;j<2;j++) {
         unsigned start=j?8:0, width=j?3:8;
         end=width;
@@ -250,12 +251,18 @@ static int FARPROC component(char *out, const unsigned char *fcb)
         if (j && end) out[n++]='.';
         for (i=0;i<end;i++) {
             unsigned char c=fcb[start+i];
-            if (c<=32 || c>=127 || strchr("\\/:*?\"<>|.",c)) return -EIO;
+            if (c<=32 || c==127 || strchr("\\/:*?\"<>|",c)) return -EIO;
+            /* Legacy DFS emits a leading dot in some non-ASCII Mac ._
+             * sidecar FCBs. Omit this unsupported form, never use it as a
+             * path. Other embedded dots and traversal remain malformed. */
+            if(c=='.' && !(encoding && !j && !i && fcb[1]=='_'))return -EIO;
             out[n++]=(c>='a' && c<='z') ? c-32 : c;
         }
     }
     out[n]=0;
-    return 0;
+    /* A structurally valid but unsupported encoding can be omitted from a
+     * listing. Malformed paths above remain fatal, even if also non-ASCII. */
+    return encoding ? -EINVAL : 0;
 }
 static int FARPROC makepath(struct pm_volume *v, unsigned node)
 {
@@ -285,7 +292,7 @@ static int FARPROC makepath(struct pm_volume *v, unsigned node)
  */
 static int FARPROC scan(struct pm_volume *v, unsigned node)
 {
-    unsigned start, req, i, attempts;
+    unsigned start, req, i, attempts, omitted=0;
     int r;
     struct pm_node *n;
     char name[13];
@@ -302,17 +309,22 @@ static int FARPROC scan(struct pm_volume *v, unsigned node)
     r=transaction(v->drive,0x1b,req+1,24);
     for (attempts=0;attempts<=NODES;attempts++) {
         if (r==END_DIR) {
-            if (!node && v->used==start) { r=-ENODEV; break; }
+            if (!node && v->used==start && !omitted) { r=-ENODEV; break; }
 #ifdef CONFIG_FS_PICOMEM_LFN
             if(v->lfn) {r=lfn_scan(v,start);if(r)break;}
 #endif
-            v->nodes[node].scanned=1;
+            /* 2 marks an incomplete namespace: never create in it or treat
+             * it as an empty directory for removal. */
+            v->nodes[node].scanned=omitted?2:1;
+            if(omitted) printk("picofs: omitted %u unsupported aliases\n",omitted);
             return 0;
         }
         if (r<0) break;
         /* FatFs normally omits dot entries; never allow them into paths. */
-        if (packet[61]=='.' || (packet[60]&0xc8)) { r=-EIO; break; }
-        r=component(name,packet+61); if (r) break;
+        if (packet[60]&0xc8) { r=-EIO; break; }
+        r=component(name,packet+61);
+        if (r==-EINVAL) {++omitted;goto next_entry;}
+        if (r) break;
         for (i=start;i<v->used;i++)
             if (!strcmp(v->nodes[i].name,name)) break;
         if (i!=v->used) { r=-EIO; break; }
@@ -322,6 +334,7 @@ static int FARPROC scan(struct pm_volume *v, unsigned node)
         strcpy(n->name,name); n->parent=node; n->attr=packet[60];
         n->size=dword(packet+76);
         if (n->size>0x7fffffffUL) { r=-EFBIG; break; }
+next_entry:
         memcpy(packet+60,packet+80,4); packet[64]=0x37;
         memset(packet+65,'?',11);
         r=transaction(v->drive,0x1c,16,24);
@@ -371,7 +384,7 @@ static int FARPROC lookup_inner(struct inode *dir,const char *name,size_t len,
         r=scan(v,node); busy=0;
         if (r) return r;
         for (i=1;i<v->used;i++)
-            if (v->nodes[i].parent==node && (!strcmp(v->nodes[i].name,part)
+            if (v->nodes[i].name[0] && v->nodes[i].parent==node && (!strcmp(v->nodes[i].name,part)
 #ifdef CONFIG_FS_PICOMEM_LFN
                 || (v->lfn && v->lfn[i][0] && lfn_equal(v->lfn[i],part))
 #endif
@@ -540,9 +553,9 @@ static struct super_block * FARPROC read_super_inner(struct super_block *s,void 
     v->rw=!(s->s_flags&MS_RDONLY);
     v->nodes[0].attr=16;
 #ifdef CONFIG_FS_PICOMEM_LFN
-    /* Start read-only: no partially integrated long-name mutation paths. */
+    /* Mutations resolve existing names to aliases; creation stays 8.3. */
     r=0;
-    if(!v->rw && lfn_present()) {
+    if(lfn_present()) {
         r=lfn_cap(v);
         if(!r) {
             v->lfn=heap_alloc(NODES*27,HEAP_TAG_DRVR|HEAP_TAG_CLEAR);

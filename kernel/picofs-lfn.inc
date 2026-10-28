@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later
- * Read-only display names for the exact experimental ROM descriptor.
+ * Display names for the exact experimental ROM descriptor.
  * No long name is ever sent to legacy OPEN or another mutation command.
  */
 static int FARPROC lfn_equal(const char *a,const char *b)
@@ -68,8 +68,8 @@ static int FARPROC lfn_scan(struct pm_volume *v,unsigned start)
         memcpy(v->lfn[i],packet+86,n);v->lfn[i][n]=0;
     }
     /* Decide before clearing any candidate; include every sibling alias. */
-    for(i=start;i<v->used;i++)if(v->lfn[i][0]) {
-        for(j=1;j<v->used;j++)if(i!=j&&v->nodes[i].parent==v->nodes[j].parent) {
+    for(i=start;i<v->used;i++)if(v->nodes[i].name[0]&&v->lfn[i][0]) {
+        for(j=1;j<v->used;j++)if(v->nodes[j].name[0]&&i!=j&&v->nodes[i].parent==v->nodes[j].parent) {
             if(lfn_equal(v->lfn[i],v->nodes[j].name))reject[i]=1;
             if(v->lfn[j][0]&&lfn_equal(v->lfn[i],v->lfn[j]))reject[i]=reject[j]=1;
         }

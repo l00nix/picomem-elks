@@ -13,6 +13,15 @@ static void respond_lfn(void)
     assert(p[64]==1 && p[67]==0 && n<128);
     memcpy(alias,p+68,n);alias[n]=0;
     a=drv==20?"FIXTURE.TXT":"SDTEST.TXT";name=file_display;
+#ifdef PICORW_TEST
+    if(op && rw_active) {
+        int object=rw_find(alias);
+        assert(object>=0);
+        a=strrchr(objects[object].path,'\\')+1;
+        name=objects[object].display[0]?objects[object].display:a;
+        size=objects[object].size;attr=objects[object].attr;
+    } else
+#endif
     if(op) {
         if(!strcmp(alias,"\\DIR")){a="DIR";name=dir_display;size=0;attr=16;}
         else if(!strcmp(alias,"\\DIR\\SUB.TXT")){a="SUB.TXT";name="Nested file.txt";size=17;}

@@ -1,0 +1,10 @@
+cd /; pmmount -u /mnt/usb || exit 1; pmmount --rw usb /mnt/usb || exit 1; /root/pmrwtest "/mnt/usb/LFN271A/Nested Long Folder/RW28B" || exit 1; sync
+# /bin/sh /root/m0e5c229dc2
+Unmounted /mnt/usb
+Mounted USB read/write at /mnt/usb
+PASS create/append/overwrite: 3073 bytes, FNV1a=fcd3aede
+PASS truncate/delete/directories; exclusive create and open-file guards
+Retained /mnt/usb/LFN271A/Nested Long Folder/RW28B/KEEP.BIN for host/remount readback
+# echo PMDONE_1ddef6d23ebc=$?
+PMDONE_1ddef6d23ebc=0
+# 

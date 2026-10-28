@@ -1,0 +1,25 @@
+PicoMEM / ELKS: existing long-name USB writes
+# mount
+/dev/hda  (minix) blocks  65535 free  52740 mount /
+picomem-usb (picofs, rw) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+
+# cd /mnt/usb/LFN271A
+# ls -l "Name With Spaces.txt"
+-rw-------  1 root     root         1086  Jan  1  1970 Name With Spaces.txt
+# ls "N26-xxxxxxxxxxxxxxxxxx.txt"
+N26-xxxxxxxxxxxxxxxxxx.txt
+# wc -c < "N26-xxxxxxxxxxxxxxxxxx.txt"
+   1100
+# cd "Nested Long Folder/Deeper Long Folder"
+# ls -l "Nested Read.txt"
+-rw-------  1 root     root         1103  Jan  1  1970 Nested Read.txt
+
+
+
+
+
+
+
+
+

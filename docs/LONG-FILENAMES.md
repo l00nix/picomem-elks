@@ -1,9 +1,14 @@
 # Long filenames: experimental implementation and hardware tests
 
 I am implementing a paired firmware/ELKS extension, with AI coding assistance.
-**The first real PPC512 tests pass:** long-name listings and reads work on
-read-only USB and SD mounts. This remains experimental, not full FAT long-name
-support. Default builds and writable mounts remain alias-only.
+**Existing long-name USB writes now pass on the PPC512:** append and overwrite
+work through 26-character ASCII names and nested long-name paths. USB writable
+mounts display long names; SD stays read-only. New long-name creation and rename
+remain future firmware/ELKS work. Default builds remain alias-only.
+
+[28 October write tests, safeguards and screenshots](HARDWARE-LFN-RW-20261028.md)
+describe the newer kernel. The sections below retain the earlier read-only
+tests and the failure that led to the unsupported-alias handling change.
 
 ## PPC512 hardware test, 27 October 2026
 
@@ -77,7 +82,7 @@ These are rendered captures of actual PPC video memory, using the captured
 BIOS font. Underscore-prefixed 4,096-byte files are Mac metadata sidecars.
 [Fixture manifest, checksums, native command logs and capture evidence](screenshots/captures-lfn-fixture-20261027/).
 
-### Known failure: non-ASCII short aliases
+### Failure found on 27 October: non-ASCII short aliases
 
 The initial `Café notes.txt` test made its entire containing directory
 unreadable. A bounded capture of the legacy DFS reply contains FCB bytes
@@ -87,16 +92,16 @@ Other USB and SD files still read, and USB unmounted normally. This is a
 reproducible compatibility gap, not a successful Unicode test.
 
 I preserved that file and its metadata sidecar in `LFN271A/UNIBAD` on the Mac.
-Isolating it lets the other tests run; **the bug is not fixed**. A separate
+Isolating it let the other tests run; **the 27 October kernel did not fix it**. A separate
 `Unicode café.txt` file in `UNISAFE` has the ASCII alias `UNICOD~2.TXT`, and
 reads through that alias match the reference hash. Therefore Unicode fallback
 is currently supported only when the legacy alias itself is supported ASCII.
 Do not recursively scan `UNIBAD` expecting it to work with this kernel.
 
 [Captured original failure and successful unmount](screenshots/20261027-lfn-failure.png).
-The next engineering task is to handle unsupported legacy aliases without
-making the whole directory inaccessible, with regression tests before another
-kernel deployment. Full Unicode path support remains separate work.
+The 28 October kernel now omits these unsupported entries with a diagnostic,
+keeps supported siblings accessible and blocks creation/removal in that
+incomplete directory. Full Unicode path support remains separate work.
 
 ## Integrated experimental candidate, 27 October 2026
 

@@ -1,0 +1,29 @@
+{
+  "elks_commit": "e7a56a4334e0ef9a2261d1c2de54db31ba40fdf0",
+  "segments": {
+    "text": 65312,
+    "fartext": 42624,
+    "data": 10864,
+    "bss": 10208
+  },
+  "sha256": {
+    "mount": "3b766f73266ec999557b36c1d1458b7459161ffa3ff2ece15bf7e97af79c1dab",
+    "pmlfnrw": "ad455f633412093a611bc41698535a46a37422a24ce06986d6c87577493a260f",
+    "pmrwtest": "ade389adf5d2d694343ec36c415cf04ea6913300b350ed7c37c145f43997f299",
+    "pmfstest": "3c96ed83c9a8b2e33b395965d9a992f46011ce69ec06c79d8f4b87ce77e08bdb",
+    "pmmount": "b2cc502b6ad36ffbd4419162345e2af182c364cfb249a6aec5fb91a908872653",
+    "pmmouse": "f72e784a9eb777524ec1ccc6b9f31ea7fea99c281290a4744f901b6afbef8f88",
+    "kernel.config": "41ecfaba5565f778871c43be6771e64f7b3485e9fa23cd38b6c4069d7eb9c5f5",
+    "system.map": "3561cb2ce1c1cb973557ad162ce6b5d358654be8971115c0d54d6bce7fc3cc33",
+    "linux": "73deeef63cd7aa0835da8c14e75b55ae130d8ca96db05cd50d2e6a99c04654d6"
+  },
+  "integration_diff_sha256": "8bc025a5451467b90bb3ab7b48155daa340a2d09411a01ee8cd9a4d6d3fbc607",
+  "source_sha256": {
+    "elks/fs/picofs.c": "073fa67147e64120853df44f06a460b8ce51c5c2a00ec3819600813694197ae9",
+    "elks/fs/picofs-write.inc": "67ca0fa5369f605b23d8eb67ad9b49e7226275cb44db0de368791fcb4ec0a38b",
+    "elks/fs/picofs-lfn.inc": "e1a394a54e392af00b3e6382b5011d1da42a6b49437d35eae7e7a4d605043dd4",
+    "elks/arch/i86/drivers/char/mouse-picomem.c": "e43aa6b9dc6d4dd8c6f4ea7ef60c23772709a9ab7160b6b477054242c347e896",
+    "elks/arch/i86/drivers/char/pmmouse.h": "fda19d9101c33004ef5a4da18122237ed5f9f75f3d88215ffdf0a6bdc4a5f34c",
+    "elkscmd/sys_utils/mount.c": "72976edef2b328fc1be7ac732d507e06ed5745c46b4921d4dab25bbb7a10bd38"
+  }
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/mnt/usb/LFN271A/Name With Spaces.txt",
+    "bytes": 61,
+    "sha256": "9256dcef4d8f84d6ff73914106251ce62b856d01cec939e3d57b9d349bac5034",
+    "passed": true
+  },
+  {
+    "path": "/mnt/usb/LFN271A/NAMEWI~8.TXT",
+    "bytes": 61,
+    "sha256": "9256dcef4d8f84d6ff73914106251ce62b856d01cec939e3d57b9d349bac5034",
+    "passed": true
+  },
+  {
+    "path": "/mnt/usb/LFN271A/N26-xxxxxxxxxxxxxxxxxx.txt",
+    "bytes": 75,
+    "sha256": "c50aacffb50cb041f362664ccd217346e0e0e78b5b71036b727fcbbd0570bb81",
+    "passed": true
+  },
+  {
+    "path": "/mnt/usb/LFN271A/N26-X~13.TXT",
+    "bytes": 75,
+    "sha256": "c50aacffb50cb041f362664ccd217346e0e0e78b5b71036b727fcbbd0570bb81",
+    "passed": true
+  },
+  {
+    "path": "/mnt/usb/LFN271A/Nested Long Folder/Deeper Long Folder/Nested Read.txt",
+    "bytes": 78,
+    "sha256": "acbc76a702bbb703127e5eb9bf44cc731361e43e1d948154d35c9d2f16515c68",
+    "passed": true
+  }
+]

@@ -20,7 +20,11 @@ static int rw_mkdir(struct inode *d,const char *name)
 {d->i_count++;return mkdir_pm(d,name,strlen(name),0700);}
 static int rw_remove(struct inode *d,const char *name,int directory)
 {d->i_count++;return directory?rmdir_pm(d,name,strlen(name)):unlink_pm(d,name,strlen(name));}
+#ifdef PICOLFN_TEST
+int write_main(void)
+#else
 int main(void)
+#endif
 {
     readonly_main();unsigned start=tests,n;
     struct inode *i,*d,*other=NULL;struct file f;char data[1100],back[1100];

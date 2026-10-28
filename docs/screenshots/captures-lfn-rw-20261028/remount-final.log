@@ -1,0 +1,16 @@
+cd /; pmmount -u /mnt/usb || exit 1; pmmount usb /mnt/usb || exit 1; /root/pmfstest "/mnt/usb/LFN271A/Name With Spaces.txt" || exit 1; /root/pmfstest "/mnt/usb/LFN271A/N26-xxxxxxxxxxxxxxxxxx.txt" || exit 1; /root/pmfstest "/mnt/usb/LFN271A/Nested Long Folder/Deeper Long Folder/Nested Read.txt" || exit 1; mount
+# /bin/sh /root/mb320605db3
+Unmounted /mnt/usb
+Mounted read-only at /mnt/usb
+PASS /mnt/usb/LFN271A/Name With Spaces.txt: 1086 bytes, FNV1a=b70d903b
+257/73-byte reads agree; seek/EOF pass; write-only open refused.
+PASS /mnt/usb/LFN271A/N26-xxxxxxxxxxxxxxxxxx.txt: 1100 bytes, FNV1a=44cc8448
+257/73-byte reads agree; seek/EOF pass; write-only open refused.
+PASS /mnt/usb/LFN271A/Nested Long Folder/Deeper Long Folder/Nested Read.txt: 1103 bytes, FNV1a=e55ec5ef
+257/73-byte reads agree; seek/EOF pass; write-only open refused.
+/dev/hda  (minix) blocks  65535 free  52742 mount /
+picomem-usb (picofs, ro) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+# echo PMDONE_a2eb2c8f544f=$?
+PMDONE_a2eb2c8f544f=0
+

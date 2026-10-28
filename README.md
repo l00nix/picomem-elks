@@ -22,10 +22,11 @@ USB and SD read-only. I have added experimental, opt-in USB writes while keeping
 [new build](dist/kernel-usb-rw-20261025/README.md) has passed host, emulator and
 PPC512 write tests, including independent readback after remount and normal
 reboot. [Hardware results and screenshot](docs/HARDWARE-USB-RW-20261025.md).
-The experimental paired firmware/kernel now passes read-only long-name tests
-on the PPC512, including 26-character names and nested paths. It requires the
-experimental builds; writable mounts retain aliases. A non-ASCII short alias
-can still make its directory unreadable. [Results, limitations and screenshots](docs/LONG-FILENAMES.md).
+The experimental paired firmware/kernel now supports reading and updating
+existing long-named USB files on the PPC512, including 26-character ASCII names
+and nested paths. New-name creation remains 8.3-only; rename is not implemented.
+Unsupported non-ASCII aliases are omitted with a diagnostic and protective
+mutation restrictions. [Results, limitations and screenshots](docs/LONG-FILENAMES.md).
 
 I published this source snapshot under `l00nix`, with fresh public commit history.
 The project credits, GPL license, tested binaries and hardware evidence are
@@ -42,6 +43,7 @@ firmware extension I would like to discuss with FreddyV.
 | `pmmem` | Queries the card's active memory types and compares them with the configured map. `--probe` checks just the BIOS block first. No RAM write probes or remapping. |
 | `pmmount` | Mounts PicoMEM USB or SD read-only; `--rw usb` explicitly enables experimental USB writes; `-u` unmounts. Requires the optional PicoMEM kernel. |
 | `mount` (updated ELKS utility) | Lists mounted filesystems, including PicoMEM USB/SD mountpoints and their `ro`/`rw` status. Supplied with the kernel build. |
+| `pmlfnrw FILE BACKUP` | Fixture-only test of existing long-name USB append/overwrite/readback; requires a matching Minix backup and leaves test contents for verification/restoration. |
 
 `pmconfig`, `pmdump`, `pmstat` and `pmmem` select modes of one executable.
 `pmmount` and the updated `mount` are separate kernel-build utilities.
@@ -91,11 +93,18 @@ mount
 ls -l /mnt/usb
 ```
 
-The later PPC512 capture shows **USB as `rw` and SD as `ro`**, followed by a
-USB directory listing. Original long filenames are not yet exposed; the
-firmware currently supplies 8.3 aliases:
+This 25 October PPC512 capture shows **USB as `rw` and SD as `ro`**, followed by
+a USB directory listing using the original firmware’s 8.3 aliases:
 
 ![PPC512 mount command showing USB read/write and SD read-only, followed by ls with 8.3 aliases](docs/screenshots/20261025-usb-lfn.png)
+
+With the experimental paired firmware/kernel, the 28 October capture shows
+existing long names on the writable USB mount, including spaces, the
+26-character boundary and nested directories. I verified append/overwrite,
+independent readback and remount persistence, then restored the test files.
+[Write-test report and limitations](docs/HARDWARE-LFN-RW-20261028.md).
+
+![PPC512 writable USB long filenames and read-only SD mount](docs/screenshots/20261028-lfn-rw.png)
 
 I verified USB creation, append, overwrite, truncate-to-empty, deletion and
 directory operations, with independent file readback after remount and normal

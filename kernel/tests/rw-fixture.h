@@ -2,7 +2,7 @@
 static int rw_active,rw_handle=-1,rw_mkdir_error,rw_lose_close,rw_corrupt_read;
 static int rw_overcount,rw_short,rw_open_mode;
 static unsigned rw_mutations,rw_total;
-struct rw_object {char path[128];unsigned attr,size;unsigned char data[4096];};
+struct rw_object {char path[128],display[27],fcb[11];unsigned attr,size;unsigned char data[4096];};
 static struct rw_object objects[80],saved_object;
 static char rw_dir[128];
 static unsigned rw_cursor;
@@ -16,7 +16,9 @@ static void rw_fcb(unsigned char *dst,const char *p)
 }
 static void rw_entry(unsigned char *p,int j)
 {
-    memset(p,0,25);p[0]=objects[j].attr;rw_fcb(p+1,objects[j].path);
+    memset(p,0,25);p[0]=objects[j].attr;
+    if(objects[j].fcb[0])memcpy(p+1,objects[j].fcb,11);
+    else rw_fcb(p+1,objects[j].path);
     le32(p+16,objects[j].size);le16(p+20,3);
 }
 static int rw_add(const char *p,int attr)
