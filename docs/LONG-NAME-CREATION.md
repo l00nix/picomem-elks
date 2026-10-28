@@ -2,8 +2,8 @@
 
 I am developing the next USB filesystem milestone as l00nix, with AI coding
 assistance. The `codex/long-name-create` branch adds optional creation of files
-and directories with names up to 26 ASCII bytes. The paired kernel and firmware have now passed PPC512 creation and write
-tests, including full-byte readback after remount and a normal reboot. This
+and directories with names up to 26 ASCII bytes. The paired kernel and firmware
+have now passed PPC512 creation and write tests, including full-byte readback after remount and a normal reboot. This
 remains an experimental candidate, not a release candidate. The earlier existing-file
 write tests remain documented [separately](HARDWARE-LFN-RW-20261028.md).
 
@@ -90,8 +90,8 @@ are build-fit figures, not runtime stack/heap measurements.
 
 Rename and measured interrupt/service latency remain later work before a
 broader read/write release candidate. Direct Mac reads, FAT consistency and
-8.3 alias readbacks on ELKS have now passed. DOS checks of this creation build
-remain pending; the earlier DOS result applies to the metadata-only firmware.
+8.3 alias readbacks on ELKS have now passed. The creation build also passed
+MS-DOS 6.22 alias reads and a bounded legacy write test, described below.
 
 
 ## PPC512 results, 28 October 2026
@@ -127,7 +127,7 @@ remount. SD stayed read-only throughout.
 The screenshot renders actual PPC video memory using its captured BIOS font.
 [Raw capture, native hardware log and readback hashes](screenshots/captures-lfn-create-20261028/)
 are retained for review. The three new fixtures remain on the test drive for
-further DOS verification. A clean reboot is not a power-loss test.
+further testing. A clean reboot is not a power-loss test.
 
 
 ### Direct Mac check
@@ -164,5 +164,30 @@ read/write and SD read-only. Unmount USB before removing it again.
 ![PPC512 long names and 8.3 aliases resolve to the same files](screenshots/20261028-lfn-create-aliases.png)
 
 The Mac did not resolve the short paths during its mounted-file checks; alias
-validation here comes from ELKS on the PPC. This is not yet a DOS test of the
-creation firmware. That compatibility smoke test remains the next check.
+validation in this section comes from ELKS on the PPC. The subsequent DOS
+compatibility check is recorded below.
+
+
+### MS-DOS 6.22 compatibility check
+
+I booted the PPC512 into MS-DOS 6.22 with 4DOS 8.00 and connected through the
+patched COMrade agent. A read of the ROM feature markers confirmed that this
+was the creation-firmware build. DOS listed the USB test directory and nested
+directory through their 8.3 aliases. Full downloads of all three files matched
+the expected bytes and the same SHA-256 values seen in ELKS and macOS. A
+read-only enumeration of the HDD's root directory also succeeded.
+
+I then created one fresh temporary file, `G:\LFNCRE~1\DOSRW28.TMP`, after checking
+that it did not exist. A 1,025-byte write, a 513-byte append and a truncate/rewrite
+to 31 bytes each passed full byte comparisons plus DOS-side length/CRC-32 checks.
+I deleted only that temporary file and confirmed it was absent. Full downloads
+of all three retained ELKS-created fixtures still matched their earlier hashes.
+
+![PPC512 MS-DOS 6.22 version and PicoMEM USB alias listings](screenshots/20261028-lfn-create-dos.png)
+
+[Native DOS capture, checksums and operation results](screenshots/captures-lfn-create-20261028/dos/)
+record the evidence. The DOS screen shows the alias listings before the temporary
+write test. This verifies selected legacy file-service operations with the new
+firmware; DOS still uses 8.3 names. It does not provide native DOS LFN support,
+measure runtime stack/interrupt latency, or establish power-loss durability.
+The PPC was left at the DOS prompt with the temporary file removed.

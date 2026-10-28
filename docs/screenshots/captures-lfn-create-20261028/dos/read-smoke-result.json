@@ -1,0 +1,74 @@
+{
+  "files": [
+    {
+      "path": "G:\\LFNCRE~1\\CREATE~1.TXT",
+      "bytes": 3073,
+      "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+    },
+    {
+      "path": "G:\\LFNCRE~1\\NESTED~1\\CHILDW~1.TXT",
+      "bytes": 1025,
+      "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+    },
+    {
+      "path": "G:\\LFNCRE~1\\N26-XX~1.TXT",
+      "bytes": 73,
+      "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+    }
+  ],
+  "hello": {
+    "proto_ver": 1,
+    "cols": 80,
+    "rows": 25,
+    "chunk_max": 1024,
+    "machine": "COMRADE/3011ad0d-dirty.20261028133643"
+  },
+  "creation_rom_verified": true,
+  "usb_directory": [
+    {
+      "name": "CREATE~1.TXT",
+      "size": 3073,
+      "attr": 32,
+      "is_dir": false,
+      "is_hidden": false,
+      "is_system": false,
+      "is_readonly": false,
+      "mtime": "2026-01-01 00:00:00"
+    },
+    {
+      "name": "NESTED~1",
+      "size": 0,
+      "attr": 16,
+      "is_dir": true,
+      "is_hidden": false,
+      "is_system": false,
+      "is_readonly": false,
+      "mtime": "2026-01-01 00:00:00"
+    },
+    {
+      "name": "N26-XX~1.TXT",
+      "size": 73,
+      "attr": 32,
+      "is_dir": false,
+      "is_hidden": false,
+      "is_system": false,
+      "is_readonly": false,
+      "mtime": "2026-01-01 00:00:00"
+    }
+  ],
+  "nested_directory": [
+    {
+      "name": "CHILDW~1.TXT",
+      "size": 1025,
+      "attr": 32,
+      "is_dir": false,
+      "is_hidden": false,
+      "is_system": false,
+      "is_readonly": false,
+      "mtime": "2026-01-01 00:00:00"
+    }
+  ],
+  "hdd_root_entry_count": 22,
+  "screen_text": "g:\\>ver\n\n4DOS 8.00   MS-DOS 6.22\n\ng:\\>dir g:\\lfncre~1 /w\n\n Volume in drive G is PICOMEM\n Directory of  g:\\lfncre~1\\*.*\n\n[NESTED~1]      create~1.txt    n26-xx~1.txt\n          3,146 bytes in 2 files and 1 dir    65,536 bytes allocated\n    206,602,240 bytes free\n\ng:\\>dir g:\\lfncre~1\\nested~1 /w\n\n Volume in drive G is PICOMEM\n Directory of  g:\\lfncre~1\\nested~1\\*.*\n\nchildw~1.txt\n          1,025 bytes in 1 file and 0 dirs    32,768 bytes allocated\n    206,602,240 bytes free\n\ng:\\>\n\n",
+  "success": true
+}

@@ -1,0 +1,26 @@
+{
+  "path": "G:\\LFNCRE~1\\DOSRW28.TMP",
+  "checks": [
+    {
+      "operation": "create/write/read",
+      "bytes": 1025,
+      "sha256": "e837c4068a7692f69523283d856d869c1ef736a25cfff132acbb668d738d731f",
+      "crc32": 3934898600
+    },
+    {
+      "operation": "append/read",
+      "bytes": 1538,
+      "sha256": "fd3dff9af41501e5d1b5e6b2d8623ab8d3844fe0cfa8170c4f58c2c2d7b70e9a",
+      "crc32": 2309448895
+    },
+    {
+      "operation": "truncate/rewrite/read",
+      "bytes": 31,
+      "sha256": "0ae55cf20235764e65906d3b1b2d6ac0d56d603380b1728d34007601fcce51c2",
+      "crc32": 4028427607
+    }
+  ],
+  "temporary_file_deleted": true,
+  "retained_fixtures_unchanged": true,
+  "success": true
+}

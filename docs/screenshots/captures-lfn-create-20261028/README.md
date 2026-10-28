@@ -18,5 +18,6 @@ entries through macOS after moving the unmounted stick. The FAT check in
 `mac-verify-volume.log` ran `fsck_msdos -n` and returned 0. The Mac-to-PPC roundtrip manifest and `ppc-alias-readback.json` record full-byte
 matches through all three long paths and their short aliases after returning the
 stick. The second native screen shows both paths resolving to the same ELKS
-file. DOS verification of this creation build remains pending. No full firmware backup, host credentials or personal host paths are
+file. The `dos/` evidence records successful DOS alias reads and a bounded
+legacy create/append/truncate/delete test with preserved fixture hashes. No full firmware backup, host credentials or personal host paths are
 included here. The protected recovery copies remain local.

@@ -1,0 +1,25 @@
+g:\>ver
+
+4DOS 8.00   MS-DOS 6.22
+
+g:\>dir g:\lfncre~1 /w
+
+ Volume in drive G is PICOMEM
+ Directory of  g:\lfncre~1\*.*
+
+[NESTED~1]      create~1.txt    n26-xx~1.txt
+          3,146 bytes in 2 files and 1 dir    65,536 bytes allocated
+    206,602,240 bytes free
+
+g:\>dir g:\lfncre~1\nested~1 /w
+
+ Volume in drive G is PICOMEM
+ Directory of  g:\lfncre~1\nested~1\*.*
+
+childw~1.txt
+          1,025 bytes in 1 file and 0 dirs    32,768 bytes allocated
+    206,602,240 bytes free
+
+g:\>
+
+

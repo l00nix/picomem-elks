@@ -1,0 +1,9 @@
+{
+  "source": "Actual PPC512 DOS text cells obtained from the patched COMrade screen-read command; no synthesized screen output",
+  "video_bytes": 4000,
+  "video_sha256": "e0a3bb98aeb33d87509e4fa26db139362cde952c31b11b080b48079ddb59c682",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "png_sha256": "1c8800aa5147ea784e8e95bce491ea5649c144be5795800558e43cd64447a1b0",
+  "firmware_uf2_sha256": "e8fd1de4f89bec53920a3d9491e0513486d202973f01ecf3d7f5615eef3d80a8",
+  "rom_markers_sha256": "1d7afaef7d96d08289a082f6375d06db11d037e3265b9c122804e78bc2a53f2c"
+}

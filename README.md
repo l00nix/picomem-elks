@@ -39,8 +39,9 @@ on a separate branch. It has passed PPC512 long-name file/directory creation,
 write and deletion tests, with independent byte checks after remount and a normal
 reboot. Direct Mac reads and a FAT consistency check also passed. It requires
 additional experimental firmware. Long-name and 8.3 alias readbacks passed after
-the Mac-to-PPC roundtrip. DOS checks of this build remain pending; this is not a
-release candidate.
+the Mac-to-PPC roundtrip. MS-DOS 6.22 alias reads and a temporary legacy
+create/write/append/truncate/delete test also passed. This remains experimental;
+rename and runtime measurements are still outstanding.
 
 ## Commands
 
