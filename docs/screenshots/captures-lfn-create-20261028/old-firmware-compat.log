@@ -1,0 +1,18 @@
+uname -a; cmp /linux /root/lincr28 || exit 1; pmmount --rw usb /mnt/usb || exit 1; pmmount sd /mnt/sd || exit 1; mount; /root/pmlfnnew "/mnt/usb/LFN Create 28"; probe_status=$?; echo EXPECTED_REFUSAL_STATUS=$probe_status; test "$probe_status" = 1 || exit 1; dd if=/dev/kmem of=/root/lcrrom bs=16 skip=54268 count=2; ls -l "/mnt/usb/LFN271A/Name With Spaces.txt"
+# /bin/sh /root/m6f6edc221d
+ELKS elks 0.9.2 commit e7a56a43 28 Oct 2026 16:16:24 +0000 ibmpc i8086
+Files are identical
+Mounted USB read/write at /mnt/usb
+Mounted read-only at /mnt/sd
+/dev/hda  (minix) blocks  65535 free  52475 mount /
+picomem-usb (picofs, rw) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+FAIL mkdir NEW directory (must not already exist): File name too long 
+EXPECTED_REFUSAL_STATUS=1
+2+0 records in
+2+0 records out
+32 bytes (0+ KiB) copied
+-rw-------  1 root     root           61  Jan  1  1970 Name With Spaces.txt
+# echo PMDONE_61c20d2f0f89=$?
+PMDONE_61c20d2f0f89=0
+

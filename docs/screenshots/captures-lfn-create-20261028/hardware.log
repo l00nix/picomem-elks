@@ -1,0 +1,68 @@
+# /bin/sh /root/mf243878f0d
+Files are identical
+/dev/hda  (minix) blocks  65535 free  52474 mount /
+2+0 records in
+2+0 records out
+32 bytes (0+ KiB) copied
+# echo PMDONE_9042b5f4ad94=$?
+PMDONE_9042b5f4ad94=0
+# # /bin/sh /root/m2ad338b7ee
+Mounted USB read/write at /mnt/usb
+Mounted read-only at /mnt/sd
+/dev/hda  (minix) blocks  65535 free  52474 mount /
+picomem-usb (picofs, rw) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+Files are identical
+Files are identical
+Files are identical
+PASS create/append/overwrite: 3073 bytes, FNV1a=fcd3aede
+PASS long create/mkdir/nested/boundary; truncate/delete and guards
+Retained /mnt/usb/LFN Create 28/Created Long Filename.txt for host/remount readback
+# echo PMDONE_e520cddc4584=$?
+PMDONE_e520cddc4584=0
+# # /bin/sh /root/m298d8713dc
+Unmounted /mnt/usb
+Mounted USB read/write at /mnt/usb
+/dev/hda  (minix) blocks  65535 free  52474 mount /
+picomem-usb (picofs, rw) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+Created Long Filename.txt   N26-xxxxxxxxxxxxxxxxxx.txt  
+Nested Long Directory       
+Files are identical
+Files are identical
+Files are identical
+# echo PMDONE_bbb9edcfad0e=$?
+PMDONE_bbb9edcfad0e=0
+# # /bin/sh /root/mf900966d2a
+Unmounted /mnt/usb
+Unmounted /mnt/sd
+/dev/hda  (minix) blocks  65535 free  52474 mount /
+# echo PMDONE_b4b1a2bdcc06=$?
+PMDONE_b4b1a2bdcc06=0
+# # /bin/sh /root/m33cf025d2a
+ELKS elks 0.9.2 commit e7a56a43 28 Oct 2026 16:16:24 +0000 ibmpc i8086
+Files are identical
+Mounted USB read/write at /mnt/usb
+Mounted read-only at /mnt/sd
+/dev/hda  (minix) blocks  65535 free  52474 mount /
+picomem-usb (picofs, rw) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+Created Long Filename.txt   N26-xxxxxxxxxxxxxxxxxx.txt  
+Nested Long Directory       
+# echo PMDONE_b0a00b98639e=$?
+PMDONE_b0a00b98639e=0
+# /bin/sh /root/ma5478f84b2
+250+0 records in
+250+0 records out
+4000 bytes (3+ KiB) copied
+# echo PMDONE_ced059752fb2=$?
+PMDONE_ced059752fb2=0
+# /bin/sh /root/m64c8a55797
+Files are identical
+Files are identical
+Files are identical
+Unmounted /mnt/usb
+/dev/hda  (minix) blocks  65535 free  52474 mount /
+picomem-sd (picofs, ro) mount /mnt/sd
+# echo PMDONE_367042af3fb5=$?
+PMDONE_367042af3fb5=0

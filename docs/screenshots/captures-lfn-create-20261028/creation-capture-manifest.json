@@ -1,0 +1,6 @@
+{
+  "source": "Actual PPC512 B800:0000 video memory; native shell commands",
+  "video_sha256": "f05ef4c85e6685464e6d636c0ef1a51d0e1e3a5f12507febf9ac816b3a7d67d0",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "png_sha256": "3977cbfe2dc792345affc7a100f0af4b9c78bd58ba4ec9629897ebcaa7a21426"
+}

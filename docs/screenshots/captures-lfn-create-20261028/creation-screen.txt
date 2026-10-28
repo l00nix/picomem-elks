@@ -1,0 +1,25 @@
+PicoMEM / ELKS: long-name USB creation and writes
+# mount
+/dev/hda  (minix) blocks  65535 free  52472 mount /
+picomem-usb (picofs, rw) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+
+# cd "/mnt/usb/LFN Create 28"
+# ls
+Created Long Filename.txt   N26-xxxxxxxxxxxxxxxxxx.txt
+Nested Long Directory
+# wc -c < "Created Long Filename.txt"
+   3073
+# wc -c < "N26-xxxxxxxxxxxxxxxxxx.txt"
+     73
+# cd "Nested Long Directory"
+# ls
+Child With Spaces.txt
+# wc -c < "Child With Spaces.txt"
+   1025
+
+
+
+
+
+

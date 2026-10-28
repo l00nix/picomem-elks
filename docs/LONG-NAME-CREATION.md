@@ -2,8 +2,9 @@
 
 I am developing the next USB filesystem milestone as l00nix, with AI coding
 assistance. The `codex/long-name-create` branch adds optional creation of files
-and directories with names up to 26 ASCII bytes. This is a host-tested candidate,
-not a release candidate or a PPC512 creation result. The earlier existing-file
+and directories with names up to 26 ASCII bytes. The paired kernel and firmware have now passed PPC512 creation and write
+tests, including full-byte readback after remount and a normal reboot. This
+remains an experimental candidate, not a release candidate. The earlier existing-file
 write tests remain documented [separately](HARDWARE-LFN-RW-20261028.md).
 
 ## What changes
@@ -88,5 +89,41 @@ are build-fit figures, not runtime stack/heap measurements.
    then confirm DOS alias access. Keep SD read-only throughout.
 
 Rename and measured interrupt/service latency remain later work before a
-broader read/write release candidate. Hardware test results will be added only
-after they actually pass.
+broader read/write release candidate. Direct Mac filesystem checks and DOS checks of this creation build remain
+pending; the earlier DOS result applies to the metadata-only firmware.
+
+
+## PPC512 results, 28 October 2026
+
+I installed the candidate kernel and first booted it with the older metadata-only
+firmware. Normal mounts and existing file reads passed; a request to create a
+long-named directory failed without creating it. I then saved all 16 MiB of the
+actual PicoMEM flash and verified the backup against the device. The creation
+firmware passed flash readback verification, and ELKS saw both exact ROM feature
+descriptors after boot.
+
+With USB mounted read/write and SD read-only, `pmlfnnew` created a fresh
+`LFN Create 28` directory. Exclusive file creation, append, overwrite across a
+transfer boundary, nested directory/file creation and a 26-byte basename passed.
+The probe also verified truncate-to-empty, file deletion, empty-directory removal,
+refusal to unlink an open file, duplicate-create refusal and directory-cache
+contents after deletion. The nonempty parent was retained.
+
+| Retained file beneath `LFN Create 28` | Bytes |
+| --- | ---: |
+| `Created Long Filename.txt` | 3,073 |
+| `Nested Long Directory/Child With Spaces.txt` | 1,025 |
+| `N26-xxxxxxxxxxxxxxxxxx.txt` | 73 |
+
+Independent FTP downloads to the Mac matched every expected byte immediately,
+after unmount/remount, and after a clean ELKS reboot. These downloads exercise
+the ELKS/PicoMEM file path; they are not yet a direct Mac FAT filesystem check.
+The original three test files matched their backups before creation and after
+remount. SD stayed read-only throughout.
+
+![PPC512 native mount and newly created long-name files](screenshots/20261028-lfn-create.png)
+
+The screenshot renders actual PPC video memory using its captured BIOS font.
+[Raw capture, native hardware log and readback hashes](screenshots/captures-lfn-create-20261028/)
+are retained for review. The three new fixtures remain on the test drive for
+independent Mac and DOS verification. A clean reboot is not a power-loss test.

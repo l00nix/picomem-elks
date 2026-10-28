@@ -24,7 +24,8 @@ PPC512 write tests, including independent readback after remount and normal
 reboot. [Hardware results and screenshot](docs/HARDWARE-USB-RW-20261025.md).
 The experimental paired firmware/kernel now supports reading and updating
 existing long-named USB files on the PPC512, including 26-character ASCII names
-and nested paths. New-name creation remains 8.3-only; rename is not implemented.
+and nested paths. The separate creation candidate below also creates long names;
+rename is not implemented.
 Unsupported non-ASCII aliases are omitted with a diagnostic and protective
 mutation restrictions. [Results, limitations and screenshots](docs/LONG-FILENAMES.md).
 
@@ -34,8 +35,10 @@ included. The [long-filename experiment](docs/LONG-FILENAMES.md) describes the
 firmware extension I would like to discuss with FreddyV.
 
 The next [long-name creation candidate](docs/LONG-NAME-CREATION.md) is developed
-on a separate branch. It has host/FAT-image and build coverage; hardware creation
-has not yet been tested. It requires additional experimental firmware.
+on a separate branch. It has passed PPC512 long-name file/directory creation,
+write and deletion tests, with independent byte checks after remount and a normal
+reboot. It requires additional experimental firmware. Direct Mac FAT and DOS
+checks of this build remain pending; this is not a release candidate.
 
 ## Commands
 
