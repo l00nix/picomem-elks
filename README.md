@@ -38,8 +38,9 @@ The next [long-name creation candidate](docs/LONG-NAME-CREATION.md) is developed
 on a separate branch. It has passed PPC512 long-name file/directory creation,
 write and deletion tests, with independent byte checks after remount and a normal
 reboot. Direct Mac reads and a FAT consistency check also passed. It requires
-additional experimental firmware. Short-alias and DOS checks of this build remain
-pending; this is not a release candidate.
+additional experimental firmware. Long-name and 8.3 alias readbacks passed after
+the Mac-to-PPC roundtrip. DOS checks of this build remain pending; this is not a
+release candidate.
 
 ## Commands
 

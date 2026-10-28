@@ -89,9 +89,9 @@ are build-fit figures, not runtime stack/heap measurements.
    then confirm DOS alias access. Keep SD read-only throughout.
 
 Rename and measured interrupt/service latency remain later work before a
-broader read/write release candidate. Direct Mac reads and a FAT consistency check have now passed. Short-alias access
-and DOS checks of this creation build remain pending; the earlier DOS result
-applies to the metadata-only firmware.
+broader read/write release candidate. Direct Mac reads, FAT consistency and
+8.3 alias readbacks on ELKS have now passed. DOS checks of this creation build
+remain pending; the earlier DOS result applies to the metadata-only firmware.
 
 
 ## PPC512 results, 28 October 2026
@@ -118,7 +118,7 @@ contents after deletion. The nonempty parent was retained.
 
 Independent FTP downloads to the Mac matched every expected byte immediately,
 after unmount/remount, and after a clean ELKS reboot. These downloads exercise
-the ELKS/PicoMEM file path; they are not yet a direct Mac FAT filesystem check.
+the ELKS/PicoMEM file path. The direct Mac FAT check is described below.
 The original three test files matched their backups before creation and after
 remount. SD stayed read-only throughout.
 
@@ -127,7 +127,7 @@ remount. SD stayed read-only throughout.
 The screenshot renders actual PPC video memory using its captured BIOS font.
 [Raw capture, native hardware log and readback hashes](screenshots/captures-lfn-create-20261028/)
 are retained for review. The three new fixtures remain on the test drive for
-independent Mac and DOS verification. A clean reboot is not a power-loss test.
+further DOS verification. A clean reboot is not a power-loss test.
 
 
 ### Direct Mac check
@@ -143,6 +143,26 @@ filesystem exit code 0. No repair was requested. Spotlight had blocked the first
 verification attempt; the normal unmount resolved that. This checks FAT consistency
 after the clean ELKS unmount, not sudden-power-loss behavior.
 
-The Mac did not resolve the candidate short paths I tried, so this does not yet
-establish 8.3 alias access. That remains a separate PPC/DOS check. The stick was
-safely ejected for return to PicoMEM.
+### Return to PicoMEM and alias access
+
+After safely ejecting the stick from the Mac and reconnecting it to PicoMEM,
+I remounted USB read/write without rebooting ELKS. All three files again matched
+every expected byte through their long paths and through these short paths:
+
+| Long path beneath `LFN Create 28` | Full alias path beneath `/mnt/usb` |
+| --- | --- |
+| `Created Long Filename.txt` | `LFNCRE~1/CREATE~1.TXT` |
+| `Nested Long Directory/Child With Spaces.txt` | `LFNCRE~1/NESTED~1/CHILDW~1.TXT` |
+| `N26-xxxxxxxxxxxxxxxxxx.txt` | `LFNCRE~1/N26-XX~1.TXT` |
+
+The native `cmp` command recognized each long/short pair as the same file,
+printing “Files are links to each other.” This is ELKS resolving both names to
+one file; separate FTP downloads additionally checked the complete bytes.
+The original fixture files still match their backups. USB remains mounted
+read/write and SD read-only. Unmount USB before removing it again.
+
+![PPC512 long names and 8.3 aliases resolve to the same files](screenshots/20261028-lfn-create-aliases.png)
+
+The Mac did not resolve the short paths during its mounted-file checks; alias
+validation here comes from ELKS on the PPC. This is not yet a DOS test of the
+creation firmware. That compatibility smoke test remains the next check.
