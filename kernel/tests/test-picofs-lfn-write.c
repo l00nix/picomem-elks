@@ -13,7 +13,11 @@ static void mount_lfn(void)
 {assert(read_super_pm(&usb,NULL,0));assert(lfn_calls);}
 static void absent(struct inode *d,const char *name)
 {struct inode *i=NULL;d->i_count++;assert(lookup(d,name,strlen(name),&i)==-ENOENT);}
+#ifdef CONFIG_FS_PICOMEM_LFN_CREATE
+int existing_lfn_write_tests(void)
+#else
 int main(void)
+#endif
 {
     unsigned start=tests,n,j;struct inode *i,*d,*other;struct file f;char data[600],back[600];
     for(j=0;j<sizeof(data);j++)data[j]=(j*31+7)&255;

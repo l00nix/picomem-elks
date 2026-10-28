@@ -1,0 +1,2 @@
+LFN create: bounds, USB-only gate, names, errors, malformed replies, passthrough and 10000 malformed requests passed
+Create adapter: directory bounds, preflight failures, sync/close errors, ambiguous completion, collisions and PSRAM cleanup passed

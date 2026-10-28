@@ -240,3 +240,10 @@ independent verification, and does not restore them automatically. Preserve the
 backup and restore it after checking persistence. The host suite includes 14
 combined LFN/write scenarios, including collision, omission, deletion-cache,
 26-byte remount, SD protection and failed-write handling.
+
+## Next candidate: long-name creation
+
+`CONFIG_FS_PICOMEM_LFN_CREATE` is separately default-off and requires LFN and
+USB-write support. Use `ppc512-create.config` or `remote-build.py --lfn-create`.
+The native `pmlfnnew` probe is included in builds. This candidate has not yet
+been hardware-tested; see the [creation design and test procedure](../docs/LONG-NAME-CREATION.md).

@@ -74,8 +74,10 @@ if 'Experimental paired-firmware long names (RO mounts)' in lfn_text:
     changes[lfn_config] = lfn_text.replace('Experimental paired-firmware long names (RO mounts)',
                                           'Experimental paired-firmware long names')
 edit('elks/fs/config.in', "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n", "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n\n\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n")
+edit('elks/fs/config.in', "\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n", "\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n\n\t    if [ \"$CONFIG_FS_PICOMEM_LFN\" = \"y\" -a \"$CONFIG_FS_PICOMEM_WRITE\" = \"y\" ]; then\n\t        bool 'Experimental paired-firmware USB long-name creation' CONFIG_FS_PICOMEM_LFN_CREATE n\n\t    fi")
 for name in ('mouse-picomem.c','pmmouse.h'):
     changes[root/char/name] = (kit.parent/'mouse'/name).read_text()
+changes[root/'elks/fs/picofs-create.inc'] = (kit/'picofs-create.inc').read_text()
 changes[root/'elks/fs/picofs.c'] = (kit/'picofs.c').read_text()
 changes[root/'elks/fs/picofs-lfn.inc'] = (kit/'picofs-lfn.inc').read_text()
 changes[root/'elks/fs/picofs-write.inc'] = (kit/'picofs-write.inc').read_text()

@@ -21,7 +21,7 @@ mkdir -p "$kit/build"
 cp elks/arch/i86/boot/Image "$kit/build/linux"
 cp elks/arch/i86/boot/system.map "$kit/build/system.map"
 cp .config "$kit/build/kernel.config"
-for app in pmmount pmfstest pmrwtest pmlfnrw; do
+for app in pmmount pmfstest pmrwtest pmlfnrw pmlfnnew; do
   ia16-elf-gcc -march=i8086 -mtune=i8086 -mcmodel=small -melks-libc \
     -mno-segment-relocation-stuff -Os -Wall -Wextra \
     -maout-heap=1024 -maout-stack=2048 "$kit/$app.c" -o "$kit/build/$app"

@@ -83,7 +83,7 @@ static unsigned FARPROC find_child(struct pm_volume *v,unsigned parent,char *nam
         if (v->nodes[j].name[0] && v->nodes[j].parent==parent &&
             (!strcmp(v->nodes[j].name,name)
 #ifdef CONFIG_FS_PICOMEM_LFN
-             || (v->lfn && v->lfn[j][0] && lfn_equal(v->lfn[j],name))
+             || (v->lfn && (lfn_equal(v->nodes[j].name,name) || (v->lfn[j][0] && lfn_equal(v->lfn[j],name))))
 #endif
             )) return j;
     return 0;
@@ -95,10 +95,14 @@ static int FARPROC create_inner(struct inode *dir,const char *name,size_t len,
     struct pm_node *node;
     struct inode *i=NULL;
     unsigned parent=(unsigned)dir->i_ino-1,index,fid;
-    char part[13];
+    char part[27];
     int r, mutation;
     *result=NULL;
-    r=new_name(part,name,len);if (r) return r;
+#ifdef CONFIG_FS_PICOMEM_LFN_CREATE
+    if(v->can_create)r=lfn_create_name(part,name,len);else
+#endif
+    r=new_name(part,name,len);
+    if (r) return r;
     r=begin_write(dir);if (r) return r;
     r=scan(v,parent);if (r) goto done;
     if(v->nodes[parent].scanned!=1) {r=-EACCES;goto done;}
@@ -108,7 +112,32 @@ static int FARPROC create_inner(struct inode *dir,const char *name,size_t len,
 #ifdef CONFIG_FS_PICOMEM_LFN
     if(v->lfn)v->lfn[index][0]=0;
 #endif
-    strcpy(node->name,part);node->parent=parent;node->attr=directory?16:32;
+    node->parent=parent;node->attr=directory?16:32;
+#ifdef CONFIG_FS_PICOMEM_LFN_CREATE
+    if(v->can_create) {
+        /* All local reservations happen before the one-shot mutation. */
+        i=iget(dir->i_sb,index+1);if(!i){r=-ENOMEM;goto rollback;}
+        read_inode(i);
+        r=lfn_create_new(v,parent,part,directory,node->name);if(r)goto rollback;
+        /* A conflicting returned alias makes completion ambiguous. */
+        {
+            unsigned k;
+            for(k=1;k<index;k++)if(v->nodes[k].name[0]&&v->nodes[k].parent==parent&&
+               (lfn_equal(v->nodes[k].name,node->name)||
+                (v->lfn[k][0]&&lfn_equal(v->lfn[k],node->name)))) {
+                r=lfn_bad();goto rollback;
+            }
+        }
+        r=makepath(v,index);if(r){r=lfn_bad();goto rollback;}
+        r=attr_rw();
+        if(r<0||dword(packet+64)||packet[68]!=(directory?16:32)) {
+            r=lfn_bad();goto rollback;
+        }
+        strcpy(v->lfn[index],part);if(directory)node->scanned=1;
+        *result=i;return end_write(0);
+    }
+#endif
+    strcpy(node->name,part);
     r=makepath(v,index);if (r) goto rollback;
     r=attr_rw();
     if (r>=0) {r=-EEXIST;goto rollback;}

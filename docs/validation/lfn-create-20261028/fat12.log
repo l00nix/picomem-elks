@@ -1,0 +1,14 @@
+Real FatFs create: file/mkdir, 26-byte name, nested alias paths, collisions without overwrite, SD refusal, independent cursor and remount passed (16 disk writes)
+ Volume in drive : has no label
+ Volume Serial Number is 7968-BF2C
+Directory for ::/Created Long Directory
+
+.            <DIR>     2026-01-01   0:00 
+..           <DIR>     2026-01-01   0:00 
+CREATE~1 TXT        21 2026-01-01   0:00  Created Long Filename.txt
+N26-XX~1 TXT         0 2026-01-01   0:00  N26-xxxxxxxxxxxxxxxxxx.txt
+NESTED~1     <DIR>     2026-01-01   0:00  Nested Long Directory
+        5 files                  21 bytes
+                          1 453 056 bytes free
+
+Independent mtools long-name lookup and payload check passed

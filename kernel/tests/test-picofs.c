@@ -43,6 +43,9 @@ static void reply_entry(unsigned char *p,unsigned index)
 #ifdef PICOLFN_TEST
 #include "lfn-fixture.h"
 #endif
+#ifdef CONFIG_FS_PICOMEM_LFN_CREATE
+#include "create-fixture.h"
+#endif
 static void respond(void)
 {
     unsigned char *p=mmio+BASE;
@@ -50,6 +53,9 @@ static void respond(void)
     unsigned long offset;
     assert(!irq_enabled);
     drv=p[58];assert(drv==18||drv==20);
+#ifdef CONFIG_FS_PICOMEM_LFN_CREATE
+    if(cmd==0x71){respond_create();return;}
+#endif
 #ifdef PICOLFN_TEST
     if(cmd==0x70) {respond_lfn();return;}
 #endif

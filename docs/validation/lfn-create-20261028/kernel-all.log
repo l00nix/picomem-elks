@@ -1,0 +1,9 @@
+picofs: 71 scenarios passed
+30 driver scenarios; 524288 movement/button combinations passed
+picofs: 71 scenarios passed
+picofs USB writes: 16 scenarios passed
+picofs: 71 scenarios passed
+picofs LFN: 35 scenarios passed
+picofs LFN writes: 14 scenarios passed
+picofs LFN writes: 14 scenarios passed
+picofs long-name creation: 21 scenarios passed

@@ -33,6 +33,10 @@ The project credits, GPL license, tested binaries and hardware evidence are
 included. The [long-filename experiment](docs/LONG-FILENAMES.md) describes the
 firmware extension I would like to discuss with FreddyV.
 
+The next [long-name creation candidate](docs/LONG-NAME-CREATION.md) is developed
+on a separate branch. It has host/FAT-image and build coverage; hardware creation
+has not yet been tested. It requires additional experimental firmware.
+
 ## Commands
 
 | Command | Current function |
@@ -43,6 +47,7 @@ firmware extension I would like to discuss with FreddyV.
 | `pmmem` | Queries the card's active memory types and compares them with the configured map. `--probe` checks just the BIOS block first. No RAM write probes or remapping. |
 | `pmmount` | Mounts PicoMEM USB or SD read-only; `--rw usb` explicitly enables experimental USB writes; `-u` unmounts. Requires the optional PicoMEM kernel. |
 | `mount` (updated ELKS utility) | Lists mounted filesystems, including PicoMEM USB/SD mountpoints and their `ro`/`rw` status. Supplied with the kernel build. |
+| `pmlfnnew NEWDIR` | Candidate-only test of long-name creation/mkdir and writes; creates a fresh fixture directory and retains files for verification. |
 | `pmlfnrw FILE BACKUP` | Fixture-only test of existing long-name USB append/overwrite/readback; requires a matching Minix backup and leaves test contents for verification/restoration. |
 
 `pmconfig`, `pmdump`, `pmstat` and `pmmem` select modes of one executable.

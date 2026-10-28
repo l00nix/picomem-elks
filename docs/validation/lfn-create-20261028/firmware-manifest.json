@@ -1,0 +1,44 @@
+{
+  "default": {
+    "uf2": {
+      "bytes": 9593856,
+      "sha256": "284ffee5d12493a444ac287edbf13992a99ab5a37e2e4f3123b3576a07e0ec01"
+    },
+    "elf": {
+      "bytes": 8143864,
+      "sha256": "8e3b6d63d66ff8d68ee0bcccae6e05957df68010c3342ab89319d54db11184f8"
+    },
+    "rom": {
+      "bytes": 16384,
+      "sha256": "c63ff8fe9a34f43138e55c0c70cab5fe12fe960c9f156363706d2548d4a62c6f"
+    }
+  },
+  "lfn": {
+    "uf2": {
+      "bytes": 9598464,
+      "sha256": "e60d8a8a3067f45ff8dccd7b2209156fe0fe7712087ebca4bb72742c4f5d133f"
+    },
+    "elf": {
+      "bytes": 8177132,
+      "sha256": "795a523f9c9a87fe1cff75f0bf07806771ac8706e15ccda8c366b8666ddb2cdb"
+    },
+    "rom": {
+      "bytes": 16384,
+      "sha256": "1bddf0d6995a526689ce9bd083a3b1b738a0aec0bc98db369bbf8e7a60d8d41f"
+    }
+  },
+  "create": {
+    "uf2": {
+      "bytes": 9601536,
+      "sha256": "e8fd1de4f89bec53920a3d9491e0513486d202973f01ecf3d7f5615eef3d80a8"
+    },
+    "elf": {
+      "bytes": 8191372,
+      "sha256": "22b90dfd594a5cca813709430b34239eab1432ca7e34cbb0d1a67e072341f631"
+    },
+    "rom": {
+      "bytes": 16384,
+      "sha256": "05ddd7644c76d4ab2595bea0208d920a1f14570e4b351fe19b30dab3e010d137"
+    }
+  }
+}

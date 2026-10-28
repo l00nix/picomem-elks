@@ -1,0 +1,4 @@
+LFN: 498 checks + 10000 malformed requests passed
+LFN: 498 checks + 10000 malformed requests passed
+DFS dispatcher: legacy passthrough, bounds, framing and real adapter passed
+DFS dispatcher: 692 checks
