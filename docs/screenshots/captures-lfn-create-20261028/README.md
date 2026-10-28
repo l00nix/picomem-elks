@@ -12,6 +12,8 @@ descriptors observed from ELKS after flashing. The three readback manifests
 record independent host comparisons of the complete expected payloads, downloaded
 through ELKS immediately, after unmount/remount and after normal reboot.
 
-Direct Mac FAT/alias checks and DOS verification of this creation build are still
-pending. No full firmware backup, host credentials or personal host paths are
+`direct-mac-readback.json` records matching full contents and exact directory
+entries through macOS after moving the unmounted stick. The FAT check in
+`mac-verify-volume.log` ran `fsck_msdos -n` and returned 0. Short-alias access and
+DOS verification of this creation build remain pending. No full firmware backup, host credentials or personal host paths are
 included here. The protected recovery copies remain local.

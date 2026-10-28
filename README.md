@@ -37,8 +37,9 @@ firmware extension I would like to discuss with FreddyV.
 The next [long-name creation candidate](docs/LONG-NAME-CREATION.md) is developed
 on a separate branch. It has passed PPC512 long-name file/directory creation,
 write and deletion tests, with independent byte checks after remount and a normal
-reboot. It requires additional experimental firmware. Direct Mac FAT and DOS
-checks of this build remain pending; this is not a release candidate.
+reboot. Direct Mac reads and a FAT consistency check also passed. It requires
+additional experimental firmware. Short-alias and DOS checks of this build remain
+pending; this is not a release candidate.
 
 ## Commands
 

@@ -1,0 +1,21 @@
+{
+  "files": [
+    {
+      "name": "Created Long Filename.txt",
+      "bytes": 3073,
+      "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+    },
+    {
+      "name": "Nested Long Directory/Child With Spaces.txt",
+      "bytes": 1025,
+      "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+    },
+    {
+      "name": "N26-xxxxxxxxxxxxxxxxxx.txt",
+      "bytes": 73,
+      "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+    }
+  ],
+  "directory_entries_exact": true,
+  "original_fixture_hashes_match": true
+}

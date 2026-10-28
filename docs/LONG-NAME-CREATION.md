@@ -89,8 +89,9 @@ are build-fit figures, not runtime stack/heap measurements.
    then confirm DOS alias access. Keep SD read-only throughout.
 
 Rename and measured interrupt/service latency remain later work before a
-broader read/write release candidate. Direct Mac filesystem checks and DOS checks of this creation build remain
-pending; the earlier DOS result applies to the metadata-only firmware.
+broader read/write release candidate. Direct Mac reads and a FAT consistency check have now passed. Short-alias access
+and DOS checks of this creation build remain pending; the earlier DOS result
+applies to the metadata-only firmware.
 
 
 ## PPC512 results, 28 October 2026
@@ -127,3 +128,21 @@ The screenshot renders actual PPC video memory using its captured BIOS font.
 [Raw capture, native hardware log and readback hashes](screenshots/captures-lfn-create-20261028/)
 are retained for review. The three new fixtures remain on the test drive for
 independent Mac and DOS verification. A clean reboot is not a power-loss test.
+
+
+### Direct Mac check
+
+After unmounting USB in ELKS, I moved the Kingston to the Mac. macOS exposed the
+exact three expected names in `LFN Create 28` and the one expected nested file;
+the deleted temporary entries were absent. Full byte comparisons of all three
+new files matched the same expected patterns and SHA-256 values. The original
+three fixtures also matched their pre-test hashes.
+
+After a normal unmount, `diskutil verifyVolume` ran `fsck_msdos -n` and returned
+filesystem exit code 0. No repair was requested. Spotlight had blocked the first
+verification attempt; the normal unmount resolved that. This checks FAT consistency
+after the clean ELKS unmount, not sudden-power-loss behavior.
+
+The Mac did not resolve the candidate short paths I tried, so this does not yet
+establish 8.3 alias access. That remains a separate PPC/DOS check. The stick was
+safely ejected for return to PicoMEM.

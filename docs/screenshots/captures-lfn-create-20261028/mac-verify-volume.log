@@ -1,0 +1,12 @@
+Started file system verification on disk4s2 (PATCHSTICK)
+Verifying file system
+Volume is already unmounted
+Performing fsck_msdos -n /dev/rdisk4s2
+** /dev/rdisk4s2
+** Phase 1 - Preparing FAT
+** Phase 2 - Checking Directories
+** Phase 3 - Checking for Orphan Clusters
+Warning: 831 files, 201764 KiB free (403529 clusters)
+File system check exit code is 0
+Restoring the original state found as unmounted
+Finished file system verification on disk4s2 (PATCHSTICK)
