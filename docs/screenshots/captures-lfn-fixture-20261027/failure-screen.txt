@@ -1,0 +1,25 @@
+PicoMEM / ELKS - controlled LFN test, 27 October 2026
+# mount
+/dev/hda  (minix) blocks  65535 free  53128 mount /
+picomem-usb (picofs, ro) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+# ls -ld /mnt/usb/LFN271A
+dr-x------  1 root     root            0  Jan  1  1970 LFN271A
+# cat /mnt/usb/LFN271A/CONTROL.TXT
+/mnt/usb/LFN271A/CONTROL.TXT: I/O error
+# cat /mnt/usb/patchstick.sh > /dev/null
+Existing file read status: 0
+# pmmount -u /mnt/usb
+Unmounted /mnt/usb
+# mount
+/dev/hda  (minix) blocks  65535 free  53128 mount /
+picomem-sd (picofs, ro) mount /mnt/sd
+
+
+
+
+
+
+
+
+

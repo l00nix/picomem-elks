@@ -1,0 +1,25 @@
+PicoMEM / ELKS - nested reads and Unicode fallback
+# mount
+/dev/hda  (minix) blocks  65535 free  53134 mount /
+picomem-usb (picofs, ro) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+# cd '/mnt/usb/LFN271A/Nested Long Folder/Deeper Long Folder'
+# cat "Nested Read.txt"
+PicoMEM ELKS LFN fixture LFN271A
+Test ID: 14
+Purpose: two nested long parents
+# ls -l /mnt/usb/LFN271A/UNISAFE
+-r--------  1 root     root           91  Jan  1  1970 UNICOD~2.TXT
+-r--------  1 root     root         4096  Jan  1  1970 _UNICO~2.TXT
+# cat /mnt/usb/LFN271A/UNISAFE/UNICOD~2.TXT
+PicoMEM ELKS LFN fixture LFN271A
+Test ID: 15
+Purpose: Unicode name with ASCII alias prefix
+
+
+
+
+
+
+
+

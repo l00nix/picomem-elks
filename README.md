@@ -22,11 +22,14 @@ USB and SD read-only. I have added experimental, opt-in USB writes while keeping
 [new build](dist/kernel-usb-rw-20261025/README.md) has passed host, emulator and
 PPC512 write tests, including independent readback after remount and normal
 reboot. [Hardware results and screenshot](docs/HARDWARE-USB-RW-20261025.md).
-Long filenames remain pending.
+The experimental paired firmware/kernel now passes read-only long-name tests
+on the PPC512, including 26-character names and nested paths. It requires the
+experimental builds; writable mounts retain aliases. A non-ASCII short alias
+can still make its directory unreadable. [Results, limitations and screenshots](docs/LONG-FILENAMES.md).
 
 I published this source snapshot under `l00nix`, with fresh public commit history.
 The project credits, GPL license, tested binaries and hardware evidence are
-included. The [long-filename proposal](docs/LONG-FILENAMES.md) describes the
+included. The [long-filename experiment](docs/LONG-FILENAMES.md) describes the
 firmware extension I would like to discuss with FreddyV.
 
 ## Commands

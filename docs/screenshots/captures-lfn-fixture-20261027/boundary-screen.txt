@@ -1,0 +1,25 @@
+PicoMEM / ELKS - filename boundaries, 27 October 2026
+# mount
+/dev/hda  (minix) blocks  65535 free  53134 mount /
+picomem-usb (picofs, ro) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+# cd /mnt/usb/LFN271A
+# ls
+CONTROL.TXT                 Empty Long Folder
+Mixed Case.txt              N12-xxxx.txt
+N13-xxxxx.txt               N26-xxxxxxxxxxxxxxxxxx.txt
+N27-X~15.TXT                Name With Spaces.txt
+Nested Long Folder          Similar Prefix Alpha.txt
+Similar Prefix Beta.txt     THISN~17.TXT
+UNIBAD                      UNISAFE
+_N26-~14.TXT                _N27-~16.TXT
+_THIS~18.TXT
+
+
+
+
+
+
+
+
+

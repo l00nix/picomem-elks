@@ -1,0 +1,39 @@
+cd /; pmstat --usb; pmmount usb /mnt/usb || exit 1; mount; ls -l /mnt/usb/LFN271A; ls -la /mnt/usb/LFN271A/UNISAFE; ls -l "/mnt/usb/LFN271A/Nested Long Folder"; ls -l "/mnt/usb/LFN271A/Nested Long Folder/Deeper Long Folder"
+# /bin/sh /root/mf742b0f737
+PMSTAT 0.5-dev - USB status query (CMD 61)
+   USB  : 1 device 
+    1: USB Disk 984.0 MB Kingston DataTravelerMini
+Copied 72 bounded bytes; ready after 4 status polls.
+Firmware snapshot; not proof of input events or an ELKS mount.
+No WiFi query, mouse enable, configuration save or remapping.
+Mounted read-only at /mnt/usb
+/dev/hda  (minix) blocks  65535 free  53136 mount /
+picomem-usb (picofs, ro) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+-r--------  1 root     root           68  Jan  1  1970 CONTROL.TXT
+dr-x------  1 root     root            0  Jan  1  1970 Empty Long Folder
+-r--------  1 root     root           65  Jan  1  1970 Mixed Case.txt
+-r--------  1 root     root           76  Jan  1  1970 N12-xxxx.txt
+-r--------  1 root     root           76  Jan  1  1970 N13-xxxxx.txt
+-r--------  1 root     root           75  Jan  1  1970 N26-xxxxxxxxxxxxxxxxxx.txt
+-r--------  1 root     root           82  Jan  1  1970 N27-X~15.TXT
+-r--------  1 root     root           61  Jan  1  1970 Name With Spaces.txt
+dr-x------  1 root     root            0  Jan  1  1970 Nested Long Folder
+-r--------  1 root     root           71  Jan  1  1970 Similar Prefix Alpha.txt
+-r--------  1 root     root           71  Jan  1  1970 Similar Prefix Beta.txt
+-r--------  1 root     root           74  Jan  1  1970 THISN~17.TXT
+dr-x------  1 root     root            0  Jan  1  1970 UNIBAD
+dr-x------  1 root     root            0  Jan  1  1970 UNISAFE
+-r--------  1 root     root         4096  Jan  1  1970 _N26-~14.TXT
+-r--------  1 root     root         4096  Jan  1  1970 _N27-~16.TXT
+-r--------  1 root     root         4096  Jan  1  1970 _THIS~18.TXT
+dr-x------  1 root     root            0  Jan  1  1970 .
+dr-x------  1 root     root            0  Jan  1  1970 ..
+-r--------  1 root     root           91  Jan  1  1970 UNICOD~2.TXT
+-r--------  1 root     root         4096  Jan  1  1970 _UNICO~2.TXT
+-r--------  1 root     root           71  Jan  1  1970 Child With Spaces.txt
+dr-x------  1 root     root            0  Jan  1  1970 Deeper Long Folder
+-r--------  1 root     root           78  Jan  1  1970 Nested Read.txt
+# echo PMDONE_07c89db9ce72=$?
+PMDONE_07c89db9ce72=0
+

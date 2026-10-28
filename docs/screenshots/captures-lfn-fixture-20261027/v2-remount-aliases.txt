@@ -1,0 +1,45 @@
+cd /; pmmount -u /mnt/usb || exit 1; pmmount --rw usb /mnt/usb || exit 1; ls -la /mnt/usb/LFN271A; pmmount -u /mnt/usb || exit 1; pmmount usb /mnt/usb || exit 1; ls -a "/mnt/usb/LFN271A/Empty Long Folder"; mount
+# /bin/sh /root/m8dae0282b7
+Unmounted /mnt/usb
+Mounted USB read/write at /mnt/usb
+drwx------  1 root     root            0  Jan  1  1970 .
+drwx------  1 root     root            0  Jan  1  1970 ..
+-rw-------  1 root     root           68  Jan  1  1970 CONTROL.TXT
+drwx------  1 root     root            0  Jan  1  1970 EMPTYL~3
+-rw-------  1 root     root           71  Jan  1  1970 HIDDE~25.TXT
+-rw-------  1 root     root           65  Jan  1  1970 MIXEDC~6.TXT
+-rw-------  1 root     root           76  Jan  1  1970 N12-XXXX.TXT
+-rw-------  1 root     root           76  Jan  1  1970 N13-X~11.TXT
+-rw-------  1 root     root           75  Jan  1  1970 N26-X~13.TXT
+-rw-------  1 root     root           82  Jan  1  1970 N27-X~15.TXT
+-rw-------  1 root     root           61  Jan  1  1970 NAMEWI~8.TXT
+drwx------  1 root     root            0  Jan  1  1970 NESTED~2
+-rw-------  1 root     root           71  Jan  1  1970 SIMIL~21.TXT
+-rw-------  1 root     root           71  Jan  1  1970 SIMIL~23.TXT
+-rw-------  1 root     root           74  Jan  1  1970 THISN~17.TXT
+drwx------  1 root     root            0  Jan  1  1970 UNIBAD
+drwx------  1 root     root            0  Jan  1  1970 UNISAFE
+-rw-------  1 root     root         4096  Jan  1  1970 _CONTR~5.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _EMPTY~4
+-rw-------  1 root     root         4096  Jan  1  1970 _HIDD~26.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _MIXED~7.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _N12-~10.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _N13-~12.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _N26-~14.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _N27-~16.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _NAMEW~9.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _NESTE~2
+-rw-------  1 root     root         4096  Jan  1  1970 _SIMI~22.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _SIMI~24.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _THIS~18.TXT
+-rw-------  1 root     root         4096  Jan  1  1970 _UNIB~89
+-rw-------  1 root     root         4096  Jan  1  1970 _UNIS~89
+Unmounted /mnt/usb
+Mounted read-only at /mnt/usb
+.   ..  
+/dev/hda  (minix) blocks  65535 free  53136 mount /
+picomem-usb (picofs, ro) mount /mnt/usb
+picomem-sd (picofs, ro) mount /mnt/sd
+# echo PMDONE_5f3d53d7f8fe=$?
+PMDONE_5f3d53d7f8fe=0
+# 

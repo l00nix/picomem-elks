@@ -1,0 +1,21 @@
+cd /
+chmod 700 /root/lfntest || exit 1
+cp '/mnt/usb/LFN271A/MIXEDC~6.TXT' /root/lfna00 || exit 1
+cp '/mnt/usb/LFN271A/N26-X~13.TXT' /root/lfna01 || exit 1
+cp '/mnt/usb/LFN271A/SIMIL~21.TXT' /root/lfna02 || exit 1
+cp '/mnt/usb/LFN271A/SIMIL~23.TXT' /root/lfna03 || exit 1
+cp '/mnt/usb/LFN271A/HIDDE~25.TXT' /root/lfna04 || exit 1
+cp '/mnt/usb/LFN271A/NESTED~2/Child With Spaces.txt' /root/lfna05 || exit 1
+/root/lfntest /mnt/usb/LFN271A/N26-xxxxxxxxxxxxxxxxxx.txt || exit 1
+/root/lfntest /mnt/usb/LFN271A/UNISAFE/UNICOD~2.TXT || exit 1
+
+# /bin/sh /root/m4272949ec8
+
+PASS /mnt/usb/LFN271A/N26-xxxxxxxxxxxxxxxxxx.txt: 75 bytes, FNV1a=8748377e
+257/73-byte reads agree; seek/EOF pass; write-only open refused.
+PASS /mnt/usb/LFN271A/UNISAFE/UNICOD~2.TXT: 91 bytes, FNV1a=5fbd8274
+257/73-byte reads agree; seek/EOF pass; write-only open refused.
+# echo PMDONE_b5a08ddd9974=$?
+
+PMDONE_b5a08ddd9974=0
+

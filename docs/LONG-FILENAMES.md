@@ -46,6 +46,58 @@ The tested firmware UF2 SHA-256 is
 the PPC kernel SHA-256 is
 `7e2ced612d7dda3560355630cb97766ad28bc3810a8d8311831c6639e9eaec26`.
 
+## Controlled USB filename fixture, 27 October 2026
+
+I created a small, separate `LFN271A` folder on the Kingston using the Mac,
+recorded reference hashes, and tested it on the PPC without changing firmware
+or kernel. USB was unmounted before each physical move. Two round trips to
+the Mac and back worked without a PPC reboot; this does not test unplugging
+a mounted volume.
+
+- 12-, 13- and 26-character ASCII names display and open in full. The
+  27-character name displays as `N27-X~15.TXT`; the 44-character name uses
+  `THISN~17.TXT`. Neither name is truncated into a false display path.
+- Spaces, mixed case, a hidden name, two nested long directory names and
+  distinct files with similar prefixes read correctly. Uppercase lookup and
+  short aliases still work, including an alias for a parent directory.
+- **21 reads match the Mac SHA-256 references:** 15 reads of 14 distinct files
+  (including a case variant), followed by six additional alias reads after
+  unmount/remount. This excludes the known-failing file described below.
+- Two native `pmfstest` runs also pass chunked reads, seek/EOF and refusal of
+  write-only opens. USB unmount/remount succeeds. A writable mount lists aliases;
+  no USB/SD writes were performed by ELKS in this fixture session.
+- USB and SD are left mounted read-only. The fixture's files were created or
+  rearranged only on the Mac; existing user files were not modified.
+
+![PPC512 filename boundaries and read-only mounts](screenshots/20261027-lfn-boundary.png)
+
+![PPC512 nested reads and Unicode fallback through an ASCII alias](screenshots/20261027-lfn-nested.png)
+
+These are rendered captures of actual PPC video memory, using the captured
+BIOS font. Underscore-prefixed 4,096-byte files are Mac metadata sidecars.
+[Fixture manifest, checksums, native command logs and capture evidence](screenshots/captures-lfn-fixture-20261027/).
+
+### Known failure: non-ASCII short aliases
+
+The initial `Café notes.txt` test made its entire containing directory
+unreadable. A bounded capture of the legacy DFS reply contains FCB bytes
+`43 41 46 c3 a9 4e 4f 54 54 58 54`. The existing client rejects the non-ASCII
+bytes before any long-name lookup and discards the partial directory snapshot.
+Other USB and SD files still read, and USB unmounted normally. This is a
+reproducible compatibility gap, not a successful Unicode test.
+
+I preserved that file and its metadata sidecar in `LFN271A/UNIBAD` on the Mac.
+Isolating it lets the other tests run; **the bug is not fixed**. A separate
+`Unicode café.txt` file in `UNISAFE` has the ASCII alias `UNICOD~2.TXT`, and
+reads through that alias match the reference hash. Therefore Unicode fallback
+is currently supported only when the legacy alias itself is supported ASCII.
+Do not recursively scan `UNIBAD` expecting it to work with this kernel.
+
+[Captured original failure and successful unmount](screenshots/20261027-lfn-failure.png).
+The next engineering task is to handle unsupported legacy aliases without
+making the whole directory inaccessible, with regression tests before another
+kernel deployment. Full Unicode path support remains separate work.
+
 ## Integrated experimental candidate, 27 October 2026
 
 The [firmware fork](https://github.com/l00nix/ISA-PicoMEM/tree/codex/dfs-long-names)
@@ -56,7 +108,8 @@ record dependencies, limits and remaining hardware checks.
 
 - Names up to 26 ASCII characters, including spaces and mixed case, appear in
   ordinary directory listings and work in lookup. Aliases continue to work.
-- Longer names, Unicode and ambiguous display names fall back to 8.3 aliases.
+- Longer names, Unicode and ambiguous display names fall back to supported
+  ASCII 8.3 aliases. Non-ASCII aliases have the known directory failure above.
 - Firmware operations always use aliases, including nested parent paths.
 - Long names are enabled only for **read-only** USB/SD mounts. USB read/write
   mounts keep aliases; long-name creation/rename is not implemented.
@@ -85,9 +138,10 @@ To build the generic candidate, set `KERNEL_CONFIG` to
 format and tests; the actual driver uses a smaller, separately allocated table.
 
 Legacy DOS compatibility, precise USB/FAT32 service time, interrupt latency,
-media changes and actually restoring the saved firmware remain to be tested.
-Name-length/Unicode/collision edge cases passed host tests, but have not yet
-been exercised with a controlled hardware fixture. A separate
+hot-unplug while mounted and actually restoring the saved firmware remain to
+be tested. The controlled fixture above covers length boundaries and limited
+Unicode fallback, and exposes a non-ASCII-alias failure. Adversarial display/
+alias collisions remain host-tested only. A separate
 bounded scan for every directory entry can be expensive. Start with a small
 read-only USB fixture and retain the actual original firmware and kernel.
 

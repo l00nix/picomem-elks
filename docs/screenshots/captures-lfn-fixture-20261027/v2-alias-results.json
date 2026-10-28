@@ -1,0 +1,74 @@
+[
+  {
+    "path": "Mixed Case.txt",
+    "purpose": "mixed case",
+    "name_characters": 14,
+    "expected_display": "long name",
+    "size": 65,
+    "sha256": "14508b4f7c075884c3f7c6a8fff299b3565ac696339ab7ad183c63c2fd57b202",
+    "access_path": "/mnt/usb/LFN271A/MIXEDC~6.TXT",
+    "temporary": "/root/lfna00",
+    "actual_sha256": "14508b4f7c075884c3f7c6a8fff299b3565ac696339ab7ad183c63c2fd57b202",
+    "passed": true
+  },
+  {
+    "path": "N26-xxxxxxxxxxxxxxxxxx.txt",
+    "purpose": "26 character maximum",
+    "name_characters": 26,
+    "expected_display": "long name",
+    "size": 75,
+    "sha256": "c50aacffb50cb041f362664ccd217346e0e0e78b5b71036b727fcbbd0570bb81",
+    "access_path": "/mnt/usb/LFN271A/N26-X~13.TXT",
+    "temporary": "/root/lfna01",
+    "actual_sha256": "c50aacffb50cb041f362664ccd217346e0e0e78b5b71036b727fcbbd0570bb81",
+    "passed": true
+  },
+  {
+    "path": "Similar Prefix Alpha.txt",
+    "purpose": "distinct alias A",
+    "name_characters": 24,
+    "expected_display": "long name",
+    "size": 71,
+    "sha256": "f0579b252d7aaaa99b9d9cb7816f9bfe17fd623bad1ada4a72fc99f43e48b3d8",
+    "access_path": "/mnt/usb/LFN271A/SIMIL~21.TXT",
+    "temporary": "/root/lfna02",
+    "actual_sha256": "f0579b252d7aaaa99b9d9cb7816f9bfe17fd623bad1ada4a72fc99f43e48b3d8",
+    "passed": true
+  },
+  {
+    "path": "Similar Prefix Beta.txt",
+    "purpose": "distinct alias B",
+    "name_characters": 23,
+    "expected_display": "long name",
+    "size": 71,
+    "sha256": "148090df3fd19924011104826866f6b25758b58b6dc4f0cfedf757ce3c37720a",
+    "access_path": "/mnt/usb/LFN271A/SIMIL~23.TXT",
+    "temporary": "/root/lfna03",
+    "actual_sha256": "148090df3fd19924011104826866f6b25758b58b6dc4f0cfedf757ce3c37720a",
+    "passed": true
+  },
+  {
+    "path": ".Hidden Long Name.txt",
+    "purpose": "hidden long name",
+    "name_characters": 21,
+    "expected_display": "long name",
+    "size": 71,
+    "sha256": "56056b7195346ca2eff552ddf4730f1c464bbd654364ee160778430dffdbf984",
+    "access_path": "/mnt/usb/LFN271A/HIDDE~25.TXT",
+    "temporary": "/root/lfna04",
+    "actual_sha256": "56056b7195346ca2eff552ddf4730f1c464bbd654364ee160778430dffdbf984",
+    "passed": true
+  },
+  {
+    "path": "Nested Long Folder/Child With Spaces.txt",
+    "purpose": "nested long path",
+    "name_characters": 21,
+    "expected_display": "long name",
+    "size": 71,
+    "sha256": "8cf6e4ccb6801009e1e14bfcc13b004886a7fbbe05fe8f33b05194aad228f11b",
+    "access_path": "/mnt/usb/LFN271A/NESTED~2/Child With Spaces.txt",
+    "temporary": "/root/lfna05",
+    "actual_sha256": "8cf6e4ccb6801009e1e14bfcc13b004886a7fbbe05fe8f33b05194aad228f11b",
+    "passed": true
+  }
+]

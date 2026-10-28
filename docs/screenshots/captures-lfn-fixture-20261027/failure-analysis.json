@@ -1,0 +1,15 @@
+{
+  "result": "Directory scan fails on a non-ASCII legacy short alias; fixture tests blocked before LFN lookups.",
+  "running_kernel_sha256": "7e2ced612d7dda3560355630cb97766ad28bc3810a8d8311831c6639e9eaec26",
+  "kernel_data_segment": "1d6f",
+  "kernel_ds_symbol_offset": "3a6a",
+  "packet_symbol_offset": "44f9",
+  "reply_length": 84,
+  "dos_status": 0,
+  "file_size": 77,
+  "fcb_hex": "434146c3a94e4f54545854",
+  "fcb_bytes": "b'CAF\\xc3\\xa9NOTTXT'",
+  "explanation": "The legacy FCB contains UTF-8 bytes c3 a9. picofs component() refuses bytes >= 127 and scan() discards the partial directory snapshot. The 77-byte entry matches the unique Unicode test file. Other USB and SD reads remain operational; broken transport latch was not set.",
+  "limitation": "Unicode LFN fallback currently works only when the legacy short alias itself is supported ASCII. Non-ASCII aliases are not supported by the current driver.",
+  "next_step": "Isolate the Unicode file and its Mac metadata sidecar in their own fixture directory on the Mac; retain this failure for regression work, then complete the ASCII boundary tests."
+}

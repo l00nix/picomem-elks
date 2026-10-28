@@ -1,0 +1,6 @@
+{
+  "source": "Actual PPC512 B800:0000 video memory; native commands, rendered with captured BIOS font",
+  "video_sha256": "e65f91d2b1554da14abf5a2883503c0a1994923e699792445cb1c1acf9406600",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "png_sha256": "7b8ae91071b6cfa4d83bb3747822bfd6758a8e97118bff0cf08f4c8c0dfb30c0"
+}
