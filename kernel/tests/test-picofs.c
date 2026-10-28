@@ -46,6 +46,9 @@ static void reply_entry(unsigned char *p,unsigned index)
 #ifdef CONFIG_FS_PICOMEM_LFN_CREATE
 #include "create-fixture.h"
 #endif
+#ifdef CONFIG_FS_PICOMEM_LFN_RENAME
+#include "rename-fixture.h"
+#endif
 static void respond(void)
 {
     unsigned char *p=mmio+BASE;
@@ -53,6 +56,9 @@ static void respond(void)
     unsigned long offset;
     assert(!irq_enabled);
     drv=p[58];assert(drv==18||drv==20);
+#ifdef CONFIG_FS_PICOMEM_LFN_RENAME
+    if(cmd==0x72){respond_rename();return;}
+#endif
 #ifdef CONFIG_FS_PICOMEM_LFN_CREATE
     if(cmd==0x71){respond_create();return;}
 #endif

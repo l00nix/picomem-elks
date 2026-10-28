@@ -11,10 +11,10 @@ head = subprocess.check_output(['git','-C',str(root),'rev-parse','HEAD'],text=Tr
 if head != BASE:
     raise SystemExit('Expected ELKS '+BASE+'; no edits made')
 changes = {}
-def edit(name, old, new):
+def edit(name, old, new, marker=None):
     p = root/name
     s = changes.get(p, p.read_text())
-    if new in s: return
+    if new in s or (marker and marker in s): return
     if s.count(old) != 1: raise SystemExit('Unexpected source '+name+'; no edits made')
     changes[p] = s.replace(old,new)
 char = 'elks/arch/i86/drivers/char/'
@@ -25,8 +25,8 @@ edit(char+'ntty.c','extern struct tty_ops ps2_mouse_ops;', 'extern struct tty_op
 edit(char+'ntty.c','    register_chrdev(TTY_MAJOR, "tty", &tty_fops);', '#ifdef CONFIG_MOUSE_PICOMEM\n        ttyp->ops = &picomem_mouse_ops;\n        (ttyp++)->minor = 33;  /* /dev/pmouse: major 4, minor 33 */\n#endif\n\n    register_chrdev(TTY_MAJOR, "tty", &tty_fops);')
 edit('elks/fs/Makefile','ifdef CONFIG_EXEC_COMPRESS','ifdef CONFIG_FS_PICOMEM\nOBJS += picofs.o\nendif\n\nifdef CONFIG_EXEC_COMPRESS')
 edit('elks/fs/config.in',"\tcomment 'Filesystem settings'", "\tif [ \"$CONFIG_ARCH_IBMPC\" = \"y\" ]; then\n\t    bool 'Experimental read-only PicoMEM USB/SD filesystem' CONFIG_FS_PICOMEM n\n\tfi\n\n\tcomment 'Filesystem settings'")
-edit('elks/fs/config.in', "\tbool 'External buffer cache'           CONFIG_FS_EXTERNAL_BUFFER  y", '\tif [ "$CONFIG_FS_PICOMEM" = "y" ]; then\n\t    bool \'Experimental verified USB writes (SD read-only)\' CONFIG_FS_PICOMEM_WRITE n\n\tfi\n\n\tbool \'External buffer cache\'           CONFIG_FS_EXTERNAL_BUFFER  y')
-edit('elks/include/linuxmt/fs.h','#define FST_ROMFS       3','#define FST_ROMFS       3\n#define FST_PICOFS      4\n\n#ifdef __KERNEL__\n#ifdef CONFIG_FS_PICOMEM\nextern int picofs_mount(char *, char *, int);\nextern int picofs_busy(void);\n#endif\nextern int do_mount(kdev_t, char *, int, int, char *);\n#endif')
+edit('elks/fs/config.in', "\tbool 'External buffer cache'           CONFIG_FS_EXTERNAL_BUFFER  y", '\tif [ "$CONFIG_FS_PICOMEM" = "y" ]; then\n\t    bool \'Experimental verified USB writes (SD read-only)\' CONFIG_FS_PICOMEM_WRITE n\n\tfi\n\n\tbool \'External buffer cache\'           CONFIG_FS_EXTERNAL_BUFFER  y', marker='CONFIG_FS_PICOMEM_WRITE n')
+edit('elks/include/linuxmt/fs.h','#define FST_ROMFS       3','#define FST_ROMFS       3\n#define FST_PICOFS      4\n\n#ifdef __KERNEL__\n#ifdef CONFIG_FS_PICOMEM\nextern int picofs_mount(char *, char *, int);\nextern int picofs_busy(void);\n#endif\nextern int do_mount(kdev_t, char *, int, int, char *);\n#endif', marker='#define FST_PICOFS      4')
 edit('elks/fs/super.c','/* Supported File System List */','/* Supported File System List */\n#ifdef CONFIG_FS_PICOMEM\nextern struct file_system_type picofs_fs_type;\n#endif')
 edit('elks/fs/super.c','        &msdos_fs_type,\n#endif\n        NULL','        &msdos_fs_type,\n#endif\n#ifdef CONFIG_FS_PICOMEM\n        &picofs_fs_type,\n#endif\n        NULL')
 edit('elks/fs/super.c','NULL, "minix", "msdos", "romfs"','NULL, "minix", "msdos", "romfs", "picofs"')
@@ -73,8 +73,14 @@ lfn_text = changes.get(lfn_config, lfn_config.read_text())
 if 'Experimental paired-firmware long names (RO mounts)' in lfn_text:
     changes[lfn_config] = lfn_text.replace('Experimental paired-firmware long names (RO mounts)',
                                           'Experimental paired-firmware long names')
-edit('elks/fs/config.in', "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n", "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n\n\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n")
-edit('elks/fs/config.in', "\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n", "\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n\n\t    if [ \"$CONFIG_FS_PICOMEM_LFN\" = \"y\" -a \"$CONFIG_FS_PICOMEM_WRITE\" = \"y\" ]; then\n\t        bool 'Experimental paired-firmware USB long-name creation' CONFIG_FS_PICOMEM_LFN_CREATE n\n\t    fi")
+edit('elks/fs/config.in', "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n", "\t    bool 'Experimental verified USB writes (SD read-only)' CONFIG_FS_PICOMEM_WRITE n\n\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n", marker='CONFIG_FS_PICOMEM_LFN n')
+edit('elks/fs/config.in', "\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n", "\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n\n\t    if [ \"$CONFIG_FS_PICOMEM_LFN\" = \"y\" -a \"$CONFIG_FS_PICOMEM_WRITE\" = \"y\" ]; then\n\t        bool 'Experimental paired-firmware USB long-name creation' CONFIG_FS_PICOMEM_LFN_CREATE n\n\t    fi", marker='CONFIG_FS_PICOMEM_LFN_CREATE n')
+edit('elks/fs/config.in', "\t        bool 'Experimental paired-firmware USB long-name creation' CONFIG_FS_PICOMEM_LFN_CREATE n", "\t        bool 'Experimental paired-firmware USB long-name creation' CONFIG_FS_PICOMEM_LFN_CREATE n\n\t        if [ \"$CONFIG_FS_PICOMEM_LFN_CREATE\" = \"y\" ]; then\n\t            bool 'Experimental same-parent USB file rename' CONFIG_FS_PICOMEM_LFN_RENAME n\n\t        fi")
+edit('elks/include/linuxmt/fs.h', '#define FST_PICOFS      4', '#define FST_PICOFS      4\n#ifdef __KERNEL__\n#ifdef CONFIG_FS_PICOMEM_LFN_RENAME\nstruct inode;\nextern int picofs_rename(struct inode *,const char *,size_t,struct inode *,const char *,size_t);\n#endif\n#endif')
+edit('elks/fs/namei.c', 'int sys_rename(register char *oldname, char *pathname)', '#include "namei-picomem.inc"\n\nint sys_rename(register char *oldname, char *pathname)')
+edit('elks/fs/namei.c', '    return !(err = sys_link(oldname, pathname)) ? sys_unlink(oldname) : err;', '    #ifdef CONFIG_FS_PICOMEM_LFN_RENAME\n    int handled;\n    err = rename_picofs_path(oldname, pathname, &handled);\n    if (handled) return err;\n    #endif\n    return !(err = sys_link(oldname, pathname)) ? sys_unlink(oldname) : err;')
+for name in ('picofs-rename.inc','namei-picomem.inc'):
+    changes[root/'elks/fs'/name] = (kit/name).read_text()
 for name in ('mouse-picomem.c','pmmouse.h'):
     changes[root/char/name] = (kit.parent/'mouse'/name).read_text()
 changes[root/'elks/fs/picofs-create.inc'] = (kit/'picofs-create.inc').read_text()

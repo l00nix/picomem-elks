@@ -63,6 +63,17 @@ static int FARPROC lfn_create_present(void)
 }
 #endif
 
+#ifdef CONFIG_FS_PICOMEM_LFN_RENAME
+#ifndef CONFIG_FS_PICOMEM_LFN_CREATE
+#error Rename requires LFN creation
+#endif
+#define LFN_RENAME_CMD 0x72
+static int FARPROC lfn_rename_present(void)
+{
+ static const unsigned char sig[16]={'P','M','L','R',1,0x72,26,52,'l','0','0','n','i','x',0,0};
+ unsigned j;for(j=0;j<16;j++)if(MEM[0x3fe0+j]!=sig[j])return 0;return 1;
+}
+#endif
 struct pm_node {
     unsigned long size;
     char name[13];
@@ -72,6 +83,9 @@ struct pm_volume {
     unsigned used, drive, rw;
 #ifdef CONFIG_FS_PICOMEM_LFN_CREATE
     unsigned can_create;
+#ifdef CONFIG_FS_PICOMEM_LFN_RENAME
+    unsigned can_rename;
+#endif
 #endif
 #ifdef CONFIG_FS_PICOMEM_LFN
     char (*lfn)[27]; /* Exact experimental firmware descriptor required. */
@@ -164,6 +178,15 @@ static int FARPROC transaction(unsigned drive, unsigned cmd, unsigned req,
     if ((drive!=20 && drive!=18) || req>CHUNK || response>CHUNK)
         return -EINVAL;
     switch (cmd) {
+#ifdef CONFIG_FS_PICOMEM_LFN_RENAME
+    case LFN_RENAME_CMD:
+        if(drive!=20)return -EROFS;
+        if(response!=52||req<13||req>166||memcmp(packet+60,"PMLR",4)||packet[64]!=1||
+           packet[65]>1||packet[66]>127||packet[67]>26||req!=13U+packet[66]+packet[67])return -EINVAL;
+        if(!packet[65]){if(req!=13||packet[68]||dword(packet+69))return -EINVAL;}
+        else if(!writing||!packet[66]||!packet[67])return -EROFS;
+        break;
+#endif
 #ifdef CONFIG_FS_PICOMEM_LFN_CREATE
     case LFN_CREATE_CMD:
         if(drive!=20)return -EROFS;
@@ -233,6 +256,9 @@ static int FARPROC transaction(unsigned drive, unsigned cmd, unsigned req,
 #endif
 #ifdef CONFIG_FS_PICOMEM_LFN_CREATE
     if(cmd==LFN_CREATE_CMD && (!lfn_present()||!lfn_create_present())){r=-ENODEV;goto done;}
+#endif
+#ifdef CONFIG_FS_PICOMEM_LFN_RENAME
+    if(cmd==LFN_RENAME_CMD && (!lfn_present()||!lfn_create_present()||!lfn_rename_present())){r=-ENODEV;goto done;}
 #endif
     for (i=0;i<768;i++) if (config[i]!=MEM[CFG+i]) { r=-ENODEV; goto done; }
     for (i=0;i<FRAME;i++) saved[i]=MEM[BASE+i];
@@ -517,6 +543,9 @@ static size_t read_dir(struct inode *i,struct file *f,char *buf,size_t count)
 #include "picofs-create.inc"
 #endif
 #include "picofs-write.inc"
+#ifdef CONFIG_FS_PICOMEM_LFN_RENAME
+#include "picofs-rename.inc"
+#endif
 #else
 #define write_pm NULL
 #define create_pm NULL
@@ -597,6 +626,9 @@ static struct super_block * FARPROC read_super_inner(struct super_block *s,void 
     if(!r && v->lfn && v->rw && v->drive==20 && lfn_create_present()) {
         r=lfn_create_cap();if(!r)v->can_create=1;
     }
+#ifdef CONFIG_FS_PICOMEM_LFN_RENAME
+    if(!r && v->can_create && lfn_rename_present()){r=lfn_rename_cap();if(!r)v->can_rename=1;}
+#endif
 #endif
     if(!r)
 #endif

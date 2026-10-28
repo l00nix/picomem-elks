@@ -25,7 +25,7 @@ reboot. [Hardware results and screenshot](docs/HARDWARE-USB-RW-20261025.md).
 The experimental paired firmware/kernel now supports reading and updating
 existing long-named USB files on the PPC512, including 26-character ASCII names
 and nested paths. The separate creation candidate below also creates long names;
-rename is not implemented.
+rename is available in the separate, not-yet-hardware-tested candidate below.
 Unsupported non-ASCII aliases are omitted with a diagnostic and protective
 mutation restrictions. [Results, limitations and screenshots](docs/LONG-FILENAMES.md).
 
@@ -41,7 +41,11 @@ reboot. Direct Mac reads and a FAT consistency check also passed. It requires
 additional experimental firmware. Long-name and 8.3 alias readbacks passed after
 the Mac-to-PPC roundtrip. MS-DOS 6.22 alias reads and a temporary legacy
 create/write/append/truncate/delete test also passed. This remains experimental;
-rename and runtime measurements are still outstanding.
+runtime measurements are still outstanding.
+
+The next [same-directory file rename candidate](docs/LONG-NAME-RENAME.md) adds
+`pmrename`, guarded against destination replacement. Host/FAT-image tests and
+the 8086 build pass; PPC512 rename validation is pending.
 
 ## Commands
 
@@ -53,6 +57,8 @@ rename and runtime measurements are still outstanding.
 | `pmmem` | Queries the card's active memory types and compares them with the configured map. `--probe` checks just the BIOS block first. No RAM write probes or remapping. |
 | `pmmount` | Mounts PicoMEM USB or SD read-only; `--rw usb` explicitly enables experimental USB writes; `-u` unmounts. Requires the optional PicoMEM kernel. |
 | `mount` (updated ELKS utility) | Lists mounted filesystems, including PicoMEM USB/SD mountpoints and their `ro`/`rw` status. Supplied with the kernel build. |
+| `pmrename OLD NEW` | Rename candidate only: one syscall for a same-directory USB file rename; existing destinations refused. |
+| `pmlfnren NEWDIR` | Candidate-only rename/refusal/readback tests in a new fixture directory. |
 | `pmlfnnew NEWDIR` | Candidate-only test of long-name creation/mkdir and writes; creates a fresh fixture directory and retains files for verification. |
 | `pmlfnrw FILE BACKUP` | Fixture-only test of existing long-name USB append/overwrite/readback; requires a matching Minix backup and leaves test contents for verification/restoration. |
 

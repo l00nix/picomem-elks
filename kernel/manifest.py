@@ -16,6 +16,6 @@ manifest={'elks_commit': subprocess.check_output(['git','-C',str(root),'rev-pars
           'segments': sizes,'sha256':{p.name:sha(p) for p in out.iterdir() if p.is_file() and p.name!='manifest.json'},
           'integration_diff_sha256':hashlib.sha256(subprocess.check_output(['git','-C',str(root),'diff'])).hexdigest(),
           'source_sha256':{str(p.relative_to(root)):sha(p) for p in
-              (root/'elks/fs/picofs.c',root/'elks/fs/picofs-write.inc',root/'elks/fs/picofs-lfn.inc',root/'elks/fs/picofs-create.inc',root/'elks/arch/i86/drivers/char/mouse-picomem.c',root/'elks/arch/i86/drivers/char/pmmouse.h',root/'elkscmd/sys_utils/mount.c')}}
+              (root/'elks/fs/picofs.c',root/'elks/fs/picofs-write.inc',root/'elks/fs/picofs-lfn.inc',root/'elks/fs/picofs-create.inc',root/'elks/fs/picofs-rename.inc',root/'elks/fs/namei-picomem.inc',root/'elks/arch/i86/drivers/char/mouse-picomem.c',root/'elks/arch/i86/drivers/char/pmmouse.h',root/'elkscmd/sys_utils/mount.c')}}
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 print(json.dumps(manifest,indent=2))

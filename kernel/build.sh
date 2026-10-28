@@ -5,6 +5,7 @@ kit=$(cd "$(dirname "$0")" && pwd)
 : "${ELKS_TREE:?Set ELKS_TREE to a dedicated ELKS e7a56a43 checkout}"
 : "${ELKS_TOOLCHAIN:?Set ELKS_TOOLCHAIN to a prepared ELKS cross directory}"
 sh "$kit/test.sh"
+python3 "$kit/tests/test-apply.py" "$ELKS_TREE"
 python3 "$kit/apply.py" "$ELKS_TREE"
 python3 "$kit/tests/test-mount.py" "$ELKS_TREE/elkscmd/sys_utils/mount.c"
 cd "$ELKS_TREE"
@@ -21,7 +22,7 @@ mkdir -p "$kit/build"
 cp elks/arch/i86/boot/Image "$kit/build/linux"
 cp elks/arch/i86/boot/system.map "$kit/build/system.map"
 cp .config "$kit/build/kernel.config"
-for app in pmmount pmfstest pmrwtest pmlfnrw pmlfnnew; do
+for app in pmmount pmfstest pmrwtest pmlfnrw pmlfnnew pmlfnren pmrename; do
   ia16-elf-gcc -march=i8086 -mtune=i8086 -mcmodel=small -melks-libc \
     -mno-segment-relocation-stuff -Os -Wall -Wextra \
     -maout-heap=1024 -maout-stack=2048 "$kit/$app.c" -o "$kit/build/$app"

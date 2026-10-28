@@ -4,7 +4,7 @@ static void start_create(void)
 {start_lfn();create_marker();create_calls=create_status=create_fault=0;}
 static void mount_create(void)
 {mount_lfn();assert(((struct pm_volume*)usb.u.generic_sbp)->can_create);}
-int main(void)
+static int creation_tests(void)
 {
  unsigned start=tests,n,j;struct inode *i,*a,*d;struct file f;char data[73];
  existing_lfn_write_tests();start=tests;
@@ -57,3 +57,7 @@ int main(void)
  j=calls;usb.s_mounted->i_count++;assert(create_pm(usb.s_mounted,"Second Long Name.txt",20,0600,&i)==-EIO);assert(j==calls);pass();
  printf("picofs long-name creation: %u scenarios passed\n",tests-start);return 0;
 }
+
+#ifndef PICO_CREATE_NO_MAIN
+int main(void){return creation_tests();}
+#endif

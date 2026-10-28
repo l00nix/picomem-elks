@@ -245,5 +245,17 @@ combined LFN/write scenarios, including collision, omission, deletion-cache,
 
 `CONFIG_FS_PICOMEM_LFN_CREATE` is separately default-off and requires LFN and
 USB-write support. Use `ppc512-create.config` or `remote-build.py --lfn-create`.
-The native `pmlfnnew` probe is included in builds. This candidate has not yet
-been hardware-tested; see the [creation design and test procedure](../docs/LONG-NAME-CREATION.md).
+The native `pmlfnnew` probe is included in builds. Creation has passed PPC512,
+Mac FAT/readback and DOS compatibility checks; see the [creation design and test procedure](../docs/LONG-NAME-CREATION.md).
+
+## Same-directory file rename candidate
+
+`CONFIG_FS_PICOMEM_LFN_RENAME` adds an optional direct rename syscall path,
+paired with the separate firmware rename descriptor/command. Build using
+`ppc512-rename.config` or remote `--lfn-rename`. `pmrename OLD NEW` performs
+one rename call; `pmlfnren NEWDIR` creates fresh fixtures and checks rename
+and refusals. Use `pmrename` for this candidate: ELKS `mv` may pre-delete the
+destination or fall back to copy/delete.
+
+Host/FAT-image tests and the IA16 build pass. PPC512 rename tests are pending.
+See [scope, protocol and validation](../docs/LONG-NAME-RENAME.md).
