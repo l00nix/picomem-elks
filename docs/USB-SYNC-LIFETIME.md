@@ -166,9 +166,41 @@ ELKS kernel and utilities are sufficient.
 
 The candidate passes 18,423 transport cases, 150 adapter scenarios, five FAT32
 tests, 14 legacy USB tests, ARM builds and stack-layout checks. The disabled build
-is byte-identical to its previous artifact. **Hardware testing is pending.**
-Next comes a fresh recovery backup and verified flash, read-only file checks,
-one fresh `mkdir` trigger, cached status capture and unmount.
+is byte-identical to its previous artifact. The hardware attempt below completed
+without a usable cache report; the write guard remains active.
 
 [Query design, status meanings and test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-CACHE-MODE.md)
 · [Candidate manifest](validation/usb-cache-mode-20261029.json).
+
+
+## Cache-mode PPC512 result
+
+The recovery backup and firmware readback passed. USB appeared immediately and
+all eight retained files passed full-content checks through a read-only mount.
+One fresh `mkdir /mnt/usb/PMCCH29` attempt after explicit read/write mounting failed
+with exit 1. The diagnostic reported:
+
+```text
+?USB fault op=35 f=2 s=1 r=0 d=0 rs=70:5/20/00 n=18 c6=phase c10=-
+```
+
+`c6=phase` means the first cache query yielded status 2. The current checked USB
+layer uses that value for both a device phase error and synthetic transport faults,
+so it does not distinguish a stall, invalid reply or byte-count mismatch. It does
+not establish that MODE SENSE is unsupported. The alternate query was correctly
+skipped. **Write-cache state is still unknown.**
+
+![PPC512 cache-mode query failure and saved native error](screenshots/ppc512-usb-cache-mode-20261029.png)
+
+The screenshot comes from actual PPC video memory with live status/mount output
+and the explicitly saved native error. I did not retry the write. The guard
+returned before sector-write submission, inferred from the firmware control flow
+and cached result rather than a physical USB trace. USB unmounted successfully;
+SD stayed unmounted and ELKS remains running. Initial stack use was 1736/4096
+firmware bytes and 426/700 kernel bytes, with zero flags/invalid counts. Fault-path
+peak use was not measured.
+
+The next diagnostic should expose the first transport stage/event/length/status
+without adding USB commands or changing write safeguards. It is not implemented
+or staged yet. No cache-setting change or synchronization bypass was made.
+[Full hardware evidence](validation/usb-cache-mode-20261029.json).

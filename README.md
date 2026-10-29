@@ -71,8 +71,9 @@ an I/O error before any workload batches ran. USB was unmounted without retrying
 The diagnostic follow-up captured a command-failed response to SYNCHRONIZE
 CACHE(10), before sector writes in that attempt. REQUEST SENSE now confirms the Kingston reports an unsupported command opcode
 (`5/20/00`). A [read-only cache-mode diagnostic](docs/USB-SYNC-LIFETIME.md#current-cache-mode-candidate)
-is now built and host tested, awaiting hardware validation. This remains
-experimental and the read/write release is blocked.
+returned a phase/transport error on its first query; the alternate query was
+skipped and cache state remains unknown. This remains experimental and the
+read/write release is blocked.
 
 ## Commands
 
