@@ -62,7 +62,13 @@ close and USB transfer failures instead of hiding them. Host tests, all 18 PPC51
 workload batches and eight file checks after remount passed with the existing
 kernel. Direct Mac filename/content, read-only FAT checks and return-trip remount
 passed too. MS-DOS 6.22 alias reads and temporary create/append/truncate/rename/delete
-tests also passed. Device-cache flush and timeout recovery remain unfinished.
+tests also passed.
+
+The next [USB cache-flush and timeout-containment candidate](docs/USB-SYNC-LIFETIME.md)
+has passed host tests and ARM builds. It adds a real device-cache flush, checks
+flush support before the first sector write, and reserves USB transfer memory
+after a timeout. PPC512/Kingston and DOS validation are pending. Automatic USB
+reset recovery and power-loss guarantees remain unfinished.
 
 ## Commands
 
