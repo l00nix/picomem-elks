@@ -79,8 +79,8 @@ recovery from power loss or safe unplugging while mounted.
 - Firmware builds with rename disabled reproduce the previous stock,
   metadata-only and creation UF2 hashes exactly.
 
-Before considering a release candidate I still need DOS compatibility checks
-for this firmware and runtime stack/service-latency measurements. QEMU
+Before considering a release candidate I still need runtime stack and
+service-latency measurements. QEMU
 cannot validate the actual PicoMEM file service. Directory moves, overwrite
 semantics, Unicode and SD writes are outside this milestone.
 
@@ -130,3 +130,27 @@ remounted read/write without a reboot. Independent FTP reads again matched
 both rename fixtures byte for byte; the old and intermediate names remained
 absent. All three earlier creation fixtures still matched as well. SD remained
 read-only throughout.
+
+### DOS compatibility — October 29, 2026
+
+The PPC booted MS-DOS 6.22 with 4DOS 8.00 and the rename firmware. Through the
+patched COMrade agent I verified all three exact ROM descriptors, enumerated
+the HDD root, and read every byte of both renamed-file fixtures through DOS:
+
+| ELKS long filename | DOS alias | Bytes |
+| --- | --- | ---: |
+| `Renamed Long Filename.txt` | `RENAME~1.TXT` | 3073 |
+| `Keep This File.txt` | `KEEPTH~1.TXT` | 4 |
+
+The three earlier long-name creation fixtures also passed full reads through
+their aliases. A separate fresh temporary 8.3 file passed create/write (1,025
+bytes), append (1,538 total), truncate/rewrite (31 bytes), ordinary DOS rename
+and deletion. Each content stage passed full readback and on-device CRC-32
+checks. The temporary file was deleted and all five retained fixtures matched
+their original byte counts and SHA-256 hashes afterward.
+
+![DOS sees and reads the renamed files through 8.3 aliases](screenshots/ppc512-dos-rename-20261029.png)
+
+This is the actual PPC DOS screen, rendered from its text cells. These tests
+check compatibility with the legacy DOS file service; no DOSLFN layer or DOS
+long-name API was installed. They do not establish power-loss durability.

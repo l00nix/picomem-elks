@@ -64,7 +64,6 @@
     "png_sha256": "de8727c5742d03adec698ce9cff5798961112974ad6357274b092ed478dbd008"
   },
   "pending": [
-    "DOS compatibility for rename firmware",
     "Runtime stack and latency measurements"
   ],
   "direct_mac": {
@@ -106,5 +105,94 @@
     "repair_requested": false
   },
   "mac_roundtrip_without_reboot": true,
-  "creation_fixture_regression_after_roundtrip": true
+  "creation_fixture_regression_after_roundtrip": true,
+  "dos": {
+    "date": "2026-10-29",
+    "system": "MS-DOS 6.22 / 4DOS 8.00",
+    "rom_descriptors_verified": true,
+    "hdd_root_entry_count": 22,
+    "alias_directory": [
+      {
+        "name": "KEEPTH~1.TXT",
+        "size": 4,
+        "attr": 32,
+        "is_dir": false,
+        "is_hidden": false,
+        "is_system": false,
+        "is_readonly": false,
+        "mtime": "2026-01-01 00:00:00"
+      },
+      {
+        "name": "RENAME~1.TXT",
+        "size": 3073,
+        "attr": 32,
+        "is_dir": false,
+        "is_hidden": false,
+        "is_system": false,
+        "is_readonly": false,
+        "mtime": "2026-01-01 00:00:00"
+      }
+    ],
+    "files": [
+      {
+        "path": "G:\\RN28A\\KEEPTH~1.TXT",
+        "bytes": 4,
+        "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+      },
+      {
+        "path": "G:\\RN28A\\RENAME~1.TXT",
+        "bytes": 3073,
+        "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+      },
+      {
+        "path": "G:\\LFNCRE~1\\CREATE~1.TXT",
+        "bytes": 3073,
+        "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+      },
+      {
+        "path": "G:\\LFNCRE~1\\NESTED~1\\CHILDW~1.TXT",
+        "bytes": 1025,
+        "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+      },
+      {
+        "path": "G:\\LFNCRE~1\\N26-XX~1.TXT",
+        "bytes": 73,
+        "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+      }
+    ],
+    "legacy_write_checks": [
+      {
+        "operation": "create/write/read",
+        "bytes": 1025,
+        "sha256": "e837c4068a7692f69523283d856d869c1ef736a25cfff132acbb668d738d731f",
+        "crc32": 3934898600
+      },
+      {
+        "operation": "append/read",
+        "bytes": 1538,
+        "sha256": "fd3dff9af41501e5d1b5e6b2d8623ab8d3844fe0cfa8170c4f58c2c2d7b70e9a",
+        "crc32": 2309448895
+      },
+      {
+        "operation": "truncate/rewrite/read",
+        "bytes": 31,
+        "sha256": "0ae55cf20235764e65906d3b1b2d6ac0d56d603380b1728d34007601fcce51c2",
+        "crc32": 4028427607
+      },
+      {
+        "operation": "legacy DOS rename/read",
+        "bytes": 31,
+        "sha256": "0ae55cf20235764e65906d3b1b2d6ac0d56d603380b1728d34007601fcce51c2",
+        "crc32": 4028427607
+      }
+    ],
+    "temporary_file_deleted": true,
+    "retained_fixtures_unchanged": true,
+    "capture": {
+      "source": "Actual PPC512 DOS text cells read through patched COMrade",
+      "video_sha256": "bd6a221259cb67bf731459470548a191ddb3d23be999a08835381ba5fe8bec8d",
+      "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+      "png_sha256": "c19a62a64d20e7934d22659b1006148750560b30f56915255fd76dc9308e6b75"
+    }
+  }
 }

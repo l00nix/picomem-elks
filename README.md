@@ -47,7 +47,8 @@ The next [same-directory file rename candidate](docs/LONG-NAME-RENAME.md) adds
 `pmrename`, guarded against destination replacement. Host/FAT-image tests,
 the 8086 build and PPC512 rename tests pass, with independent readback after
 remount and a normal reboot. Direct Mac filename/content checks and a read-only
-FAT consistency check passed too. [Hardware results and screenshot](docs/LONG-NAME-RENAME.md#ppc512-results--october-28-2026).
+FAT consistency check passed too. DOS alias reads and temporary legacy file
+create/append/truncate/rename/delete checks also pass. [Hardware results and screenshot](docs/LONG-NAME-RENAME.md#ppc512-results--october-28-2026).
 
 ## Commands
 
