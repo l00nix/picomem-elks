@@ -1,11 +1,12 @@
 # File-service error candidate
 
-I am preparing a firmware-only correctness update after the successful
-[runtime diagnostics tests](RUNTIME-DIAGNOSTICS.md). **Host tests and the firmware
-build pass; PPC512 testing of this candidate is pending.** This is another step
-toward a USB read/write release candidate, not a release-candidate announcement.
+I have tested this firmware-only correctness update after the successful
+[runtime diagnostics tests](RUNTIME-DIAGNOSTICS.md). **All 18 PPC512 workload
+batches and eight full-file checks after remount passed.** Direct Mac FAT
+checking and DOS compatibility for this firmware remain pending. This is another
+step toward a USB read/write release candidate, not a release announcement.
 
-The current firmware can hide both a failed file close and a failed USB sector
+The preceding firmware can hide both a failed file close and a failed USB sector
 transfer. Independent readback catches many problems, but cannot make those
 success responses reliable. The new default-off firmware option:
 
@@ -26,6 +27,42 @@ The USB error latch also affects DOS USB disk-image access because that uses the
 same firmware sector adapter. That makes a fresh DOS compatibility test part of
 this candidate's validation, even though no DOS long-filename extension is needed.
 
+## PPC512 results — October 29, 2026
+
+I saved and verified a full-flash recovery backup, then flashed and readback-verified
+this candidate. The existing kernel and utilities matched their tested hashes;
+no kernel installation was needed. The Kingston mounted read/write normally.
+Seven prior fixtures matched their expected bytes before the new workload.
+
+All 18 batches in fresh `PMERR29` passed: no-op, read, write, rename pairs,
+long-name create/delete and directory create/remove. All eight retained files,
+including the new 3073-byte payload, matched their full contents before and
+after clean unmount/remount. SD stayed unmounted. USB was subsequently unmounted
+successfully for the independent Mac check.
+
+| Observation | Used | Reserved |
+| --- | ---: | ---: |
+| Firmware core-0 stack, workload | 2812 bytes | 4096 bytes |
+| ELKS syscall stack, workload and immediate remount report | 354 bytes | 700 bytes |
+| ELKS syscall stack, initial pre-reset observation | 426 bytes | 700 bytes |
+
+The firmware workload peak leaves 1284 bytes. All diagnostic flags and invalid
+sample counts were zero. These are observed peaks with instrumentation, not
+worst-case bounds. The report counted 1579 commands totaling 127.321283 seconds,
+including fixture setup and inter-batch verification. No performance improvement
+is claimed. This run exercises normal successful I/O; failure handling was tested
+only in the host fault-injection tests.
+
+![PPC512 native mount and saved diagnostics report](screenshots/ppc512-file-errors-20261029.png)
+
+The screenshot is rendered from actual PPC text video memory and its BIOS font.
+It shows native `mount` output before the final unmount and the saved native
+`pmperf` report immediately after the workload. Its summary reflects the later
+post-remount file checks; the command counters remain those of the saved report.
+
+[Raw native report](validation/pmperf-file-errors-20261029.txt) and
+[full timings, artifact hashes, stack readings and file checks](validation/file-errors-ppc512-20261029.json).
+
 ## Evidence and limits
 
 Five disposable FAT32-image scenarios exercise the real firmware dispatcher,
@@ -37,7 +74,7 @@ completion, timeout across timer wrap, disconnect, and late completion. The
 ELKS host suite and existing firmware LFN/create/rename/diagnostics tests pass.
 
 The ARM build and 4 KiB stack-layout check pass. Turning the new option off
-reproduces the currently installed diagnostics firmware byte-for-byte.
+reproduces the previous diagnostics firmware byte-for-byte.
 [Candidate artifact hashes and validation](validation/file-errors-preflight-20261029.json).
 
 This preserves `f_close`/`f_sync`; it does not remove flushes to improve timing.
@@ -52,7 +89,10 @@ include build instructions. Build with `PICOMEM_EXPERIMENTAL_FILE_ERRORS=ON`
 in addition to the existing LFN/create/rename/stack/diagnostics options. Keep the
 currently tested diagnostics kernel and utilities.
 
-## Next physical test
+## Hardware validation sequence
+
+The first two steps and the ELKS remount checks below are complete. Direct Mac
+checks and DOS compatibility remain pending for this candidate.
 
 1. Cleanly unmount USB and shut down ELKS. Save and verify a fresh full PicoMEM
    flash backup in BOOT mode, then flash and verify the candidate.

@@ -1,0 +1,421 @@
+{
+  "date": "2026-10-29",
+  "status": "PPC512 normal workload and clean remount passed; direct Mac FAT check and DOS compatibility pending",
+  "firmware_source_commit": "99d00ebc942fa3d1d84af79dc514aa1a176a0f4d",
+  "elks_source_commit": "b6b2354533d2d8cd4a8f2fc0d667ad543a3917c6",
+  "firmware_sha256": "3788bbd56205c077f11a0b73a2f8b0909aa7cde39eb7eb33b5561289ffa219b4",
+  "kernel_sha256": "262a4394e95990a515ecc75bb3e27f67d900e07d199953bdf51ee979873e5c9e",
+  "new_kernel_installed": false,
+  "recovery_backup_verified": true,
+  "firmware_readback_verified": true,
+  "workload_directory": "PMERR29",
+  "benchmark": {
+    "status": "pass",
+    "clock": "host time.perf_counter_ns",
+    "metric": "batch wall time including transport and TTY; not firmware service time",
+    "directory": "/mnt/usb/PMERR29",
+    "samples": [
+      {
+        "sequence": 1,
+        "operation": "noop",
+        "iterations": 4,
+        "elapsed_ns": 1544018916,
+        "ms_per_iteration": 386.004729
+      },
+      {
+        "sequence": 2,
+        "operation": "noop",
+        "iterations": 4,
+        "elapsed_ns": 1512641541,
+        "ms_per_iteration": 378.16038525
+      },
+      {
+        "sequence": 3,
+        "operation": "noop",
+        "iterations": 4,
+        "elapsed_ns": 1559690917,
+        "ms_per_iteration": 389.92272925
+      },
+      {
+        "sequence": 4,
+        "operation": "read3073",
+        "iterations": 4,
+        "elapsed_ns": 6353624208,
+        "ms_per_iteration": 1588.406052
+      },
+      {
+        "sequence": 5,
+        "operation": "read3073",
+        "iterations": 4,
+        "elapsed_ns": 6526139834,
+        "ms_per_iteration": 1631.5349585
+      },
+      {
+        "sequence": 6,
+        "operation": "read3073",
+        "iterations": 4,
+        "elapsed_ns": 6874720417,
+        "ms_per_iteration": 1718.68010425
+      },
+      {
+        "sequence": 7,
+        "operation": "write3073",
+        "iterations": 4,
+        "elapsed_ns": 25194537375,
+        "ms_per_iteration": 6298.63434375
+      },
+      {
+        "sequence": 8,
+        "operation": "write3073",
+        "iterations": 4,
+        "elapsed_ns": 25708138667,
+        "ms_per_iteration": 6427.03466675
+      },
+      {
+        "sequence": 9,
+        "operation": "write3073",
+        "iterations": 4,
+        "elapsed_ns": 25872027500,
+        "ms_per_iteration": 6468.006875
+      },
+      {
+        "sequence": 10,
+        "operation": "rename_pair",
+        "iterations": 4,
+        "elapsed_ns": 6241164083,
+        "ms_per_iteration": 1560.29102075
+      },
+      {
+        "sequence": 11,
+        "operation": "rename_pair",
+        "iterations": 4,
+        "elapsed_ns": 5596841541,
+        "ms_per_iteration": 1399.21038525
+      },
+      {
+        "sequence": 12,
+        "operation": "rename_pair",
+        "iterations": 4,
+        "elapsed_ns": 5601127875,
+        "ms_per_iteration": 1400.28196875
+      },
+      {
+        "sequence": 13,
+        "operation": "create_unlink",
+        "iterations": 4,
+        "elapsed_ns": 11504041417,
+        "ms_per_iteration": 2876.01035425
+      },
+      {
+        "sequence": 14,
+        "operation": "create_unlink",
+        "iterations": 4,
+        "elapsed_ns": 12099892875,
+        "ms_per_iteration": 3024.97321875
+      },
+      {
+        "sequence": 15,
+        "operation": "create_unlink",
+        "iterations": 4,
+        "elapsed_ns": 12219454875,
+        "ms_per_iteration": 3054.86371875
+      },
+      {
+        "sequence": 16,
+        "operation": "mkdir_rmdir",
+        "iterations": 4,
+        "elapsed_ns": 8466288291,
+        "ms_per_iteration": 2116.57207275
+      },
+      {
+        "sequence": 17,
+        "operation": "mkdir_rmdir",
+        "iterations": 4,
+        "elapsed_ns": 8747843459,
+        "ms_per_iteration": 2186.96086475
+      },
+      {
+        "sequence": 18,
+        "operation": "mkdir_rmdir",
+        "iterations": 4,
+        "elapsed_ns": 8394432459,
+        "ms_per_iteration": 2098.60811475
+      }
+    ],
+    "completion": "PMBENCH PASS 18 batches; retained /mnt/usb/PMERR29/Runtime File Alpha.txt (3073 bytes)",
+    "median_ms_per_iteration": {
+      "noop": 386.004729,
+      "read3073": 1631.5349585,
+      "write3073": 6427.03466675,
+      "rename_pair": 1400.28196875,
+      "create_unlink": 3024.97321875,
+      "mkdir_rmdir": 2116.57207275
+    }
+  },
+  "native_diagnostics": {
+    "commands": {
+      "ff": {
+        "count": 1579,
+        "min_us": 2,
+        "max_us": 995467,
+        "total_us": 127321283,
+        "mean_us": 80634.12476250791,
+        "flags": 0
+      },
+      "70": {
+        "count": 0,
+        "min_us": 0,
+        "max_us": 0,
+        "total_us": 0,
+        "mean_us": null,
+        "flags": 0
+      },
+      "71": {
+        "count": 26,
+        "min_us": 189708,
+        "max_us": 995467,
+        "total_us": 15033825,
+        "mean_us": 578224.0384615385,
+        "flags": 0
+      },
+      "72": {
+        "count": 24,
+        "min_us": 249238,
+        "max_us": 251961,
+        "total_us": 6017701,
+        "mean_us": 250737.54166666666,
+        "flags": 0
+      },
+      "1b": {
+        "count": 0,
+        "min_us": 0,
+        "max_us": 0,
+        "total_us": 0,
+        "mean_us": null,
+        "flags": 0
+      },
+      "1c": {
+        "count": 0,
+        "min_us": 0,
+        "max_us": 0,
+        "total_us": 0,
+        "mean_us": null,
+        "flags": 0
+      },
+      "16": {
+        "count": 264,
+        "min_us": 119107,
+        "max_us": 120098,
+        "total_us": 31571175,
+        "mean_us": 119587.78409090909,
+        "flags": 0
+      },
+      "08": {
+        "count": 623,
+        "min_us": 2,
+        "max_us": 20051,
+        "total_us": 4815870,
+        "mean_us": 7730.128410914927,
+        "flags": 0
+      },
+      "09": {
+        "count": 220,
+        "min_us": 3,
+        "max_us": 11921,
+        "total_us": 1027283,
+        "mean_us": 4669.468181818182,
+        "flags": 0
+      },
+      "06": {
+        "count": 276,
+        "min_us": 5,
+        "max_us": 818688,
+        "total_us": 41679075,
+        "mean_us": 151011.14130434784,
+        "flags": 0
+      },
+      "0f": {
+        "count": 110,
+        "min_us": 49827,
+        "max_us": 60112,
+        "total_us": 6545425,
+        "mean_us": 59503.86363636364,
+        "flags": 0
+      },
+      "03": {
+        "count": 0,
+        "min_us": 0,
+        "max_us": 0,
+        "total_us": 0,
+        "mean_us": null,
+        "flags": 0
+      },
+      "01": {
+        "count": 12,
+        "min_us": 646712,
+        "max_us": 653776,
+        "total_us": 7796481,
+        "mean_us": 649706.75,
+        "flags": 0
+      },
+      "13": {
+        "count": 12,
+        "min_us": 625958,
+        "max_us": 633067,
+        "total_us": 7553786,
+        "mean_us": 629482.1666666666,
+        "flags": 0
+      },
+      "17": {
+        "count": 12,
+        "min_us": 415104,
+        "max_us": 653217,
+        "total_us": 5280662,
+        "mean_us": 440055.1666666667,
+        "flags": 0
+      },
+      "2e": {
+        "count": 0,
+        "min_us": 0,
+        "max_us": 0,
+        "total_us": 0,
+        "mean_us": null,
+        "flags": 0
+      }
+    },
+    "FW_STACK": {
+      "used": 2812,
+      "reserved": 4096,
+      "flags": 0
+    },
+    "K_STACK": {
+      "used": 354,
+      "reserved": 700,
+      "pid": 29,
+      "syscall": 11,
+      "invalid": 0,
+      "samples": 4193
+    }
+  },
+  "initial_stack_observations": {
+    "firmware": 1600,
+    "elks": 426
+  },
+  "readback": {
+    "pretest": {
+      "RN28A/Renamed Long Filename.txt": {
+        "bytes": 3073,
+        "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+      },
+      "RN28A/Keep This File.txt": {
+        "bytes": 4,
+        "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+      },
+      "LFN Create 28/Created Long Filename.txt": {
+        "bytes": 3073,
+        "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+      },
+      "LFN Create 28/Nested Long Directory/Child With Spaces.txt": {
+        "bytes": 1025,
+        "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+      },
+      "LFN Create 28/N26-xxxxxxxxxxxxxxxxxx.txt": {
+        "bytes": 73,
+        "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+      },
+      "PMBEN29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      },
+      "PMDIAG29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      }
+    },
+    "posttest": {
+      "RN28A/Renamed Long Filename.txt": {
+        "bytes": 3073,
+        "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+      },
+      "RN28A/Keep This File.txt": {
+        "bytes": 4,
+        "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+      },
+      "LFN Create 28/Created Long Filename.txt": {
+        "bytes": 3073,
+        "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+      },
+      "LFN Create 28/Nested Long Directory/Child With Spaces.txt": {
+        "bytes": 1025,
+        "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+      },
+      "LFN Create 28/N26-xxxxxxxxxxxxxxxxxx.txt": {
+        "bytes": 73,
+        "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+      },
+      "PMBEN29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      },
+      "PMDIAG29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      },
+      "PMERR29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      }
+    },
+    "remount": {
+      "RN28A/Renamed Long Filename.txt": {
+        "bytes": 3073,
+        "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+      },
+      "RN28A/Keep This File.txt": {
+        "bytes": 4,
+        "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+      },
+      "LFN Create 28/Created Long Filename.txt": {
+        "bytes": 3073,
+        "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+      },
+      "LFN Create 28/Nested Long Directory/Child With Spaces.txt": {
+        "bytes": 1025,
+        "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+      },
+      "LFN Create 28/N26-xxxxxxxxxxxxxxxxxx.txt": {
+        "bytes": 73,
+        "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+      },
+      "PMBEN29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      },
+      "PMDIAG29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      },
+      "PMERR29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      }
+    }
+  },
+  "screenshot": {
+    "source": "Actual PPC512 B800 video memory, BIOS font; native mount and saved native pmperf output; summary reflects verified workload/readbacks",
+    "video_sha256": "5fe5860640fc4fa026932c1b8c6a8ee20ee588ba274aa6456306fb8e0e9d0614",
+    "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+    "png_sha256": "c5bef05d4537b505468c8a264f03ac130a86aad053bb2100ba184bb1682fb66f",
+    "native_report_sha256": "27dee975ec8a944d580221095b76727fe61381deca153c79e5af207694340ac7"
+  },
+  "usb_unmounted_for_mac": true,
+  "sd_mounted_or_written": false,
+  "physical_fault_injection": false,
+  "mac_check": "pending",
+  "dos_check": "pending",
+  "limitations": [
+    "No device-cache flush or power-loss guarantee",
+    "Timeout cancellation and late-transfer buffer ownership unresolved",
+    "Observed stack peaks are not worst-case bounds"
+  ]
+}

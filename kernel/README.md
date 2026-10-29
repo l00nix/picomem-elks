@@ -201,7 +201,8 @@ it while mounted. `sync` alone is not evidence of a successful firmware flush.
 
 The separate [file-service error candidate](../docs/FILE-SERVICE-ERRORS.md)
 addresses masked close/USB errors in firmware. Its host tests pass, including
-this kernel's handling of returned CLOSE errors; hardware testing is pending.
+this kernel's handling of returned CLOSE errors. All 18 PPC512 workload batches
+and eight file checks after remount also passed with the existing kernel.
 It does not establish power-loss durability or safe timeout recovery.
 
 Open-file deletion is refused. Created entries consume the fixed 64-node mount
