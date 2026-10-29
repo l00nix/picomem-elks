@@ -60,7 +60,8 @@ command timings; this remains experimental.
 The next [file-service error candidate](docs/FILE-SERVICE-ERRORS.md) reports
 close and USB transfer failures instead of hiding them. Host tests, all 18 PPC512
 workload batches and eight file checks after remount passed with the existing
-kernel. Direct Mac FAT checks and DOS compatibility remain pending for this build.
+kernel. Direct Mac filename/content and read-only FAT checks passed too; return-trip
+remount and DOS compatibility remain pending for this build.
 
 ## Commands
 

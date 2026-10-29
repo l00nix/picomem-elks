@@ -2,8 +2,8 @@
 
 I have tested this firmware-only correctness update after the successful
 [runtime diagnostics tests](RUNTIME-DIAGNOSTICS.md). **All 18 PPC512 workload
-batches and eight full-file checks after remount passed.** Direct Mac FAT
-checking and DOS compatibility for this firmware remain pending. This is another
+batches and eight full-file checks after remount passed.** Direct Mac filename/content checks and a read-only FAT check passed too.
+The return trip to ELKS and DOS compatibility for this firmware remain pending. This is another
 step toward a USB read/write release candidate, not a release announcement.
 
 The preceding firmware can hide both a failed file close and a failed USB sector
@@ -38,7 +38,7 @@ All 18 batches in fresh `PMERR29` passed: no-op, read, write, rename pairs,
 long-name create/delete and directory create/remove. All eight retained files,
 including the new 3073-byte payload, matched their full contents before and
 after clean unmount/remount. SD stayed unmounted. USB was subsequently unmounted
-successfully for the independent Mac check.
+successfully for the independent Mac check, which subsequently passed.
 
 | Observation | Used | Reserved |
 | --- | ---: | ---: |
@@ -62,6 +62,18 @@ post-remount file checks; the command counters remain those of the saved report.
 
 [Raw native report](validation/pmperf-file-errors-20261029.txt) and
 [full timings, artifact hashes, stack readings and file checks](validation/file-errors-ppc512-20261029.json).
+
+## Independent Mac check — October 29, 2026
+
+The Mac identified the same physical Kingston and FAT32 volume. I checked the
+exact spelling of every path component and read all eight files directly;
+every byte count and SHA-256 matched the ELKS readbacks. The new `PMERR29`
+directory contained only its expected `Runtime File Alpha.txt` payload.
+
+After a normal unmount, `diskutil verifyVolume` ran `fsck_msdos -n` and reported
+filesystem check exit code 0. No repair was requested. The Kingston was safely
+ejected for return to PicoMEM. [Read-only FAT check log](validation/file-errors-mac-fat-20261029.txt).
+The return-trip remount and DOS compatibility remain pending for this firmware.
 
 ## Evidence and limits
 
@@ -91,8 +103,8 @@ currently tested diagnostics kernel and utilities.
 
 ## Hardware validation sequence
 
-The first two steps and the ELKS remount checks below are complete. Direct Mac
-checks and DOS compatibility remain pending for this candidate.
+The ELKS workload/remount and direct Mac checks below are complete. The return
+trip to ELKS and DOS compatibility remain pending for this candidate.
 
 1. Cleanly unmount USB and shut down ELKS. Save and verify a fresh full PicoMEM
    flash backup in BOOT mode, then flash and verify the candidate.
