@@ -201,7 +201,7 @@ firmware bytes and 426/700 kernel bytes, with zero flags/invalid counts. Fault-p
 peak use was not measured.
 
 The next diagnostic should expose the first transport stage/event/length/status
-without adding USB commands or changing write safeguards. The [transport-detail follow-up](#transport-detail-candidate) is now built and host-tested; hardware validation is pending. No cache-setting change or synchronization bypass was made.
+without adding USB commands or changing write safeguards. The [transport-detail follow-up](#transport-detail-candidate) has now captured the mismatch described below. No cache-setting change or synchronization bypass was made.
 [Full hardware evidence](validation/usb-cache-mode-20261029.json).
 
 
@@ -215,14 +215,62 @@ USB commands. The existing ELKS kernel and utility are sufficient.
 
 This changes diagnostics only. The command sequence, transfer acceptance checks,
 write quarantine and cache-flush requirement remain unchanged. Cache state is
-still unknown and the read/write release is blocked. No new firmware has been
-flashed for this candidate yet.
+still unknown and the read/write release is blocked. The hardware test below captured the mismatch without changing write safeguards.
 
 Validation passes: 18,430 real TinyUSB cases, 151 adapter scenarios, five FAT32
 scenarios, 14 legacy USB tests, 29 ELKS status-parser cases, ARM builds and
-stack-layout checks. The feature-disabled firmware is byte-identical. The next
-physical check will use a fresh verified recovery backup, read-only checks of the
+stack-layout checks. The feature-disabled firmware is byte-identical. The physical check below used a fresh verified recovery backup, read-only checks of the
 eight retained files and one guarded write attempt to capture the failure detail.
 
 [Design and field meanings](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-TRANSPORT-DETAIL.md)
 · [Candidate manifest](validation/usb-transport-detail-20261029.json).
+
+
+## Transport-detail PPC512 result
+
+The full recovery backup and firmware readback passed. ELKS booted with the
+existing kernel, USB appeared immediately, and all eight retained files passed
+full-content verification through a read-only mount. After unmounting and mounting
+explicitly read/write, one fresh `mkdir /mnt/usb/PMTRN29` failed with exit 1.
+The cached result was:
+
+```text
+?USB fault op=35 f=2 s=1 r=0 d=0 rs=70:5/20/00 n=18 c6=phase c10=-
+USB fault op=1a tag=427 why=8 stage=3 event=0
+USB xfer ep=81/81 got=13 want=13 data=4
+USB CSW checks=1f status=0 residue=0
+```
+
+The first cache query failed the **DATA/residue agreement check**. TinyUSB recorded
+four DATA bytes for the 64-byte allocation, followed by a successful 13-byte CSW
+transfer on the expected endpoint. The raw CSW had a valid signature, matching
+tag, bounded residue and status 0, but residue 0 claims all 64 requested bytes
+were relevant. The agreement bit `20` is missing from `checks=1f`. The checked
+transport then generated synthetic status 2; the device CSW itself did not report
+a phase error. MODE SENSE(10) was correctly skipped under the existing policy.
+
+For Data-In, the [USB Bulk-Only Transport specification, section 5.2](https://www.usb.org/sites/default/files/usbmassbulk_10.pdf)
+defines residue from the requested length and relevant bytes returned. The observed
+counts therefore do not establish a trustworthy cache-page response. This is
+firmware-observed evidence, not a physical bus trace: a device reporting an
+incorrect residue is one possibility, but a host byte-count problem is not ruled
+out. The four raw mode bytes were not captured, so I cannot yet call this an empty
+mode header or infer the write-cache setting. **Cache state remains unknown.**
+
+![PPC512 cached USB DATA/residue mismatch and saved native error](screenshots/ppc512-usb-transport-detail-20261029.png)
+
+The screenshot comes from actual PPC B800 video memory with live mount/status
+output and the explicitly saved native mkdir error. I did not repeat the write.
+The pre-write guard returned before sector-write submission, inferred from the
+control flow and original `dirty=0` fault rather than a USB trace. USB unmounted
+successfully; SD stayed unmounted. Initial stack use was 1632/4096 firmware bytes
+and 418/700 kernel bytes with zero flags/invalid counts. Fault-path peak use was
+not measured. ELKS remains running with the fault latched until PicoMEM restarts.
+
+My next proposed diagnostic is a bounded capture of returned mode bytes and
+MODE SENSE(10) as the **first** cache query on a fresh boot. That would test the
+alternate command without continuing after this ambiguous MODE SENSE(6) response.
+It is not implemented or flashed yet. Strict transport checks, write quarantine
+and the flush requirement remain; no cache-setting change or write retry was made.
+
+[Full hardware evidence and hashes](validation/usb-transport-detail-20261029.json).
