@@ -1,12 +1,74 @@
 # Optional runtime diagnostics candidate
 
-I am preparing a paired ELKS kernel and PicoMEM 2 firmware build to measure
-file-service latency and observed peak stack use. Hardware results are still
-pending. This is a diagnostic candidate, not a release candidate.
+I have tested the paired ELKS kernel and PicoMEM 2 firmware on the PPC512 to
+measure file-service latency and observed peak stack use. All 18 workload
+batches and seven full-file checks after remount passed. This remains a
+diagnostic candidate, not a release candidate.
 
 The [earlier baseline](RUNTIME-VALIDATION.md) measured complete operations from
 the host, including telnet/TTY overhead. This candidate adds microsecond
 measurements taken on PicoMEM itself, plus stack watermarks in both systems.
+
+## PPC512 results — October 29, 2026
+
+I installed the verified kernel and firmware after saving recovery copies.
+The Kingston DataTravelerMini mounted read/write after connection. The workload
+used a fresh `PMDIAG29` directory: reads, writes, rename pairs, long-name file
+creation/deletion and directory creation/removal, plus no-op batches. All 18
+batches passed. Full host reads matched all bytes in the new 3073-byte payload
+and six earlier fixtures, both before and after clean unmount/remount. SD was
+not mounted or written during this run.
+
+| Stack observation | Used | Reserved |
+| --- | ---: | ---: |
+| PicoMEM core 0, after workload | 2732 bytes | 4096 bytes |
+| ELKS syscall stack, after workload reset | 354 bytes | 700 bytes |
+| ELKS syscall stack, after subsequent remount | 358 bytes | 700 bytes |
+| ELKS syscall stack, initial pre-reset observation | 418 bytes | 700 bytes |
+
+The firmware peak leaves 1364 bytes in this workload and exceeds the previous
+2048-byte reservation by 684 bytes. This supports keeping the 4 KiB reservation;
+it does not establish a worst-case bound or demonstrate corruption in an older
+build. The reset deliberately excludes earlier mount/startup activity. All
+firmware flags and kernel invalid-paint counts were zero.
+
+The post-workload report counted 1579 firmware commands totaling 127.844409
+seconds. It includes fixture setup and the verification reads between batches;
+these totals are not confined to the host's timed windows. Selected command
+measurements are below, converted from microseconds to milliseconds:
+
+| Firmware command | Count | Mean ms | Maximum ms | Total seconds |
+| --- | ---: | ---: | ---: | ---: |
+| `06` close, mixed read/write handles | 276 | 151.640 | 812.689 | 41.853 |
+| `16` open | 264 | 119.599 | 120.117 | 31.574 |
+| `71` long-name creation, files/directories | 26 | 589.587 | 1081.431 | 15.329 |
+| `01` remove directory | 12 | 671.328 | 881.031 | 8.056 |
+| `13` delete file | 12 | 634.642 | 645.108 | 7.616 |
+| `0f` get attributes | 110 | 59.567 | 60.105 | 6.552 |
+| `72` rename | 24 | 250.555 | 251.969 | 6.013 |
+| `09` write payload | 220 | 4.683 | 12.055 | 1.030 |
+
+Open and close account for 57.4% of cumulative firmware service time in this
+workload. I will investigate their metadata and flush costs before changing
+transfer sizes. These command-level timings do not isolate `f_open`, `f_stat`
+or `f_sync`, and they do not justify removing synchronization. The existing
+[close-error limitation](../kernel/README.md) still needs attention before a
+release-candidate claim.
+
+Host timings include the added stack tracing as well as telnet/TTY overhead,
+so this run is not a performance improvement comparison with the uninstrumented
+baseline. No power-loss or media-error injection was performed.
+
+![PPC512 diagnostic report and mounted USB](screenshots/ppc512-diagnostics-20261029.png)
+
+This screenshot is rendered from actual PPC text video memory and its BIOS
+font. It shows native `mount` output and the saved native `pmperf` report taken
+immediately after the benchmark. The seven-file summary reflects the later
+independent post-remount checks; the displayed counters have not been replaced
+with post-remount values.
+
+[Raw native report](validation/pmperf-ppc512-20261029.txt) and
+[samples, artifact hashes, stack readings and file checks](validation/runtime-diag-ppc512-20261029.json).
 
 ## Build and use
 
@@ -86,8 +148,7 @@ Existing long-name tests remain part of the build. The ARM link map must
 retain separate 4 KiB core-0 and 2 KiB core-1 reservations without scratch
 code/data overlap. The 8086 kernel must fit its 16-bit segments.
 
-Before installation I save and verify the running kernel and a full PicoMEM
-flash recovery image. Hardware testing will repeat the 18-batch workload in
-a new USB directory, collect both reports, then verify retained file bytes
-after clean remount. SD stays read-only. No hardware measurements for this
-candidate are claimed yet.
+Before installation I saved and verified the running kernel and a full PicoMEM
+flash recovery image. Firmware programming passed readback verification. The
+hardware test above then repeated the bounded workload and post-remount byte
+checks. Further error-path validation and performance investigation remain.

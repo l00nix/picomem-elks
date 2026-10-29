@@ -52,8 +52,10 @@ create/append/truncate/rename/delete checks also pass. [Hardware results and scr
 
 The [runtime diagnostics candidate](docs/RUNTIME-DIAGNOSTICS.md) adds opt-in
 firmware-clock timing and observed stack peaks, following the
-[first host-timed hardware baseline](docs/RUNTIME-VALIDATION.md). Hardware
-measurements with this new candidate are pending.
+[first host-timed hardware baseline](docs/RUNTIME-VALIDATION.md). All 18 PPC512
+workload batches and seven file checks after remount passed. The measured
+firmware stack peak was 2732 of 4096 bytes. Results include a screenshot and
+command timings; this remains experimental.
 
 ## Commands
 
