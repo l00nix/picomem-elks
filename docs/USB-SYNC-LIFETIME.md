@@ -1,7 +1,7 @@
 # USB cache flush and timeout containment candidate
 
 I have prepared the next firmware-only step toward reliable PicoMEM USB writes.
-**PPC512 read checks passed, but the first write failed. A diagnostic follow-up is prepared; DOS validation remains pending.**
+**The diagnostic follow-up identified rejection of the cache-flush command. Read checks pass; writes remain blocked and DOS validation is pending.**
 The existing diagnostics kernel and utilities are sufficient. SD remains read-only.
 
 The preceding [file-service error milestone](FILE-SERVICE-ERRORS.md) reports
@@ -15,7 +15,7 @@ Filesystem synchronization now sends a real device-cache flush command. Before
 the first sector write, the firmware tests whether the drive supports that flush.
 Unsupported or failed flushes stop the operation; a failed close cannot silently
 report success. This does not prove protection against power loss or provide
-transactional writes. The Kingston's flush support and the cause of the first-write failure are not yet known.
+transactional writes. The Kingston returned command-failed status for the flush; its detailed error reason is still unknown.
 
 The candidate is default-off on `codex/usb-sync-lifetime`. See the
 [firmware design, build instructions and test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-SYNC-LIFETIME.md)
@@ -29,11 +29,11 @@ sector writes. Firmware RAM use increases by 512 bytes, with the 4 KiB stack
 reservation intact. Runtime stack usage and the performance cost of one-sector
 transfers still need hardware measurements.
 
-Next I will test the diagnostic follow-up after another verified recovery backup.
-It reports the first failed USB opcode and status through `pmstat --usb`; it adds
-no retries or fallback writes. If the fault is resolved, the bounded workload,
-clean remount, independent Mac checks, ELKS return trip and DOS compatibility
-remain required. No
+The diagnostic follow-up has now captured the failed command through
+`pmstat --usb`. The next step is a bounded read-only REQUEST SENSE diagnostic
+to obtain the detailed reason; that follow-up is not implemented yet. Writes
+stay blocked. After a validated fix, the bounded workload, clean remount,
+independent Mac checks, ELKS return trip and DOS compatibility remain required. No
 real-media failure injection is planned. The upstream metadata-only draft PR
 remains unchanged.
 
@@ -63,5 +63,36 @@ status describes its internal device state; the ELKS `mount` listing confirms
 that USB is unmounted.
 
 [Detailed first-attempt evidence](validation/usb-sync-first-write-20261029.json).
-The diagnostic follow-up's host tests/build pass, including 59 adapter scenarios;
-its physical validation is pending. The read/write release is still blocked.
+The diagnostic follow-up's host tests/build pass, including 59 adapter scenarios.
+Its physical result follows below. The read/write release is still blocked.
+
+## Diagnostic PPC512 result
+
+The diagnostic firmware was backed up, flashed and readback-verified. The Kingston
+was detected immediately, and all eight existing files again matched their full
+contents through a read-only mount. The first directory creation in fresh
+`PMSYD29` failed, with this cached status:
+
+```text
+?USB fault op=35 f=2 s=1 r=0 d=0
+```
+
+`35` is SYNCHRONIZE CACHE(10); `f=2 s=1` identifies a validated command-failed
+response. The pre-write probe returned before any sector WRITE was submitted
+by this attempt, based on the firmware control flow and the clear dirty flag.
+No physical USB trace was taken. There were no retries and no workload batches.
+USB is unmounted, SD stayed unmounted, and ELKS remains running.
+
+![PPC512 cached USB fault and saved native workload error](screenshots/ppc512-usb-sync-fault-status-20261029.png)
+
+The screen is rendered from actual PPC video memory. The native workload error
+is explicitly saved output, not another write attempt. The full
+[artifact hashes, file checks, fault fields and capture provenance](validation/usb-sync-fault-status-20261029.json)
+are recorded.
+
+This confirms the failing command, but not why the drive rejected it. Under the
+[USB BOT specification](https://www.usb.org/sites/default/files/usbmassbulk_10.pdf),
+status 1 means command failure. Detailed SCSI sense data is needed before calling
+it an unsupported opcode or deciding on compatibility behavior. I will keep the
+write guard in place while investigating; a failed flush must not silently become
+success. No follow-up sense-query firmware is staged yet.

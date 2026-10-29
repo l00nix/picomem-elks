@@ -68,8 +68,9 @@ The next [USB cache-flush and timeout-containment candidate](docs/USB-SYNC-LIFET
 adds a real device-cache flush and reserves USB transfer memory after a timeout.
 Host tests/builds and eight PPC512 read checks passed, but the first write returned
 an I/O error before any workload batches ran. USB was unmounted without retrying.
-A diagnostic follow-up is prepared to identify the failed command; this remains
-experimental and the read/write release is blocked.
+The diagnostic follow-up captured a command-failed response to SYNCHRONIZE
+CACHE(10), before sector writes in that attempt. Detailed sense data is still
+needed; this remains experimental and the read/write release is blocked.
 
 ## Commands
 
