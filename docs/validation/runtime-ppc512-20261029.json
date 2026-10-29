@@ -1,0 +1,190 @@
+{
+  "date": "2026-10-29",
+  "hardware": "Amstrad PPC512, PicoMEM 2, Kingston 1 GB FAT32 USB",
+  "kernel_sha256": "f47981b9551bc8c1793fc0a5604d405568f6b7a9197d8b428a3c0085dd762fc8",
+  "firmware_sha256": "4e144a3ed4f1a40db9da79043fe4660fe9e0c4f8a71253f962622a2e46efef13",
+  "native_utility_sha256": "319cb74bb90cfff377d6512ceeb5490fb761da96bc8fed5f7505d717a0e92b36",
+  "core0_stack_reserved_bytes": 4096,
+  "core1_stack_reserved_bytes": 2048,
+  "full_flash_backup_and_new_firmware_readback_verified": true,
+  "latency": {
+    "status": "pass",
+    "clock": "host time.perf_counter_ns",
+    "metric": "batch wall time including transport and TTY; not firmware service time",
+    "directory": "/mnt/usb/PMBEN29",
+    "samples": [
+      {
+        "sequence": 1,
+        "operation": "noop",
+        "iterations": 4,
+        "elapsed_ns": 1000784292,
+        "ms_per_iteration": 250.196073
+      },
+      {
+        "sequence": 2,
+        "operation": "noop",
+        "iterations": 4,
+        "elapsed_ns": 1033794875,
+        "ms_per_iteration": 258.44871875
+      },
+      {
+        "sequence": 3,
+        "operation": "noop",
+        "iterations": 4,
+        "elapsed_ns": 1001587542,
+        "ms_per_iteration": 250.3968855
+      },
+      {
+        "sequence": 4,
+        "operation": "read3073",
+        "iterations": 4,
+        "elapsed_ns": 4758625250,
+        "ms_per_iteration": 1189.6563125
+      },
+      {
+        "sequence": 5,
+        "operation": "read3073",
+        "iterations": 4,
+        "elapsed_ns": 4389943208,
+        "ms_per_iteration": 1097.485802
+      },
+      {
+        "sequence": 6,
+        "operation": "read3073",
+        "iterations": 4,
+        "elapsed_ns": 4592682250,
+        "ms_per_iteration": 1148.1705625
+      },
+      {
+        "sequence": 7,
+        "operation": "write3073",
+        "iterations": 4,
+        "elapsed_ns": 21178967916,
+        "ms_per_iteration": 5294.741979
+      },
+      {
+        "sequence": 8,
+        "operation": "write3073",
+        "iterations": 4,
+        "elapsed_ns": 21211598708,
+        "ms_per_iteration": 5302.899677
+      },
+      {
+        "sequence": 9,
+        "operation": "write3073",
+        "iterations": 4,
+        "elapsed_ns": 21400844500,
+        "ms_per_iteration": 5350.211125
+      },
+      {
+        "sequence": 10,
+        "operation": "rename_pair",
+        "iterations": 4,
+        "elapsed_ns": 3117281791,
+        "ms_per_iteration": 779.32044775
+      },
+      {
+        "sequence": 11,
+        "operation": "rename_pair",
+        "iterations": 4,
+        "elapsed_ns": 3106891708,
+        "ms_per_iteration": 776.722927
+      },
+      {
+        "sequence": 12,
+        "operation": "rename_pair",
+        "iterations": 4,
+        "elapsed_ns": 3110363042,
+        "ms_per_iteration": 777.5907605
+      },
+      {
+        "sequence": 13,
+        "operation": "create_unlink",
+        "iterations": 4,
+        "elapsed_ns": 9364956458,
+        "ms_per_iteration": 2341.2391145
+      },
+      {
+        "sequence": 14,
+        "operation": "create_unlink",
+        "iterations": 4,
+        "elapsed_ns": 9836774708,
+        "ms_per_iteration": 2459.193677
+      },
+      {
+        "sequence": 15,
+        "operation": "create_unlink",
+        "iterations": 4,
+        "elapsed_ns": 9817434667,
+        "ms_per_iteration": 2454.35866675
+      },
+      {
+        "sequence": 16,
+        "operation": "mkdir_rmdir",
+        "iterations": 4,
+        "elapsed_ns": 6817783625,
+        "ms_per_iteration": 1704.44590625
+      },
+      {
+        "sequence": 17,
+        "operation": "mkdir_rmdir",
+        "iterations": 4,
+        "elapsed_ns": 7091914000,
+        "ms_per_iteration": 1772.9785
+      },
+      {
+        "sequence": 18,
+        "operation": "mkdir_rmdir",
+        "iterations": 4,
+        "elapsed_ns": 6860747292,
+        "ms_per_iteration": 1715.186823
+      }
+    ],
+    "completion": "PMBENCH PASS 18 batches; retained /mnt/usb/PMBEN29/Runtime File Alpha.txt (3073 bytes)",
+    "median_ms_per_iteration": {
+      "noop": 250.3968855,
+      "read3073": 1148.1705625,
+      "write3073": 5302.899677,
+      "rename_pair": 777.5907605,
+      "create_unlink": 2454.35866675,
+      "mkdir_rmdir": 1715.186823
+    }
+  },
+  "post_benchmark_and_remount_sha256_verified": {
+    "RN28A/Renamed Long Filename.txt": {
+      "bytes": 3073,
+      "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+    },
+    "RN28A/Keep This File.txt": {
+      "bytes": 4,
+      "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+    },
+    "LFN Create 28/Created Long Filename.txt": {
+      "bytes": 3073,
+      "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+    },
+    "LFN Create 28/Nested Long Directory/Child With Spaces.txt": {
+      "bytes": 1025,
+      "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+    },
+    "LFN Create 28/N26-xxxxxxxxxxxxxxxxxx.txt": {
+      "bytes": 73,
+      "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+    },
+    "PMBEN29/Runtime File Alpha.txt": {
+      "bytes": 3073,
+      "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+    }
+  },
+  "fresh_directory_only_expected_final_file": true,
+  "sd_writes": false,
+  "runtime_stack_high_water_measured": false,
+  "firmware_only_service_latency_measured": false,
+  "release_candidate": false,
+  "screenshot": {
+    "source": "Actual PPC512 B800:0000 video memory; native mount/ls/wc plus explicitly labelled host timing report shown via cat",
+    "video_sha256": "d81d0ff078a8d9f24bb8302fdc19fb6d6346a05ac58e5f6dd2c8721bc196e80a",
+    "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+    "png_sha256": "162ce8cc06d32f2105780289dbea46068111ac3f44020925c02b911f14001487"
+  }
+}

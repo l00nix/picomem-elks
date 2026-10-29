@@ -1,8 +1,9 @@
-# Runtime validation preparation
+# Runtime validation: first hardware baseline
 
-I am preparing stack and latency checks for the rename candidate. This is
-still experimental work, not a release candidate. The existing kernel can run
-the new `pmbench` utility; no kernel change is required for host-timed batches.
+I have completed the first host-timed workload on the PPC512 using the rename
+kernel and the firmware's opt-in 4 KiB core-0 stack reservation. All 18 batches
+passed, and full-file reads passed again after remounting. This is still
+experimental work, not a release candidate. No kernel change was needed.
 
 ## Stack preflight
 
@@ -18,9 +19,49 @@ bytes of nested frames against a 2048-byte core-0 stack reservation, before
 deeper FatFs/USB calls or interrupts. An opt-in firmware candidate now reserves
 the otherwise empty 4 KiB SCRATCH_Y bank for core 0 while retaining core 1's
 2 KiB allocation. Its build/map checks pass and flashing passed readback
-verification after saving a full recovery image. The ELKS reboot, hardware
-workload and actual stack high-water checks remain pending. See the companion
-firmware branch's `RUNTIME-VALIDATION.md` for the frame breakdown.
+verification after saving a full recovery image. ELKS boot and the hardware
+workload now pass; actual stack high-water measurements remain pending. See the
+[companion firmware audit](https://github.com/l00nix/ISA-PicoMEM/blob/codex/runtime-validation/RUNTIME-VALIDATION.md)
+for the frame breakdown.
+
+## PPC512 results — October 29, 2026
+
+I ran three batches of four iterations for each operation on the Kingston
+1 GB FAT32 USB drive. The table gives the median of the three batch averages,
+in milliseconds per iteration. Every value includes telnet/TTY overhead;
+rename and create/remove entries represent a complete pair of operations.
+
+| Operation | Median ms/iteration | Range of batch averages |
+| --- | ---: | ---: |
+| No-op baseline | 250.4 | 250.2–258.4 |
+| Read and verify 3073 bytes | 1148.2 | 1097.5–1189.7 |
+| Write 3073 bytes | 5302.9 | 5294.7–5350.2 |
+| Rename there and back | 777.6 | 776.7–779.3 |
+| Create, write 73 bytes, delete | 2454.4 | 2341.2–2459.2 |
+| Create and remove directory | 1715.2 | 1704.4–1773.0 |
+
+The no-op **whole batch** took about one second. I have not subtracted that
+overhead or treated these values as firmware-only timings. The three samples
+per operation establish a first baseline, not a latency distribution or a
+worst-case bound. Writes are the clearest performance target in this workload.
+
+The workload verified its retained payload after every batch. Independent
+host FTP reads matched all 3073 bytes afterward, along with the five earlier
+creation/rename fixtures. USB unmounted and remounted read/write successfully;
+all six files matched their expected SHA-256 hashes again. Only
+`Runtime File Alpha.txt` remained in the fresh `PMBEN29` directory. SD was not
+written, and the kernel remained unchanged.
+
+![Actual PPC512 screen with mount, files and labelled host timing report](screenshots/ppc512-runtime-20261029.png)
+
+This image is rendered from the PPC's actual text video memory and BIOS font.
+`mount`, `ls` and `wc` ran on ELKS; the explicitly labelled host timing report
+was displayed with `cat`. It is not an ELKS-clock measurement.
+
+[Raw samples, artifact hashes and full-file checks](validation/runtime-ppc512-20261029.json).
+The tested firmware UF2 SHA-256 is
+`4e144a3ed4f1a40db9da79043fe4660fe9e0c4f8a71253f962622a2e46efef13`.
+The previous firmware and full flash recovery image remain saved.
 
 ## Host-timed workload
 
@@ -75,6 +116,13 @@ timings will need separate instrumentation using the PicoMEM clock.
 - Native 8086 build passed with warnings treated as errors.
 - PPC native utility startup and staging readback passed. USB mounted
   read-only and both retained rename payloads matched their original bytes.
-- The stack-reservation firmware is flashed and readback verified; hardware
-  measurements await the ELKS reboot. The kernel is unchanged. No
-  release-candidate claim is made.
+- The stack-reservation firmware is flashed and readback verified; ELKS boot,
+  all 18 workload batches and post-remount file checks pass.
+
+## Remaining before release-candidate consideration
+
+I still need measured peak stack use in the kernel and firmware, plus
+firmware-clock service timings. A larger reservation and successful workloads
+do not establish a worst-case stack bound. Those measurements should guide
+any changes to write performance. This run does not test sudden removal or
+power-loss recovery, and it does not expand the supported rename semantics.
