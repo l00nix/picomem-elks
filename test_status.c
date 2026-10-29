@@ -104,11 +104,16 @@ int main(void)
     assert(run(0x61)==0 && !memcmp(record+1," ???",4));
     /* The transport diagnostic adds three cached lines to the existing wire
      * format. Exercise an eight-line inventory plus the exact text fields. */
-    {
+    for (unsigned variant=0;variant<2;++variant) {
         const char *lines[] = {"USB: 4 devices", "1: fault", "2: hub", "3: mouse", "4: keyboard",
             "USB fault op=1a tag=4294967295 why=1 stage=2 event=2",
             "USB xfer ep=81/81 got=0 want=64 data=0",
             "USB CSW checks=00 status=255 residue=4294967295"};
+        if (variant) {
+            lines[5]="USB query op=5a tag=427 why=8 stage=3 event=0";
+            lines[6]="USB xfer ep=81/81 got=13 want=13 data=8";
+            lines[7]="USB CSW ck=1f s=0 r=0 n=8 b=0006000000000000";
+        }
         setup(0); response[0]=8; response_len=1;
         for (i=0;i<8;++i) {
             unsigned length=(unsigned)strlen(lines[i])+1;

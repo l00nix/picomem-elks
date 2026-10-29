@@ -73,7 +73,7 @@ CACHE(10), before sector writes in that attempt. REQUEST SENSE now confirms the 
 (`5/20/00`). A [read-only cache-mode diagnostic](docs/USB-SYNC-LIFETIME.md#current-cache-mode-candidate)
 returned a phase/transport error on its first query; the alternate query was
 skipped and cache state remains unknown. This remains experimental and the
-read/write release is blocked. A [transport-detail follow-up](docs/USB-SYNC-LIFETIME.md#transport-detail-candidate) has now identified a DATA/residue mismatch: four bytes recorded for a 64-byte cache query, with success status and zero residue. The write guard remains active.
+read/write release is blocked. A [transport-detail follow-up](docs/USB-SYNC-LIFETIME.md#transport-detail-candidate) has now identified a DATA/residue mismatch: four bytes recorded for a 64-byte cache query, with success status and zero residue. The write guard remains active. The [MODE SENSE(10)-first follow-up](docs/USB-SYNC-LIFETIME.md#mode-sense10-first-candidate) is built and host-tested, with raw response-prefix capture; its hardware test is pending.
 
 ## Commands
 

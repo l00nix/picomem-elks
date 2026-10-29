@@ -274,3 +274,24 @@ It is not implemented or flashed yet. Strict transport checks, write quarantine
 and the flush requirement remain; no cache-setting change or write retry was made.
 
 [Full hardware evidence and hashes](validation/usb-transport-detail-20261029.json).
+
+
+## MODE SENSE(10)-first candidate
+
+I built a firmware-only follow-up that starts with MODE SENSE(10) and preserves
+up to 16 bytes from an accepted cache-query DATA transfer. A checked completion
+with no usable cache page may permit one MODE SENSE(6) alternate; ambiguous
+transport still stops the sequence. No residue override, write retry, cache-setting
+change or synchronization bypass is included.
+
+`pmstat --usb` reports the latest completed query and a bounded hexadecimal prefix.
+The existing ELKS kernel and utilities are sufficient. Even a valid cache-disabled
+reply leaves writes blocked in this diagnostic build.
+
+The candidate passes 19,222 transport cases, 153 adapter scenarios, five FAT32
+scenarios, 14 legacy USB tests, 30 ELKS status-parser scenarios, ARM builds and
+stack-layout checks. The feature-disabled firmware is byte-identical. Hardware
+validation is pending; the PPC is still running the previous transport diagnostic.
+
+[Design, output fields and hardware test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-MODE10-PREFIX.md)
+· [Candidate manifest](validation/usb-mode10-prefix-20261029.json).
