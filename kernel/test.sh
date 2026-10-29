@@ -4,6 +4,7 @@ kit=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 workspace=$(mktemp -d "${TMPDIR:-/tmp}/picomem-tests.XXXXXX")
 trap 'rm -f "$workspace/picofs" "$workspace/mouse" "$workspace/rw" "$workspace/lfn" "$workspace/lfnrw" "$workspace/create" "$workspace/rename" "$workspace/namei"; rmdir "$workspace"' EXIT HUP INT TERM
 host_cc=${CC:-cc}
+python3 "$kit/tests/test-pmbench.py"
 "$host_cc" -std=c99 -D_DEFAULT_SOURCE -Wall -Wextra -Werror \
   -fsanitize=address,undefined "$kit/tests/test-picofs.c" -o "$workspace/picofs"
 "$workspace/picofs"

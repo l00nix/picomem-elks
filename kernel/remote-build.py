@@ -46,7 +46,7 @@ KERNEL_CONFIG={w}/src/kernel/{'ppc512-rename.config' if rename else 'ppc512-crea
 cat {w}/src/kernel/build/manifest.json
 ''')
     out.mkdir(parents=True,exist_ok=True)
-    for name in ('linux','kernel.config','manifest.json','system.map','pmmount','pmmouse','pmfstest','mount','pmrwtest','pmlfnrw','pmlfnnew','pmlfnren','pmrename'):
+    for name in ('linux','kernel.config','manifest.json','system.map','pmmount','pmmouse','pmfstest','mount','pmrwtest','pmlfnrw','pmlfnnew','pmlfnren','pmrename','pmbench'):
         with (out/name).open('wb') as f:
             subprocess.run(['ssh',host,'cat '+w+'/src/kernel/build/'+name],stdout=f,check=True)
     with (out/'build.log').open('wb') as f:

@@ -80,7 +80,8 @@ recovery from power loss or safe unplugging while mounted.
   metadata-only and creation UF2 hashes exactly.
 
 Before considering a release candidate I still need runtime stack and
-service-latency measurements. QEMU
+service-latency measurements. [Runtime validation preparation](RUNTIME-VALIDATION.md)
+records the compiler audit and the host-timed workload. QEMU
 cannot validate the actual PicoMEM file service. Directory moves, overwrite
 semantics, Unicode and SD writes are outside this milestone.
 
