@@ -3,7 +3,7 @@
 I have tested this firmware-only correctness update after the successful
 [runtime diagnostics tests](RUNTIME-DIAGNOSTICS.md). **All 18 PPC512 workload
 batches and eight full-file checks after remount passed.** Direct Mac filename/content checks and a read-only FAT check passed too.
-The return trip to ELKS and DOS compatibility for this firmware remain pending. This is another
+The return trip to ELKS also passed; DOS compatibility for this firmware remains pending. This is another
 step toward a USB read/write release candidate, not a release announcement.
 
 The preceding firmware can hide both a failed file close and a failed USB sector
@@ -73,7 +73,12 @@ directory contained only its expected `Runtime File Alpha.txt` payload.
 After a normal unmount, `diskutil verifyVolume` ran `fsck_msdos -n` and reported
 filesystem check exit code 0. No repair was requested. The Kingston was safely
 ejected for return to PicoMEM. [Read-only FAT check log](validation/file-errors-mac-fat-20261029.txt).
-The return-trip remount and DOS compatibility remain pending for this firmware.
+After reconnection to PicoMEM with ELKS still running, the Kingston remounted
+read/write and all eight files again matched their exact contents. `ls` displayed
+the long filename correctly. The later diagnostic observation was 2812/4096
+firmware stack bytes and 402/700 ELKS stack bytes, with no flags or invalid
+samples; this is separate from the frozen workload report above. DOS compatibility
+remains pending for this firmware.
 
 ## Evidence and limits
 
@@ -103,8 +108,8 @@ currently tested diagnostics kernel and utilities.
 
 ## Hardware validation sequence
 
-The ELKS workload/remount and direct Mac checks below are complete. The return
-trip to ELKS and DOS compatibility remain pending for this candidate.
+The ELKS workload/remount, direct Mac checks and return-trip remount are complete.
+DOS compatibility remains pending for this candidate.
 
 1. Cleanly unmount USB and shut down ELKS. Save and verify a fresh full PicoMEM
    flash backup in BOOT mode, then flash and verify the candidate.

@@ -1,6 +1,6 @@
 {
   "date": "2026-10-29",
-  "status": "PPC512 workload/remount and direct Mac names/contents/FAT checks passed; return-trip remount and DOS compatibility pending",
+  "status": "PPC512 workload/remount, independent Mac names/contents/FAT checks and return-trip remount passed; DOS compatibility pending",
   "firmware_source_commit": "99d00ebc942fa3d1d84af79dc514aa1a176a0f4d",
   "elks_source_commit": "b6b2354533d2d8cd4a8f2fc0d667ad543a3917c6",
   "firmware_sha256": "3788bbd56205c077f11a0b73a2f8b0909aa7cde39eb7eb33b5561289ffa219b4",
@@ -458,5 +458,46 @@
     "Timeout cancellation and late-transfer buffer ownership unresolved",
     "Observed stack peaks are not worst-case bounds"
   ],
-  "return_trip": "pending"
+  "return_trip": {
+    "status": "passed",
+    "readback": {
+      "RN28A/Renamed Long Filename.txt": {
+        "bytes": 3073,
+        "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+      },
+      "RN28A/Keep This File.txt": {
+        "bytes": 4,
+        "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+      },
+      "LFN Create 28/Created Long Filename.txt": {
+        "bytes": 3073,
+        "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+      },
+      "LFN Create 28/Nested Long Directory/Child With Spaces.txt": {
+        "bytes": 1025,
+        "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+      },
+      "LFN Create 28/N26-xxxxxxxxxxxxxxxxxx.txt": {
+        "bytes": 73,
+        "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+      },
+      "PMBEN29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      },
+      "PMDIAG29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      },
+      "PMERR29/Runtime File Alpha.txt": {
+        "bytes": 3073,
+        "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+      }
+    },
+    "mount_mode": "rw",
+    "firmware_stack_used": 2812,
+    "kernel_stack_used": 402,
+    "diagnostic_flags": 0,
+    "kernel_invalid_samples": 0
+  }
 }
