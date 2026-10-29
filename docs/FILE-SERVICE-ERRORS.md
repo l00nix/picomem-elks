@@ -3,7 +3,7 @@
 I have tested this firmware-only correctness update after the successful
 [runtime diagnostics tests](RUNTIME-DIAGNOSTICS.md). **All 18 PPC512 workload
 batches and eight full-file checks after remount passed.** Direct Mac filename/content checks and a read-only FAT check passed too.
-The return trip to ELKS also passed; DOS compatibility for this firmware remains pending. This is another
+The return trip to ELKS and MS-DOS 6.22 compatibility also passed. This is another
 step toward a USB read/write release candidate, not a release announcement.
 
 The preceding firmware can hide both a failed file close and a failed USB sector
@@ -78,7 +78,31 @@ read/write and all eight files again matched their exact contents. `ls` displaye
 the long filename correctly. The later diagnostic observation was 2812/4096
 firmware stack bytes and 402/700 ELKS stack bytes, with no flags or invalid
 samples; this is separate from the frozen workload report above. DOS compatibility
-remains pending for this firmware.
+subsequently passed as described below.
+
+## MS-DOS 6.22 compatibility — October 29, 2026
+
+With the same candidate firmware, MS-DOS 6.22 with 4DOS 8.00, and the patched
+CMTEST agent and RMTDOS running,
+I verified all eight retained ELKS-created files through DOS 8.3 aliases. The
+new `PMERR29/Runtime File Alpha.txt` appeared as `G:\PMERR29\RUNTIM~1.TXT` and
+all 3073 bytes matched. The three file-service ROM descriptors and independent
+diagnostics descriptor matched, and the DOS HDD root enumerated successfully.
+
+A fresh `G:\PMERR29\DOSE29.TMP` passed create/write/read (1025 bytes), append/read
+(1538 bytes) and truncate/rewrite/read (31 bytes), with exact host readback and
+DOS-side CRC-32 checks. Ordinary DOS `REN` changed it to `DOSE2.TMP`; readback and
+CRC passed again. Ordinary `DEL` removed the temporary file. All eight retained
+fixtures were then reread and remained unchanged. Existing test filenames were
+refused before writing. No DOS long-filename driver was installed or needed.
+
+![PPC512 DOS alias listing and compatibility results](screenshots/ppc512-file-errors-dos-20261029.png)
+
+This is the actual DOS text screen captured through patched COMrade and rendered
+with the PPC BIOS font. The echo summaries were issued only after the tests and
+cleanup passed. The [combined validation record](validation/file-errors-ppc512-20261029.json)
+contains alias paths, lengths, hashes and CRCs. The PPC was left at the DOS prompt
+with CMTEST/RMTDOS resident; no firmware change or reboot was performed by this test.
 
 ## Evidence and limits
 
@@ -108,8 +132,9 @@ currently tested diagnostics kernel and utilities.
 
 ## Hardware validation sequence
 
-The ELKS workload/remount, direct Mac checks and return-trip remount are complete.
-DOS compatibility remains pending for this candidate.
+The ELKS workload/remount, direct Mac checks, return-trip remount and DOS
+compatibility checks below are complete. Fault injection remains host-only;
+USB cache-flush semantics and safe timeout recovery still block a release claim.
 
 1. Cleanly unmount USB and shut down ELKS. Save and verify a fresh full PicoMEM
    flash backup in BOOT mode, then flash and verify the candidate.

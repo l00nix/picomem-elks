@@ -1,6 +1,6 @@
 {
   "date": "2026-10-29",
-  "status": "PPC512 workload/remount, independent Mac names/contents/FAT checks and return-trip remount passed; DOS compatibility pending",
+  "status": "Normal ELKS workload/remount, independent Mac FAT/name/content checks, return trip and MS-DOS 6.22 compatibility passed; candidate remains experimental",
   "firmware_source_commit": "99d00ebc942fa3d1d84af79dc514aa1a176a0f4d",
   "elks_source_commit": "b6b2354533d2d8cd4a8f2fc0d667ad543a3917c6",
   "firmware_sha256": "3788bbd56205c077f11a0b73a2f8b0909aa7cde39eb7eb33b5561289ffa219b4",
@@ -452,7 +452,174 @@
     "fat_log_sha256": "da4134dbfb9ebc773c500d960aa20e6708f9975324db38e2e7e4538fdb9945c6",
     "safely_ejected": true
   },
-  "dos_check": "pending",
+  "dos_check": {
+    "status": "passed",
+    "os": "MS-DOS 6.22",
+    "read_test": {
+      "files": [
+        {
+          "path": "G:\\RN28A\\KEEPTH~1.TXT",
+          "bytes": 4,
+          "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+        },
+        {
+          "path": "G:\\RN28A\\RENAME~1.TXT",
+          "bytes": 3073,
+          "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+        },
+        {
+          "path": "G:\\LFNCRE~1\\CREATE~1.TXT",
+          "bytes": 3073,
+          "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+        },
+        {
+          "path": "G:\\LFNCRE~1\\NESTED~1\\CHILDW~1.TXT",
+          "bytes": 1025,
+          "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+        },
+        {
+          "path": "G:\\LFNCRE~1\\N26-XX~1.TXT",
+          "bytes": 73,
+          "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+        },
+        {
+          "path": "G:\\PMBEN29\\RUNTIM~1.TXT",
+          "bytes": 3073,
+          "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+        },
+        {
+          "path": "G:\\PMDIAG29\\RUNTIM~1.TXT",
+          "bytes": 3073,
+          "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+        },
+        {
+          "path": "G:\\PMERR29\\RUNTIM~1.TXT",
+          "bytes": 3073,
+          "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+        }
+      ],
+      "hello": {
+        "proto_ver": 1,
+        "cols": 80,
+        "rows": 25,
+        "chunk_max": 1024,
+        "machine": "COMRADE/3011ad0d-dirty.20261028133643"
+      },
+      "all_three_rom_descriptors_verified": true,
+      "diagnostics_descriptor_verified": true,
+      "rename_directory": [
+        {
+          "name": "KEEPTH~1.TXT",
+          "size": 4,
+          "attr": 32,
+          "is_dir": false,
+          "is_hidden": false,
+          "is_system": false,
+          "is_readonly": false,
+          "mtime": "2026-01-01 00:00:00"
+        },
+        {
+          "name": "RENAME~1.TXT",
+          "size": 3073,
+          "attr": 32,
+          "is_dir": false,
+          "is_hidden": false,
+          "is_system": false,
+          "is_readonly": false,
+          "mtime": "2026-01-01 00:00:00"
+        }
+      ],
+      "usb_directory": [
+        {
+          "name": "CREATE~1.TXT",
+          "size": 3073,
+          "attr": 32,
+          "is_dir": false,
+          "is_hidden": false,
+          "is_system": false,
+          "is_readonly": false,
+          "mtime": "2026-01-01 00:00:00"
+        },
+        {
+          "name": "NESTED~1",
+          "size": 0,
+          "attr": 16,
+          "is_dir": true,
+          "is_hidden": false,
+          "is_system": false,
+          "is_readonly": false,
+          "mtime": "2026-01-01 00:00:00"
+        },
+        {
+          "name": "N26-XX~1.TXT",
+          "size": 73,
+          "attr": 32,
+          "is_dir": false,
+          "is_hidden": false,
+          "is_system": false,
+          "is_readonly": false,
+          "mtime": "2026-01-01 00:00:00"
+        }
+      ],
+      "nested_directory": [
+        {
+          "name": "CHILDW~1.TXT",
+          "size": 1025,
+          "attr": 32,
+          "is_dir": false,
+          "is_hidden": false,
+          "is_system": false,
+          "is_readonly": false,
+          "mtime": "2026-01-01 00:00:00"
+        }
+      ],
+      "hdd_root_entry_count": 22,
+      "screen_text": "g:\\>ver\n\n4DOS 8.00   MS-DOS 6.22\n\ng:\\>dir g:\\pmerr29\n\n Volume in drive G is PICOMEM\n Directory of  g:\\pmerr29\\*.*\n\nruntim~1.txt      3073   1-01-26   0:00\n          3,073 bytes in 1 file and 0 dirs    32,768 bytes allocated\n    206,209,024 bytes free\n\ng:\\>dir g:\\rn28a /w\n\n Volume in drive G is PICOMEM\n Directory of  g:\\rn28a\\*.*\n\nkeepth~1.txt    rename~1.txt\n          3,077 bytes in 2 files and 0 dirs    65,536 bytes allocated\n    206,209,024 bytes free\n\ng:\\>\n\n",
+      "success": true
+    },
+    "write_test": {
+      "path": "G:\\PMERR29\\DOSE29.TMP",
+      "checks": [
+        {
+          "operation": "create/write/read",
+          "bytes": 1025,
+          "sha256": "e837c4068a7692f69523283d856d869c1ef736a25cfff132acbb668d738d731f",
+          "crc32": 3934898600
+        },
+        {
+          "operation": "append/read",
+          "bytes": 1538,
+          "sha256": "fd3dff9af41501e5d1b5e6b2d8623ab8d3844fe0cfa8170c4f58c2c2d7b70e9a",
+          "crc32": 2309448895
+        },
+        {
+          "operation": "truncate/rewrite/read",
+          "bytes": 31,
+          "sha256": "0ae55cf20235764e65906d3b1b2d6ac0d56d603380b1728d34007601fcce51c2",
+          "crc32": 4028427607
+        },
+        {
+          "operation": "legacy DOS rename/read",
+          "bytes": 31,
+          "sha256": "0ae55cf20235764e65906d3b1b2d6ac0d56d603380b1728d34007601fcce51c2",
+          "crc32": 4028427607
+        }
+      ],
+      "renamed_path": "G:\\PMERR29\\DOSE2.TMP",
+      "temporary_file_deleted": true,
+      "retained_fixtures_unchanged": true,
+      "success": true
+    },
+    "screenshot": {
+      "source": "Actual DOS text screen via patched COMrade; rendered with PPC BIOS font. Echo summaries follow successful full-file and temporary-write assertions.",
+      "cells_sha256": "b51964d22b477f8caf64148a10d8b6eedf7b5862918270b242129693821040a8",
+      "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+      "png_sha256": "9612cf49d6b1c57839a2adb8ffb39c4313785ea688842480276509d715728b85"
+    },
+    "retained_files_verified_after_writes": 8,
+    "physical_fault_injection": false,
+    "shell": "4DOS 8.00"
+  },
   "limitations": [
     "No device-cache flush or power-loss guarantee",
     "Timeout cancellation and late-transfer buffer ownership unresolved",

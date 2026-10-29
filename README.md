@@ -61,7 +61,8 @@ The next [file-service error candidate](docs/FILE-SERVICE-ERRORS.md) reports
 close and USB transfer failures instead of hiding them. Host tests, all 18 PPC512
 workload batches and eight file checks after remount passed with the existing
 kernel. Direct Mac filename/content, read-only FAT checks and return-trip remount
-passed too. DOS compatibility remains pending for this build.
+passed too. MS-DOS 6.22 alias reads and temporary create/append/truncate/rename/delete
+tests also passed. Device-cache flush and timeout recovery remain unfinished.
 
 ## Commands
 
