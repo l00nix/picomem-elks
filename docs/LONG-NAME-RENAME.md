@@ -124,3 +124,9 @@ After unmounting the volume, `fsck_msdos -n` checked the FAT, directories and
 orphan clusters and returned exit code 0. No repair was requested. The stick
 was then safely ejected. This verifies a normal clean unmount, not recovery
 from sudden removal or power loss.
+
+After reconnecting the Kingston to PicoMEM with ELKS still running, USB
+remounted read/write without a reboot. Independent FTP reads again matched
+both rename fixtures byte for byte; the old and intermediate names remained
+absent. All three earlier creation fixtures still matched as well. SD remained
+read-only throughout.

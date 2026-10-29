@@ -43,6 +43,18 @@
         "bytes": 4,
         "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
       }
+    ],
+    "mac-roundtrip": [
+      {
+        "name": "Renamed Long Filename.txt",
+        "bytes": 3073,
+        "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+      },
+      {
+        "name": "Keep This File.txt",
+        "bytes": 4,
+        "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+      }
     ]
   },
   "capture": {
@@ -52,7 +64,6 @@
     "png_sha256": "de8727c5742d03adec698ce9cff5798961112974ad6357274b092ed478dbd008"
   },
   "pending": [
-    "Mac-to-PPC remount/readback",
     "DOS compatibility for rename firmware",
     "Runtime stack and latency measurements"
   ],
@@ -93,5 +104,7 @@
     "command": "fsck_msdos -n",
     "exit_code": 0,
     "repair_requested": false
-  }
+  },
+  "mac_roundtrip_without_reboot": true,
+  "creation_fixture_regression_after_roundtrip": true
 }
