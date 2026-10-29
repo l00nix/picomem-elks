@@ -25,7 +25,7 @@ reboot. [Hardware results and screenshot](docs/HARDWARE-USB-RW-20261025.md).
 The experimental paired firmware/kernel now supports reading and updating
 existing long-named USB files on the PPC512, including 26-character ASCII names
 and nested paths. The separate creation candidate below also creates long names;
-rename is available in the separate, not-yet-hardware-tested candidate below.
+rename is available in the separate candidate below.
 Unsupported non-ASCII aliases are omitted with a diagnostic and protective
 mutation restrictions. [Results, limitations and screenshots](docs/LONG-FILENAMES.md).
 
@@ -44,8 +44,9 @@ create/write/append/truncate/delete test also passed. This remains experimental;
 runtime measurements are still outstanding.
 
 The next [same-directory file rename candidate](docs/LONG-NAME-RENAME.md) adds
-`pmrename`, guarded against destination replacement. Host/FAT-image tests and
-the 8086 build pass; PPC512 rename validation is pending.
+`pmrename`, guarded against destination replacement. Host/FAT-image tests,
+the 8086 build and PPC512 rename tests pass, with independent readback after
+remount and a normal reboot. [Hardware results and screenshot](docs/LONG-NAME-RENAME.md#ppc512-results--october-28-2026).
 
 ## Commands
 

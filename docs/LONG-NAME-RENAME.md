@@ -2,8 +2,9 @@
 
 I am developing this next milestone as l00nix, with AI coding assistance, on
 `codex/long-name-rename`. It builds on the hardware-tested long-name creation
-candidate. **Rename has passed host/FAT-image tests, an 8086 build and emulator boot; physical
-PPC512 rename testing is still pending.** This is not a release candidate.
+candidate. **Rename has passed host/FAT-image tests, an 8086 build, emulator boot and
+PPC512 rename tests with independent byte checks after remount and a normal reboot.** This is not
+a release candidate.
 
 ## Scope and commands
 
@@ -78,8 +79,35 @@ recovery from power loss or safe unplugging while mounted.
 - Firmware builds with rename disabled reproduce the previous stock,
   metadata-only and creation UF2 hashes exactly.
 
-Before considering a release candidate I still need real PPC rename tests,
-remount/reboot readbacks, direct Mac name/content/FAT checks, DOS compatibility
+Before considering a release candidate I still need direct Mac name/content/FAT checks, DOS compatibility
 checks for this firmware, and runtime stack/service-latency measurements. QEMU
 cannot validate the actual PicoMEM file service. Directory moves, overwrite
 semantics, Unicode and SD writes are outside this milestone.
+
+## PPC512 results — October 28, 2026
+
+The paired kernel and firmware booted successfully. I verified all three exact
+ROM descriptors on the PPC, then mounted USB read/write and SD read-only.
+`pmlfnren` passed file rename, case-only rename, unchanged-name handling,
+append after rename and byte readback. Existing-target, open-file, directory
+and cross-parent requests were refused as expected. The `pmrename` command
+also renamed a fixture and renamed it back successfully.
+
+Independent FTP reads matched all 3,073 bytes of the renamed file and the
+four-byte collision fixture. Both also matched after unmount/remount and a normal reboot; the old
+and intermediate names were absent. All three retained creation-test files
+still matched their previous hashes.
+
+![Actual PPC512 rename commands and test output](screenshots/ppc512-lfn-rename-20261028.png)
+
+This screenshot is rendered from the PPC's actual text video memory using its
+BIOS font. The probe output is the saved native test output; the displayed
+`pmrename`, `ls`, `mount` and `wc` commands were executed on the PPC.
+
+The tested kernel SHA-256 is
+`f47981b9551bc8c1793fc0a5604d405568f6b7a9197d8b428a3c0085dd762fc8`; firmware UF2
+is `79055e63295aad3901d23ff17a93882ec3cf3cc8c5dd4702c36a5205626e31c8`.
+The full prior flash was saved and verified before flashing; the previous
+kernel is backed up. These are experimental tests, not power-loss testing.
+
+[Machine-readable validation summary](validation/rename-ppc512-20261028.json).

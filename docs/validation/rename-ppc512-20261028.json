@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-28",
+  "hardware": "Amstrad PPC512 + PicoMEM 2",
+  "kernel_sha256": "f47981b9551bc8c1793fc0a5604d405568f6b7a9197d8b428a3c0085dd762fc8",
+  "firmware_sha256": "79055e63295aad3901d23ff17a93882ec3cf3cc8c5dd4702c36a5205626e31c8",
+  "native_probe_passed": true,
+  "pmrename_cli_passed": true,
+  "old_names_absent_after_reboot": true,
+  "creation_fixture_regression_passed": true,
+  "readbacks": {
+    "initial": [
+      {
+        "name": "Renamed Long Filename.txt",
+        "bytes": 3073,
+        "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+      },
+      {
+        "name": "Keep This File.txt",
+        "bytes": 4,
+        "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+      }
+    ],
+    "remount": [
+      {
+        "name": "Renamed Long Filename.txt",
+        "bytes": 3073,
+        "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+      },
+      {
+        "name": "Keep This File.txt",
+        "bytes": 4,
+        "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+      }
+    ],
+    "reboot": [
+      {
+        "name": "Renamed Long Filename.txt",
+        "bytes": 3073,
+        "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+      },
+      {
+        "name": "Keep This File.txt",
+        "bytes": 4,
+        "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+      }
+    ]
+  },
+  "capture": {
+    "source": "Actual PPC512 B800:0000 video memory; native shell commands",
+    "video_sha256": "5c866fac8f8c05f566db46e4d1da60f8f8838aaa112144abbab1ec9cc92eb96e",
+    "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+    "png_sha256": "de8727c5742d03adec698ce9cff5798961112974ad6357274b092ed478dbd008"
+  },
+  "pending": [
+    "Direct Mac FAT/name/content checks",
+    "DOS compatibility for rename firmware",
+    "Runtime stack and latency measurements"
+  ]
+}

@@ -257,5 +257,6 @@ one rename call; `pmlfnren NEWDIR` creates fresh fixtures and checks rename
 and refusals. Use `pmrename` for this candidate: ELKS `mv` may pre-delete the
 destination or fall back to copy/delete.
 
-Host/FAT-image tests and the IA16 build pass. PPC512 rename tests are pending.
+Host/FAT-image tests, the IA16 build and PPC512 rename tests pass, including
+independent full-byte readbacks after remount and a normal reboot.
 See [scope, protocol and validation](../docs/LONG-NAME-RENAME.md).
