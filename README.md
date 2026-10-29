@@ -69,8 +69,9 @@ adds a real device-cache flush and reserves USB transfer memory after a timeout.
 Host tests/builds and eight PPC512 read checks passed, but the first write returned
 an I/O error before any workload batches ran. USB was unmounted without retrying.
 The diagnostic follow-up captured a command-failed response to SYNCHRONIZE
-CACHE(10), before sector writes in that attempt. Detailed sense data is still
-needed; this remains experimental and the read/write release is blocked.
+CACHE(10), before sector writes in that attempt. A bounded REQUEST SENSE diagnostic is now built and host tested, awaiting a
+hardware test to identify the reason. This remains experimental and the read/write
+release is blocked.
 
 ## Commands
 

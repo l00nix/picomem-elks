@@ -95,4 +95,28 @@ This confirms the failing command, but not why the drive rejected it. Under the
 status 1 means command failure. Detailed SCSI sense data is needed before calling
 it an unsupported opcode or deciding on compatibility behavior. I will keep the
 write guard in place while investigating; a failed flush must not silently become
-success. No follow-up sense-query firmware is staged yet.
+success. The follow-up below is now built and host tested; its hardware test is pending.
+
+
+## REQUEST SENSE candidate ready for hardware testing
+
+I added one bounded read-only query after the initial, fully validated clean flush
+failure. It preserves the original fault and keeps writes blocked. It uses its own
+persistent USB request/data storage and a two-second timeout; failed or ambiguous
+transport never triggers the query. Short sense replies are accepted only with
+matching transfer length and residue, and complete required header fields.
+
+`pmstat --usb` will append `rs=FORMAT:KEY/ASC/ASCQ n=BYTES`, or an explicit reason
+why sense data could not be trusted. No new ELKS kernel or utility is needed.
+**The Kingston has not yet been tested with this candidate.** An unsupported-flush
+sense code alone will not justify silently skipping synchronization.
+
+The candidate passes 983 TinyUSB cases, 89 adapter scenarios, five real FAT32 tests
+and 14 legacy USB tests, plus ARM builds and stack-layout checks. The build with
+the experiment disabled remains byte-identical. Next comes a fresh full-flash
+recovery backup, verified firmware installation, read-only checks, and one fresh
+bounded `mkdir` to capture the sense response. The full read/write release tests
+remain pending.
+
+[Implementation and hardware plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-SYNC-LIFETIME.md#request-sense-follow-up--built-hardware-pending)
+· [Candidate manifest](validation/usb-request-sense-20261029.json).
