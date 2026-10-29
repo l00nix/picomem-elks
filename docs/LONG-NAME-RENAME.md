@@ -79,8 +79,8 @@ recovery from power loss or safe unplugging while mounted.
 - Firmware builds with rename disabled reproduce the previous stock,
   metadata-only and creation UF2 hashes exactly.
 
-Before considering a release candidate I still need direct Mac name/content/FAT checks, DOS compatibility
-checks for this firmware, and runtime stack/service-latency measurements. QEMU
+Before considering a release candidate I still need DOS compatibility checks
+for this firmware and runtime stack/service-latency measurements. QEMU
 cannot validate the actual PicoMEM file service. Directory moves, overwrite
 semantics, Unicode and SD writes are outside this milestone.
 
@@ -111,3 +111,16 @@ The full prior flash was saved and verified before flashing; the previous
 kernel is backed up. These are experimental tests, not power-loss testing.
 
 [Machine-readable validation summary](validation/rename-ppc512-20261028.json).
+
+### Direct Mac verification
+
+The Kingston was unmounted in ELKS and connected to the Mac. The Mac saw
+exactly the two expected long names in the rename-test directory, with no old,
+intermediate or rejected names left behind. Both files matched the original
+byte counts and SHA-256 hashes. The three creation-test fixtures also retained
+their previous contents.
+
+After unmounting the volume, `fsck_msdos -n` checked the FAT, directories and
+orphan clusters and returned exit code 0. No repair was requested. The stick
+was then safely ejected. This verifies a normal clean unmount, not recovery
+from sudden removal or power loss.
