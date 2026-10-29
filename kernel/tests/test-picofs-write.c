@@ -6,7 +6,7 @@
 static void rw_begin(void)
 {
     reset();rw_active=1;rw_handle=-1;rw_mkdir_error=rw_lose_close=rw_corrupt_read=rw_overcount=0;
-    rw_short=-1;rw_mutations=rw_total=0;rw_cursor=0;
+    rw_short=-1;rw_mutations=rw_total=0;rw_cursor=0;rw_close_error=0;
     int n=rw_add("\\FIXTURE.TXT",32);objects[n].size=700;
     for(unsigned j=0;j<700;j++)objects[n].data[j]=fixture(j);
     rw_add("\\DIR",16);usb.s_flags=0;assert(read_super_pm(&usb,NULL,0));
@@ -84,6 +84,18 @@ int main(void)
     rw_begin();i=rw_create(usb.s_mounted,"LOST.TXT");f=(struct file){2,0,0};rw_lose_close=1;
     assert((int)write_pm(i,&f,data,20)==-EIO);assert(broken&&!i->i_size&&!f.f_pos);
     n=calls;assert((int)write_pm(i,&f,data,20)==-EIO && calls==n);iput(i);pass();
+
+    /* Checked firmware CLOSE returns a real error and retains its handle.
+     * Never report the preceding write as committed or issue more commands. */
+    const unsigned close_errors[]={6,19,21,31,33};
+    for(unsigned e=0;e<sizeof(close_errors)/sizeof(close_errors[0]);e++) {
+        rw_begin();i=rw_create(usb.s_mounted,"CLOSEERR.TXT");f=(struct file){2,0,0};
+        rw_close_error=close_errors[e];
+        assert((int)write_pm(i,&f,data,20)<0&&broken&&!busy&&!writing);
+        assert(!i->i_size&&!f.f_pos&&rw_handle>=0);
+        n=calls;rw_close_error=0;
+        assert((int)write_pm(i,&f,data,20)==-EIO&&calls==n);iput(i);pass();
+    }
 
     rw_begin();i=rw_create(usb.s_mounted,"BAD.TXT");f=(struct file){2,0,0};rw_corrupt_read=1;
     assert((int)write_pm(i,&f,data,20)==-EIO);assert(broken&&!i->i_size);iput(i);pass();

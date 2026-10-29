@@ -199,6 +199,11 @@ power-loss durability, and no firmware flush guarantee is claimed. Use a USB
 drive with backed-up, expendable contents for this experiment. Do not remove
 it while mounted. `sync` alone is not evidence of a successful firmware flush.
 
+The separate [file-service error candidate](../docs/FILE-SERVICE-ERRORS.md)
+addresses masked close/USB errors in firmware. Its host tests pass, including
+this kernel's handling of returned CLOSE errors; hardware testing is pending.
+It does not establish power-loss durability or safe timeout recovery.
+
 Open-file deletion is refused. Created entries consume the fixed 64-node mount
 cache; deleted slots are not reused until unmount. No write is issued after an
 ambiguous transport failure; reboot is required to clear the fault.

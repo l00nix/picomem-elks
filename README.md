@@ -57,6 +57,10 @@ workload batches and seven file checks after remount passed. The measured
 firmware stack peak was 2732 of 4096 bytes. Results include a screenshot and
 command timings; this remains experimental.
 
+The next [file-service error candidate](docs/FILE-SERVICE-ERRORS.md) reports
+close and USB transfer failures instead of hiding them. Host tests and the
+firmware build pass; hardware testing is pending. It uses the existing kernel.
+
 ## Commands
 
 | Command | Current function |

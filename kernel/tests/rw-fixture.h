@@ -1,6 +1,6 @@
 /* In-memory firmware with intentionally swallowed CLOSE and unreliable MKDIR. */
 static int rw_active,rw_handle=-1,rw_mkdir_error,rw_lose_close,rw_corrupt_read;
-static int rw_overcount,rw_short,rw_open_mode;
+static int rw_overcount,rw_short,rw_open_mode,rw_close_error;
 static unsigned rw_mutations,rw_total;
 struct rw_object {char path[128],display[27],fcb[11];unsigned attr,size;unsigned char data[4096];};
 static struct rw_object objects[80],saved_object;
@@ -68,6 +68,9 @@ static void respond_rw(unsigned cmd,unsigned req)
         memcpy(p+60,objects[rw_handle].data+off,n);if(rw_corrupt_read)p[60]^=1;len=60+n;
     } else if(cmd==0x06) {
         assert(rw_handle>=0&&rd16(p+60)==3);
+        if(rw_close_error&&rw_open_mode==2) {
+            le16(p+52,60);le16(p+58,rw_close_error);return;
+        }
         if(rw_lose_close&&rw_open_mode==2)objects[rw_handle]=saved_object;
         rw_handle=-1;closed++;
     } else if(cmd==0x0f||cmd==0x03||cmd==0x01||cmd==0x13) {
