@@ -149,3 +149,26 @@ The next step is a read-only query of current write-cache settings. An unsupport
 flush does not prove absence of volatile caching. Missing or unsupported cache
 information must remain unknown; no flush bypass or cache-setting change has been
 made. [Full hardware evidence and hashes](validation/usb-request-sense-20261029.json).
+
+
+## Current cache-mode candidate
+
+I added a read-only current caching-page query after the confirmed unsupported
+flush response. It tries MODE SENSE(6), with one MODE SENSE(10) alternate only after
+a clean completed reply without usable cache information. Each query has its own
+persistent storage and two-second deadline. Ambiguous transport stops the sequence.
+No cache settings change, no write retry and no synchronization bypass is included.
+
+`pmstat --usb` gains `c6` and `c10` fields. `on`/`off` report the current write-cache
+enable bit; all failure, malformed-page or missing-page results remain unknown.
+Even an `off` reply does not enable writes in this diagnostic build. The existing
+ELKS kernel and utilities are sufficient.
+
+The candidate passes 18,423 transport cases, 150 adapter scenarios, five FAT32
+tests, 14 legacy USB tests, ARM builds and stack-layout checks. The disabled build
+is byte-identical to its previous artifact. **Hardware testing is pending.**
+Next comes a fresh recovery backup and verified flash, read-only file checks,
+one fresh `mkdir` trigger, cached status capture and unmount.
+
+[Query design, status meanings and test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-CACHE-MODE.md)
+· [Candidate manifest](validation/usb-cache-mode-20261029.json).
