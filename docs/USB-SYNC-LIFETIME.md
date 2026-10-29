@@ -1,7 +1,7 @@
 # USB cache flush and timeout containment candidate
 
 I have prepared the next firmware-only step toward reliable PicoMEM USB writes.
-**The diagnostic follow-up identified rejection of the cache-flush command. Read checks pass; writes remain blocked and DOS validation is pending.**
+**REQUEST SENSE confirms the Kingston rejects the cache-flush opcode. Read checks pass; writes remain blocked pending cache-mode investigation.**
 The existing diagnostics kernel and utilities are sufficient. SD remains read-only.
 
 The preceding [file-service error milestone](FILE-SERVICE-ERRORS.md) reports
@@ -15,7 +15,7 @@ Filesystem synchronization now sends a real device-cache flush command. Before
 the first sector write, the firmware tests whether the drive supports that flush.
 Unsupported or failed flushes stop the operation; a failed close cannot silently
 report success. This does not prove protection against power loss or provide
-transactional writes. The Kingston returned command-failed status for the flush; its detailed error reason is still unknown.
+transactional writes. The Kingston returned command-failed status for the flush; the later sense diagnostic below identifies an invalid command opcode.
 
 The candidate is default-off on `codex/usb-sync-lifetime`. See the
 [firmware design, build instructions and test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-SYNC-LIFETIME.md)
@@ -95,10 +95,10 @@ This confirms the failing command, but not why the drive rejected it. Under the
 status 1 means command failure. Detailed SCSI sense data is needed before calling
 it an unsupported opcode or deciding on compatibility behavior. I will keep the
 write guard in place while investigating; a failed flush must not silently become
-success. The follow-up below is now built and host tested; its hardware test is pending.
+success. The follow-up below has now captured the detailed sense response.
 
 
-## REQUEST SENSE candidate ready for hardware testing
+## REQUEST SENSE diagnostic
 
 I added one bounded read-only query after the initial, fully validated clean flush
 failure. It preserves the original fault and keeps writes blocked. It uses its own
@@ -106,17 +106,46 @@ persistent USB request/data storage and a two-second timeout; failed or ambiguou
 transport never triggers the query. Short sense replies are accepted only with
 matching transfer length and residue, and complete required header fields.
 
-`pmstat --usb` will append `rs=FORMAT:KEY/ASC/ASCQ n=BYTES`, or an explicit reason
+`pmstat --usb` appends `rs=FORMAT:KEY/ASC/ASCQ n=BYTES`, or an explicit reason
 why sense data could not be trusted. No new ELKS kernel or utility is needed.
-**The Kingston has not yet been tested with this candidate.** An unsupported-flush
+The Kingston result is recorded below. An unsupported-flush
 sense code alone will not justify silently skipping synchronization.
 
 The candidate passes 983 TinyUSB cases, 89 adapter scenarios, five real FAT32 tests
 and 14 legacy USB tests, plus ARM builds and stack-layout checks. The build with
-the experiment disabled remains byte-identical. Next comes a fresh full-flash
-recovery backup, verified firmware installation, read-only checks, and one fresh
-bounded `mkdir` to capture the sense response. The full read/write release tests
-remain pending.
+the experiment disabled remains byte-identical. The full-flash backup, firmware readback and hardware sense diagnostic have now
+passed. The full read/write release tests remain pending.
 
-[Implementation and hardware plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-SYNC-LIFETIME.md#request-sense-follow-up--built-hardware-pending)
+[Implementation and hardware plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-SYNC-LIFETIME.md#request-sense-follow-up)
 · [Candidate manifest](validation/usb-request-sense-20261029.json).
+
+
+## REQUEST SENSE PPC512 result
+
+USB was detected immediately after startup. All eight retained files passed
+full-content readbacks through a read-only mount. After unmounting and explicitly
+mounting read/write, I made one fresh `mkdir /mnt/usb/PMSEN29` attempt. It failed
+with exit 1 and `cannot create directory`. The cached status was:
+
+```text
+?USB fault op=35 f=2 s=1 r=0 d=0 rs=70:5/20/00 n=18
+```
+
+The 18-byte current-format response reports illegal request / invalid command
+operation code. This confirms rejection of SYNCHRONIZE CACHE(10); the
+[T10 sense-code list](https://www.t10.org/lists/asc-num.txt) assigns 20/00 to that
+condition. The pre-write flush guard returned before WRITE(10) submission, based
+on the audited firmware control flow and status; no physical USB trace was taken.
+
+![PPC512 cache-flush sense result and saved native mkdir error](screenshots/ppc512-usb-request-sense-20261029.png)
+
+The screenshot is rendered from actual PPC video memory, with live mount/status
+output and the explicitly saved native error. I did not repeat the failed write.
+USB unmounted successfully, SD stayed unmounted, and ELKS remains running. Initial
+stack readings were 1624/4096 firmware bytes and 426/700 kernel bytes with zero
+flags/invalid counts; fault-path peak usage was not measured.
+
+The next step is a read-only query of current write-cache settings. An unsupported
+flush does not prove absence of volatile caching. Missing or unsupported cache
+information must remain unknown; no flush bypass or cache-setting change has been
+made. [Full hardware evidence and hashes](validation/usb-request-sense-20261029.json).
