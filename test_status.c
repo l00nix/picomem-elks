@@ -102,6 +102,21 @@ int main(void)
     assert(run(0x61)==5 && !status_used); /* Last terminator outside the bound. */
     setup(0); response[1]=0xfe;response[2]=27;response[3]='\n';response[4]=0x80;
     assert(run(0x61)==0 && !memcmp(record+1," ???",4));
+    /* The transport diagnostic adds three cached lines to the existing wire
+     * format. Exercise an eight-line inventory plus the exact text fields. */
+    {
+        const char *lines[] = {"USB: 4 devices", "1: fault", "2: hub", "3: mouse", "4: keyboard",
+            "USB fault op=1a tag=4294967295 why=1 stage=2 event=2",
+            "USB xfer ep=81/81 got=0 want=64 data=0",
+            "USB CSW checks=00 status=255 residue=4294967295"};
+        setup(0); response[0]=8; response_len=1;
+        for (i=0;i<8;++i) {
+            unsigned length=(unsigned)strlen(lines[i])+1;
+            memcpy(response+response_len,lines[i],length);response_len+=length;
+        }
+        assert(run(0x61)==0 && status_used==response_len && queries==1 && !resets);
+        assert(!memcmp(record,response,response_len));
+    }
     printf("%u status query scenarios passed; only bounded command scratch changed.\n",cases);
     return 0;
 }

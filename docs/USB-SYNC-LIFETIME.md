@@ -201,6 +201,28 @@ firmware bytes and 426/700 kernel bytes, with zero flags/invalid counts. Fault-p
 peak use was not measured.
 
 The next diagnostic should expose the first transport stage/event/length/status
-without adding USB commands or changing write safeguards. It is not implemented
-or staged yet. No cache-setting change or synchronization bypass was made.
+without adding USB commands or changing write safeguards. The [transport-detail follow-up](#transport-detail-candidate) is now built and host-tested; hardware validation is pending. No cache-setting change or synchronization bypass was made.
 [Full hardware evidence](validation/usb-cache-mode-20261029.json).
+
+
+## Transport-detail candidate
+
+I added a firmware-only record of the cache query's transfer stage, event,
+endpoints, byte counts and available CSW checks. It distinguishes a genuine device
+phase error from a synthetic checked-transport failure. The original fault remains
+visible; `pmstat --usb` adds three bounded cached lines. Reading them sends no new
+USB commands. The existing ELKS kernel and utility are sufficient.
+
+This changes diagnostics only. The command sequence, transfer acceptance checks,
+write quarantine and cache-flush requirement remain unchanged. Cache state is
+still unknown and the read/write release is blocked. No new firmware has been
+flashed for this candidate yet.
+
+Validation passes: 18,430 real TinyUSB cases, 151 adapter scenarios, five FAT32
+scenarios, 14 legacy USB tests, 29 ELKS status-parser cases, ARM builds and
+stack-layout checks. The feature-disabled firmware is byte-identical. The next
+physical check will use a fresh verified recovery backup, read-only checks of the
+eight retained files and one guarded write attempt to capture the failure detail.
+
+[Design and field meanings](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-TRANSPORT-DETAIL.md)
+· [Candidate manifest](validation/usb-transport-detail-20261029.json).
