@@ -11,7 +11,7 @@ with tempfile.TemporaryDirectory(prefix='pm-apply-') as d:
     def hashes():return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for base in ('elks','elkscmd') for p in (root/base).rglob('*') if p.is_file()}
     apply();first=hashes();apply();assert first==hashes(),'Repeated apply changed source'
     conf=(root/'elks/fs/config.in').read_text()
-    for key in ('CONFIG_FS_PICOMEM_WRITE','CONFIG_FS_PICOMEM_LFN','CONFIG_FS_PICOMEM_LFN_CREATE','CONFIG_FS_PICOMEM_LFN_RENAME'):
+    for key in ('CONFIG_FS_PICOMEM_WRITE','CONFIG_FS_PICOMEM_LFN','CONFIG_FS_PICOMEM_LFN_CREATE','CONFIG_FS_PICOMEM_LFN_RENAME','CONFIG_FS_PICOMEM_DIAG'):
         assert conf.count(key+' n')==1,key
     assert (root/'elks/include/linuxmt/fs.h').read_text().count('#define FST_PICOFS')==1
 print('Integration: fresh checkout and repeat apply passed; one declaration per option')

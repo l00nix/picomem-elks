@@ -56,6 +56,9 @@ static void respond(void)
     unsigned long offset;
     assert(!irq_enabled);
     drv=p[58];assert(drv==18||drv==20);
+#ifdef PICODIAG_TEST
+    if(cmd==0x73){respond_diag();return;}
+#endif
 #ifdef CONFIG_FS_PICOMEM_LFN_RENAME
     if(cmd==0x72){respond_rename();return;}
 #endif

@@ -87,5 +87,23 @@ changes[root/'elks/fs/picofs-create.inc'] = (kit/'picofs-create.inc').read_text(
 changes[root/'elks/fs/picofs.c'] = (kit/'picofs.c').read_text()
 changes[root/'elks/fs/picofs-lfn.inc'] = (kit/'picofs-lfn.inc').read_text()
 changes[root/'elks/fs/picofs-write.inc'] = (kit/'picofs-write.inc').read_text()
+edit('elks/fs/config.in', "\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n",
+     "\t    bool 'Experimental paired-firmware long names' CONFIG_FS_PICOMEM_LFN n\n\t    bool 'Experimental paired-firmware timing/stack diagnostics' CONFIG_FS_PICOMEM_DIAG n",
+     marker='CONFIG_FS_PICOMEM_DIAG n')
+arch='elks/arch/i86/kernel/'
+edit(arch+'Makefile', 'ifeq ($(CONFIG_ARCH_IBMPC), y)', 'ifdef CONFIG_FS_PICOMEM_DIAG\nOBJS += picostack.o\nendif\n\nifeq ($(CONFIG_ARCH_IBMPC), y)')
+edit(arch+'irqtab.S', '#ifdef CONFIG_TRACE\n        call    trace_begin', '#if defined(CONFIG_TRACE) || defined(CONFIG_FS_PICOMEM_DIAG)\n        call    trace_begin')
+edit(arch+'strace.c', '#include <arch/segment.h>', '''#include <arch/segment.h>
+#ifdef CONFIG_FS_PICOMEM_DIAG
+#ifdef CONFIG_TRACE
+#error PicoMEM diagnostics use separate lightweight stack tracing
+#endif
+extern void FARPROC picostack_begin(void);
+extern void FARPROC picostack_end(void);
+void trace_begin(void) { picostack_begin(); }
+#endif''')
+edit(arch+'strace.c', 'void trace_end(unsigned int retval)\n{', 'void trace_end(unsigned int retval)\n{\n#ifdef CONFIG_FS_PICOMEM_DIAG\n    picostack_end();\n#endif')
+changes[root/arch/'picostack.c']=(kit/'picostack.c').read_text()
+changes[root/'elks/fs/picofs-diag.inc']=(kit/'picofs-diag.inc').read_text()
 for p,s in changes.items(): p.write_text(s)
 print('Installed optional CONFIG_MOUSE_PICOMEM + CONFIG_FS_PICOMEM. No boot files changed.')

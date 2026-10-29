@@ -50,6 +50,11 @@ remount and a normal reboot. Direct Mac filename/content checks and a read-only
 FAT consistency check passed too. DOS alias reads and temporary legacy file
 create/append/truncate/rename/delete checks also pass. [Hardware results and screenshot](docs/LONG-NAME-RENAME.md#ppc512-results--october-28-2026).
 
+The [runtime diagnostics candidate](docs/RUNTIME-DIAGNOSTICS.md) adds opt-in
+firmware-clock timing and observed stack peaks, following the
+[first host-timed hardware baseline](docs/RUNTIME-VALIDATION.md). Hardware
+measurements with this new candidate are pending.
+
 ## Commands
 
 | Command | Current function |

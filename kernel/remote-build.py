@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Build over configured SSH; keys/agent/config supply credentials, never this repo.
-Usage: remote-build.py HOST ABSOLUTE_WORKDIR ABSOLUTE_CROSS_DIR [LOCAL_OUTPUT] [--lfn | --lfn-create | --lfn-rename]
+Usage: remote-build.py HOST ABSOLUTE_WORKDIR ABSOLUTE_CROSS_DIR [LOCAL_OUTPUT] [--lfn | --lfn-create | --lfn-rename | --diag]
 """
 from pathlib import Path
 import hashlib, json, shlex, subprocess, sys, tarfile, tempfile
+diag = '--diag' in sys.argv
+if diag: sys.argv.remove('--diag')
 rename = '--lfn-rename' in sys.argv
 if rename: sys.argv.remove('--lfn-rename')
 create = '--lfn-create' in sys.argv
@@ -42,11 +44,11 @@ if ! test -d {w}/elks; then
  git clone https://github.com/ghaerr/elks.git {w}/elks
  git -C {w}/elks checkout --detach e7a56a4334e0ef9a2261d1c2de54db31ba40fdf0
 fi
-KERNEL_CONFIG={w}/src/kernel/{'ppc512-rename.config' if rename else 'ppc512-create.config' if create else 'ppc512-lfn.config' if lfn else 'ppc512.config'} ELKS_TREE={w}/elks ELKS_TOOLCHAIN={c} bash {w}/src/kernel/build.sh > {w}/build.log 2>&1 || {{ tail -60 {w}/build.log; exit 1; }}
+KERNEL_CONFIG={w}/src/kernel/{'ppc512-diag.config' if diag else 'ppc512-rename.config' if rename else 'ppc512-create.config' if create else 'ppc512-lfn.config' if lfn else 'ppc512.config'} ELKS_TREE={w}/elks ELKS_TOOLCHAIN={c} bash {w}/src/kernel/build.sh > {w}/build.log 2>&1 || {{ tail -60 {w}/build.log; exit 1; }}
 cat {w}/src/kernel/build/manifest.json
 ''')
     out.mkdir(parents=True,exist_ok=True)
-    for name in ('linux','kernel.config','manifest.json','system.map','pmmount','pmmouse','pmfstest','mount','pmrwtest','pmlfnrw','pmlfnnew','pmlfnren','pmrename','pmbench'):
+    for name in ('linux','kernel.config','manifest.json','system.map','pmmount','pmmouse','pmfstest','mount','pmrwtest','pmlfnrw','pmlfnnew','pmlfnren','pmrename','pmbench','pmperf'):
         with (out/name).open('wb') as f:
             subprocess.run(['ssh',host,'cat '+w+'/src/kernel/build/'+name],stdout=f,check=True)
     with (out/'build.log').open('wb') as f:

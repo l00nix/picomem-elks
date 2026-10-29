@@ -37,6 +37,13 @@
 #define DEV_USB MKDEV(0,1)
 #define DEV_SD MKDEV(0,2)
 #define END_DIR 1
+#ifdef CONFIG_FS_PICOMEM_DIAG
+static int FARPROC diag_present(void)
+{
+ static const unsigned char sig[16]={'P','M','D','G',1,0x73,8,52,'l','0','0','n','i','x',0,0};
+ unsigned j;for(j=0;j<16;j++)if(MEM[0x3fb0+j]!=sig[j])return 0;return 1;
+}
+#endif
 
 #ifdef CONFIG_FS_PICOMEM_LFN
 #define LFN_CMD 0x70
@@ -178,6 +185,13 @@ static int FARPROC transaction(unsigned drive, unsigned cmd, unsigned req,
     if ((drive!=20 && drive!=18) || req>CHUNK || response>CHUNK)
         return -EINVAL;
     switch (cmd) {
+#ifdef CONFIG_FS_PICOMEM_DIAG
+    case 0x73:
+        if(drive!=20||req!=8||response!=52||memcmp(packet+60,"PMDG",4)||packet[64]!=1||
+           packet[65]>1||packet[67]||(packet[66]>=128&&packet[66]!=255)||
+           (packet[65]&&packet[66]!=255))return -EINVAL;
+        break;
+#endif
 #ifdef CONFIG_FS_PICOMEM_LFN_RENAME
     case LFN_RENAME_CMD:
         if(drive!=20)return -EROFS;
@@ -251,6 +265,9 @@ static int FARPROC transaction(unsigned drive, unsigned cmd, unsigned req,
     save_flags(flags); clr_irq();
     r=profile();
     if (r) goto done;
+#ifdef CONFIG_FS_PICOMEM_DIAG
+    if(cmd==0x73&&!diag_present()){r=-ENODEV;goto done;}
+#endif
 #ifdef CONFIG_FS_PICOMEM_LFN
     if(cmd==LFN_CMD && !lfn_present()){r=-ENODEV;goto done;}
 #endif
@@ -555,7 +572,12 @@ static size_t read_dir(struct inode *i,struct file *f,char *buf,size_t count)
 static int open_pm(struct inode *i,struct file *f)
 { (void)i; return (f->f_mode&FMODE_WRITE)?-EROFS:0; }
 #endif
-static struct file_operations dir_fops={NULL,read_dir,NULL,readdir_pm,NULL,NULL,open_pm,NULL};
+#ifdef CONFIG_FS_PICOMEM_DIAG
+#include "picofs-diag.inc"
+#else
+#define diag_ioctl NULL
+#endif
+static struct file_operations dir_fops={NULL,read_dir,NULL,readdir_pm,NULL,diag_ioctl,open_pm,NULL};
 static struct file_operations file_fops={NULL,read_pm,write_pm,NULL,NULL,NULL,open_pm,NULL};
 static struct inode_operations dir_ops={&dir_fops,create_pm,lookup,NULL,unlink_pm,NULL,mkdir_pm,rmdir_pm,NULL,NULL,NULL,NULL,NULL};
 static struct inode_operations file_ops={&file_fops,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};

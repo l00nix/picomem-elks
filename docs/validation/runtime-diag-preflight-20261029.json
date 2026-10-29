@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-29",
+  "status": "prepared; hardware measurements pending",
+  "elks_commit": "e7a56a4334e0ef9a2261d1c2de54db31ba40fdf0",
+  "kernel_sha256": "262a4394e95990a515ecc75bb3e27f67d900e07d199953bdf51ee979873e5c9e",
+  "pmperf_sha256": "69c2501dddd2d9f0199abf0aad6027718165695b0ba96fe7c175f19e69091f57",
+  "firmware_uf2_sha256": "3a52312588f0333c5588a897a64fdd6ebc24b70b38f1fce3e02f8b3ca98c01e5",
+  "kernel_segments": {
+    "text": 65392,
+    "fartext": 47488,
+    "data": 10928,
+    "bss": 10208
+  },
+  "near_code_free_bytes": 144,
+  "checks": {
+    "kernel_host_sanitizers": "pass",
+    "fresh_and_repeat_integration": "pass",
+    "native_i8086_build": "pass",
+    "emulator_boot_and_refusal_checks": "pass",
+    "firmware_diag_sanitizers": "pass",
+    "existing_lfn_create_rename_sanitizers": "pass",
+    "real_fat32_rename_creation_and_independent_readback": "pass",
+    "rom_markers_and_checksum": "pass",
+    "firmware_stack_map": "pass",
+    "diagnostics_disabled_uf2_matches_tested_baseline": true
+  },
+  "measured_stack_peaks": null,
+  "measured_firmware_service_times": null
+}

@@ -2,9 +2,13 @@
 set -eu
 kit=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 workspace=$(mktemp -d "${TMPDIR:-/tmp}/picomem-tests.XXXXXX")
-trap 'rm -f "$workspace/picofs" "$workspace/mouse" "$workspace/rw" "$workspace/lfn" "$workspace/lfnrw" "$workspace/create" "$workspace/rename" "$workspace/namei"; rmdir "$workspace"' EXIT HUP INT TERM
+trap 'rm -f "$workspace/picofs" "$workspace/mouse" "$workspace/rw" "$workspace/lfn" "$workspace/lfnrw" "$workspace/create" "$workspace/rename" "$workspace/namei" "$workspace/diag" "$workspace/stack"; rmdir "$workspace"' EXIT HUP INT TERM
 host_cc=${CC:-cc}
 python3 "$kit/tests/test-pmbench.py"
+"$host_cc" -std=c99 -D_DEFAULT_SOURCE -Wall -Wextra -Werror -fsanitize=address,undefined "$kit/tests/test-picofs-diag.c" -o "$workspace/diag"
+"$workspace/diag"
+"$host_cc" -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined "$kit/tests/test-picostack.c" -o "$workspace/stack"
+"$workspace/stack"
 "$host_cc" -std=c99 -D_DEFAULT_SOURCE -Wall -Wextra -Werror \
   -fsanitize=address,undefined "$kit/tests/test-picofs.c" -o "$workspace/picofs"
 "$workspace/picofs"
