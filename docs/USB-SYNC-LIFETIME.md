@@ -648,3 +648,39 @@ so the empty-inventory hardware case was not observed.
 This is actual PPC text-video memory rendered with its BIOS font. Status and
 mount output are live; the checksum summary comes from verified full-file reads.
 [Hardware evidence](validation/usb-inventory-20261030.json).
+
+
+## SanDisk powered-hub flush result
+
+On 30 October I tested the SanDisk alone through the powered hub, using the
+inventory firmware. It appeared as `0781:5150`, selected on hub address 5, port 3.
+All three saved full-file checksums matched through a read-only mount. The
+firmware session had no prior write attempt or fault; clean removal of the
+Kingston and reattachment selected the SanDisk.
+
+After confirming `PMHS1030` was absent, one guarded mkdir failed. The command's
+31-byte OUT wrapper completed, but its 13-byte status IN had no completion by the
+two-second deadline. The observer changed from `obs=wait` to:
+
+```text
+op=35 f=6 s=255 r=0 d=0 obs=none os=255 why=0 ms=30000
+```
+
+All six original timeout/controller lines remained unchanged. The hub did not
+resolve the timeout: no completion or detach was recorded during the extra
+30-second window. This is software evidence, not a physical USB trace, and does
+not establish whether the drive or controller path is responsible. The earlier
+direct-connected test used the late-observer firmware; this version adds
+inventory reporting, so this is not a same-firmware A/B comparison.
+
+The fault display retained the hub count and all six diagnostic lines by omitting
+the hub detail row, as designed. I made no write retry, safely unmounted USB, and
+left ELKS running. The fault stays latched until PicoMEM restarts. The audited guard and `d=0` indicate that no sector write was submitted;
+no post-fault media readback was
+attempted. A third drive comparison, if available, needs a fresh MCU session.
+
+![PPC512 SanDisk powered-hub flush test](screenshots/ppc512-sandisk-powered-hub-20261030.png)
+
+This is actual PPC text-video memory rendered with its BIOS font. Mount and status
+output are live; the saved native mkdir error is labelled and was not rerun.
+[Full hardware record](validation/usb-sandisk-hub-20261030.json).

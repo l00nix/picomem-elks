@@ -368,8 +368,8 @@ are saved; the cause remains unresolved and writes remain blocked.
 
 A [powered USB hub comparison](docs/USB-SYNC-LIFETIME.md#powered-hub-comparison)
 confirmed read access to both sticks separately, but the Kingston still rejected
-the cache-flush command. Writes remain blocked; the SanDisk's flush behavior
-through the hub has not yet been tested.
+the cache-flush command. The [SanDisk hub test](docs/USB-SYNC-LIFETIME.md#sandisk-powered-hub-flush-result)
+also timed out with no late completion recorded. Writes remain blocked.
 
 The [hub inventory candidate](docs/USB-SYNC-LIFETIME.md#hub-and-multiple-device-inventory-candidate)
 adds hub/device IDs, port locations and selected/inactive disk reporting to the

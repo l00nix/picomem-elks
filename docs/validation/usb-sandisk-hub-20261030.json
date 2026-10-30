@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-30",
+  "firmware_commit": "92d36d47750c6e71ee489d182bb3219bce1cc600",
+  "firmware_uf2_sha256": "a7186d7616b64447ed46b8322dcccc918b6b02c8f0caa3d9217374a5e6633f80",
+  "topology": {
+    "hub_vid_pid": "1a40:0101",
+    "hub_address": 5,
+    "hub_root_port": 0,
+    "disk_vid_pid": "0781:5150",
+    "disk_address": 1,
+    "disk_hub_port": 3,
+    "powered_hub": "User reported",
+    "other_sticks_attached": false
+  },
+  "device": "SanDisk Cruzer Mini 512 MB FAT32 (user reported; all three saved full-file baselines matched)",
+  "session": "Current inventory firmware boot has had read-only checks only; no guarded flush attempt or fault. Clean detach/attach resets drive selection and sync-supported state. No additional reboot needed.",
+  "read_only_mount": "passed",
+  "retained_file_baselines": [
+    {
+      "bytes": 8660,
+      "sha256": "93174bba1ca16281826bf7e5f8aad598d53cc21df2ba4672913778b5191d97a2"
+    },
+    {
+      "bytes": 8720,
+      "sha256": "460ef3cd781d84c7fd21f53f226ec84455c258da955913071866318dc62b6c01"
+    },
+    {
+      "bytes": 35508,
+      "sha256": "4ce20a1a75b56d3547b42c166518366630921f09caf22c7e74fb877f0b0294bb"
+    }
+  ],
+  "single_attempt": "mkdir /mnt/usb/PMHS1030",
+  "test_name_absent": true,
+  "exit_status": 1,
+  "native_error": "/mnt/usb/PMHS1030: cannot create directory",
+  "fault": "op=35 f=6 s=255 r=0 d=0",
+  "first_observation": "obs=wait os=255 why=0 ms=0",
+  "terminal_observation": "obs=none os=255 why=0 ms=30000",
+  "frozen_timeout_lines": [
+    "USB timeout op=35 tag=2747 stage=3 submit=1",
+    "USB pending ep=81 want=13 deadline_ms=2000",
+    "USB last stage=1 event=0 ep=01 got=31",
+    "HCD slot=2 act=1 rem=0 got=0 sof=813/764 v=1",
+    "HCD bc=0000740d ec=a8000240 poll=0000000e addr=00010001 sc=20008604",
+    "HCD ss=50000201 bs=00000000 irq=00000000 ie=0000047b sm=00000900"
+  ],
+  "timeout_lines_unchanged": true,
+  "interpretation": "Same timeout/no-late-completion outcome as prior direct-connected SanDisk run. Command OUT completed (31 bytes), status IN accepted (13 bytes requested) with no callback before two-second timeout or accepted observation in the additional 30-second window. Hub did not resolve this run. Software observation does not prove physical command delivery or absence of a physical reply. No conclusion that device power, unsupported opcode or host controller is the root cause.",
+  "comparison_limit": "Earlier direct-connected run used late-observer firmware, current run adds inventory reporting. Not a same-firmware or electrically instrumented A/B comparison.",
+  "controller_notes": "Slot 2, active 1, transferred 0, frame delta 1999 modulo 2048. remaining=0 means buffer assigned, not completion. Original timeout snapshot, not terminal snapshot. Raw SM state retained without symbolic interpretation.",
+  "write_retries": 0,
+  "sector_write_submission": "None inferred from audited pre-write guard and dirty=0, not a physical bus trace",
+  "post_fault_media_readback": false,
+  "fault_latched_until_mcu_restart": true,
+  "telnet": "First status connection closed before login; read-only reconnect succeeded. No write retry.",
+  "next_step": "Compare a third drive, if available, in a fresh MCU session; otherwise continue native controller/status-transfer investigation. Do not bypass cache-flush safeguards.",
+  "usb_unmounted": true,
+  "sd_unmounted": true,
+  "elks_left_running": true,
+  "screenshot": {
+    "source": "Actual PPC512 B800 text video memory rendered with BIOS font; live mount/pmstat, explicitly saved native error, summary from verified baseline",
+    "video_sha256": "bc5a881c435f35814ab09cc8d0edf06c07a902e3661c04de175d69607c4cb3b7",
+    "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+    "png_sha256": "ed8833579781d058ec4524b448d9ecf982549ddc57ac06154409a72ac0d97baf"
+  }
+}
