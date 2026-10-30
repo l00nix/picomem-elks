@@ -744,3 +744,21 @@ must not silently enable writes. No firmware or kernel changed during this audit
 and no new flash is needed for it.
 
 [Audit, references, test coverage and limitations](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-COMMAND-AUDIT.md).
+
+
+## Read-only cache-capability candidate
+
+I built a firmware-only diagnostic that probes the current cache settings before
+any flush. The first valid attempted USB sector write runs MODE SENSE(10), with
+at most one MODE SENSE(6) alternative after a validated completion. The attempt
+always fails: this candidate sends no flush or sector-write command and does not
+enable writes for any cache result.
+
+The existing `pmstat --usb` displays enabled, disabled or unknown WCE, bounded
+reply bytes and I/O state. Status reads are cached. No ELKS kernel or utility
+update is needed. A transport fault keeps USB I/O blocked until PicoMEM restarts.
+The candidate passed 64 new sanitizer scenarios, four real FAT32 scenarios with
+unchanged whole-image hashes, the existing test suites, both ARM builds and stack
+layout checks. **Physical validation is pending.**
+
+[Behavior, candidate hashes and planned hardware test](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-CACHE-PROBE.md).
