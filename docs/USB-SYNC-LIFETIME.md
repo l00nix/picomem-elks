@@ -372,7 +372,7 @@ preserving existing files and using a fresh test directory. Each test starts wit
 read-only checks and a clean MCU session after any fault. A rejected write ends
 that session's write test. A drive that accepts flush can proceed to byte-for-byte
 write/readback, remount, Mac FAT validation and power-cycle persistence checks.
-The SanDisk's cache behavior is not known yet.
+The two-drive results are recorded below; SanDisk's cache setting remains unknown.
 
 [Implementation, safeguards and test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-SHORT-MODE.md)
 · [Candidate manifest](validation/usb-short-mode-20261029.json).
@@ -409,7 +409,58 @@ successfully; SD stayed unmounted.
 
 This screenshot is rendered from actual PPC video memory, with live cached status
 and mount output. The saved native mkdir error is explicitly labelled and was not
-rerun. The SanDisk comparison is pending; it will use a fresh MCU session and a
-new test directory, preserving existing files.
+rerun. The completed SanDisk comparison is recorded below.
 
 [Hardware evidence and hashes](validation/usb-short-mode-20261029.json).
+
+## SanDisk comparison result
+
+I tested a second drive, reported as a SanDisk Cruzer Mini 512 MB FAT32. After
+booting without a USB stick and inserting it once ELKS was running, PicoMEM
+reported a fresh checked-I/O mount with no previous fault. The read-only mount
+and directory listing passed. I fully read three existing package files (8,660,
+8,720 and 35,508 bytes), saved local copies and recorded their checksums. These
+are pre-test baselines, not independent content verification or post-test checks.
+I have not published the unrelated personal filenames from the directory listing.
+
+After confirming `PMSD1029` did not exist, I remounted read/write and made one
+`mkdir /mnt/usb/PMSD1029` attempt. It failed with exit 1 and `cannot create directory`:
+
+```text
+?USB fault op=35 f=6 s=255 r=0 d=0
+```
+
+`op=35` is SYNCHRONIZE CACHE(10); `f=6` is the adapter's two-second timeout.
+`s=255` is a sentinel, not a status returned by the drive. There was no validated
+failed CSW, so REQUEST SENSE and MODE SENSE were not submitted. This does not
+establish that SanDisk rejects the opcode or has its cache enabled/disabled.
+The precise transport stage and cause of the timeout remain unknown.
+
+No sector write was submitted according to the pre-write guard and `dirty=0`
+evidence; this is not a physical bus trace. I did not retry. USB unmounted
+successfully, SD stayed unmounted, and ELKS is left running with the fault latched.
+Initial stack usage was 2136/4096 firmware bytes and 426/700 kernel bytes, with
+zero flags/invalid counts. Fault-path peak remains unmeasured.
+
+![PPC512 SanDisk initial flush timeout](screenshots/ppc512-sandisk-flush-timeout-20261029.png)
+
+The screenshot uses actual PPC video memory, live mount/status output and the
+explicitly saved native error, without repeating the write.
+
+| Drive | Read-only checks | Initial cache flush | Cache-page queries | Write outcome |
+| --- | --- | --- | --- | --- |
+| Kingston DataTraveler 1 GB | Eight retained files verified | Valid failure; sense 5/20/00 | Both completed, no caching page | Blocked before sector write |
+| SanDisk Cruzer Mini 512 MB | Listing and three file baselines read | Adapter timeout; no validated CSW | Not run | Blocked before sector write |
+
+The second drive exposed a separate timeout path; it does not validate a RW
+release. Next I need bounded evidence of the flush transport stage at timeout,
+then host tests for any required recovery, alongside an explicit policy for
+unsupported flush with unknown cache state. Extending the timeout or bypassing
+flush without that evidence is not an established fix.
+
+The user also reported the PPC display-switch shortcut working again after a
+boot without the SanDisk. Its behavior after hot-plugging the drive was not
+checked. This remains an observation to investigate, not proof of a firmware,
+keyboard, power or USB-device cause. No screen-control code changed in this test.
+
+[Two-drive evidence and hashes](validation/usb-short-mode-20261029.json).
