@@ -359,3 +359,7 @@ The [native controller diagnostic candidate](docs/USB-SYNC-LIFETIME.md#native-co
 captured an enabled, still-pending receive with advancing USB frames. The
 [hardware result and screenshot](docs/USB-SYNC-LIFETIME.md#sandisk-controller-state-result)
 are recorded; the reason for the missing reply remains unresolved.
+
+The [late status observation candidate](docs/USB-SYNC-LIFETIME.md#late-status-observation-candidate)
+will check for a delayed reply while retaining the normal two-second error and
+write quarantine. Builds and host tests pass; hardware testing is pending.

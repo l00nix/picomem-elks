@@ -538,3 +538,18 @@ observing late completion while retaining the normal timeout and write quarantin
 
 The screenshot is actual PPC text-video memory rendered with its BIOS font. Status
 and mount output are live; the saved native error is labelled and was not rerun.
+
+
+## Late status observation candidate
+
+I added a bounded observer for the initial clean flush timeout. The file-service
+operation still fails after two seconds and writes stay blocked. The normal USB
+task watches the already-outstanding transfer for 30 additional seconds, recording
+a checked late reply, invalid callback, disconnect or no observation before expiry.
+It does not retry, reset or send another USB command, and even late success cannot
+enable writes. The original controller snapshot remains frozen.
+
+The build and sanitizer/FAT32 tests pass, including 43 dedicated observation cases.
+**Hardware testing is pending.** Existing ELKS and `pmstat --usb` display the result.
+[Behavior, suffix fields and limitations](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-LATE-STATUS.md)
+· [Validation manifest](validation/usb-late-status-20261030.json).
