@@ -807,3 +807,20 @@ blocked, and this is still not a read/write release candidate.
 This is actual PPC text-video memory with live mount and cached status output.
 The saved native mkdir error is labelled and was not rerun.
 [Direct hardware record](validation/usb-cache-direct-20261030.json).
+
+
+## Cache-query transfer-stage candidate
+
+I built the next firmware diagnostic to preserve the pending USB transfer stage
+and controller state at the cache-query timeout. It reports command/data/status
+stage, endpoint, expected bytes, last completion and controller registers through
+the existing `pmstat --usb`. The saved report stays unchanged after late callbacks;
+status reads send no USB commands. Writes remain blocked and no flush is sent.
+
+The candidate passed 80 cache-probe sanitizer scenarios, 12 FAT32 scenarios with
+unchanged whole-image hashes, the existing regression suites, both ARM builds and
+stack-layout checks. No ELKS kernel or utility update is needed. **It has not been
+flashed or tested on the PPC yet.** The next physical test uses the generic drive
+directly connected, following a fresh full recovery backup.
+
+[Diagnostic format, limitations and candidate manifest](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-CACHE-STAGE.md).
