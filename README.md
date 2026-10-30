@@ -364,3 +364,9 @@ The [late status observation candidate](docs/USB-SYNC-LIFETIME.md#late-status-ob
 recorded no completion during 30 additional seconds after the normal two-second
 timeout. The [result and screenshot](docs/USB-SYNC-LIFETIME.md#sandisk-late-status-result)
 are saved; the cause remains unresolved and writes remain blocked.
+
+
+A [powered USB hub comparison](docs/USB-SYNC-LIFETIME.md#powered-hub-comparison)
+confirmed read access to both sticks separately, but the Kingston still rejected
+the cache-flush command. Writes remain blocked; the SanDisk's flush behavior
+through the hub has not yet been tested.

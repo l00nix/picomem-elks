@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-30",
+  "firmware_commit": "4afc5abe1a78321be777435e2a94674b690a8e4a",
+  "firmware_uf2_sha256": "cfaa1629d7ac3a49475c8798086c4b21eb3047f689daa3730ebfc8cf2401a2f6",
+  "topology": "User-supplied powered USB hub; only Kingston attached for guarded test; hub model not recorded",
+  "device": "Kingston DataTraveler 1 GB FAT32 (user reported; eight prior full-file baselines matched)",
+  "two_device_detection": "PicoMEM counted two non-hub devices while both sticks were attached; one volume exposed. SanDisk confirmed with one saved full-file checksum, then both removed and Kingston reinserted alone.",
+  "retained_files_verified": {
+    "RN28A/Renamed Long Filename.txt": {
+      "bytes": 3073,
+      "sha256": "d771c7166dc97e2f4e636afb5d4df8f57865c48ddf5095af12cd3b2153576a47"
+    },
+    "RN28A/Keep This File.txt": {
+      "bytes": 4,
+      "sha256": "6ca7ea2feefc88ecb5ed6356ed963f47dc9137f82526fdd25d618ea626d0803f"
+    },
+    "LFN Create 28/Created Long Filename.txt": {
+      "bytes": 3073,
+      "sha256": "d45c5305b8dd48af787ecfd75dcbedbdf6fca682fef83824fb39c5372eafd441"
+    },
+    "LFN Create 28/Nested Long Directory/Child With Spaces.txt": {
+      "bytes": 1025,
+      "sha256": "984c5645a309dbba620349f0efaa17f16288cf8181d91b13efcdc2d9f6dbd2d4"
+    },
+    "LFN Create 28/N26-xxxxxxxxxxxxxxxxxx.txt": {
+      "bytes": 73,
+      "sha256": "fd13e0d898623dfd06aa25d9aeb4e414079f7a2a05be7a5c4ea188a834d7e773"
+    },
+    "PMBEN29/Runtime File Alpha.txt": {
+      "bytes": 3073,
+      "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+    },
+    "PMDIAG29/Runtime File Alpha.txt": {
+      "bytes": 3073,
+      "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+    },
+    "PMERR29/Runtime File Alpha.txt": {
+      "bytes": 3073,
+      "sha256": "09af4de6b33ee8e2cd98cd3b02531f96f62eb0b6dc4c6c3adc0879a1a206a5f1"
+    }
+  },
+  "single_attempt": "mkdir /mnt/usb/PMHK1030",
+  "fresh_test_name_absent": true,
+  "exit_status": 1,
+  "native_error": "/mnt/usb/PMHK1030: cannot create directory",
+  "fault": "op=35 f=2 s=1 r=0 d=0 rs=70:5/20/00 n=18 c6=page c10=page",
+  "query": [
+    "USB query op=1a tag=976 why=0 stage=3 event=0",
+    "USB xfer ep=81/81 got=13 want=13 data=4",
+    "USB CSW ck=1f s=0 r=0 n=4 b=03000000"
+  ],
+  "interpretation": "Same unsupported SYNCHRONIZE CACHE(10) response as prior direct-connected Kingston run. Sense key 5, ASC/ASCQ 20/00. Both MODE queries lacked a usable caching page; latest MODE6 returned a four-byte header. Cache policy remains unknown. No inference that a powered hub resolves writes or that power is the root cause.",
+  "comparison_limit": "Earlier direct-connected Kingston run used the short-mode diagnostic firmware; current late-observer changes apply to timeouts, not this immediate unsupported-command path. No same-firmware direct/hub A/B retest performed.",
+  "write_retries": 0,
+  "sector_write_submission": "None inferred from audited pre-write guard and dirty=0, not a physical bus trace",
+  "late_observer": "Not armed: this is a completed command-failed response rather than a timeout",
+  "telnet": "First status connection closed before login; read-only status reconnect succeeded. Write command was not repeated.",
+  "usb_unmounted": true,
+  "sd_unmounted": true,
+  "elks_left_running": true,
+  "fault_latched_until_mcu_restart": true,
+  "post_fault_media_readback": false,
+  "next_step": "A separate fresh-session SanDisk test through hub would compare its different timeout failure; keep safeguards unchanged.",
+  "screenshot": {
+    "source": "Actual PPC512 B800 text video memory rendered with BIOS font; live mount/pmstat, explicitly saved native error, summary from verified baseline",
+    "video_sha256": "5d6258ff3104c1e7a31d11ffe7c7c00ce78b9dc65d552bb104ba145e3a584544",
+    "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+    "png_sha256": "4d36a4cf665c2375bc0bf63dbc8d7b54090659a67f0da3f536f71d1624d5f382"
+  }
+}

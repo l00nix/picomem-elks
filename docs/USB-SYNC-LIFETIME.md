@@ -574,3 +574,39 @@ comparison. No new kernel was needed, and the upstream draft PR is unchanged.
 
 This is actual PPC text-video memory rendered with its BIOS font. Mount and
 status output are live; the saved native mkdir error is labelled and was not rerun.
+
+
+## Powered hub comparison
+
+On 30 October I checked both sticks through a powered USB hub. PicoMEM counted
+two non-hub devices when both were attached, but the file service exposes only
+one storage volume. I identified the selected SanDisk by a saved full-file
+checksum, then removed both sticks and reconnected only the Kingston. All eight
+saved Kingston file checksums matched, including long names and nested paths.
+
+With only the Kingston connected, I confirmed a fresh `PMHK1030` name was absent
+and made one guarded mkdir attempt. It failed with the same unsupported-flush
+response seen in the earlier direct-connected Kingston run:
+
+```text
+op=35 f=2 s=1 r=0 d=0 rs=70:5/20/00 n=18 c6=page c10=page
+```
+
+The drive rejected SYNCHRONIZE CACHE(10), and neither MODE query provided a usable
+caching page. The latest MODE6 response was the four-byte header `03000000`.
+The 30-second observer does not apply here: this was a completed command-failed
+response, not a timeout. The hub did not resolve this Kingston write blocker.
+This does not establish the cause of the SanDisk's different timeout failure.
+The earlier direct Kingston test used the short-mode diagnostic firmware; I have
+not performed a same-firmware direct/hub A/B comparison.
+
+I made no write retry, unmounted USB and left ELKS running. The guard and `d=0`
+indicate no sector write was submitted; this is a software inference rather than
+a physical USB trace. There was no post-fault media readback. A separate fresh
+PicoMEM session is needed to compare the SanDisk's flush behavior through the hub.
+
+![PPC512 Kingston powered-hub test](screenshots/ppc512-kingston-powered-hub-20261030.png)
+
+The screenshot is actual PPC text-video memory rendered with its BIOS font.
+Mount and status output are live; the saved mkdir error is labelled and was not
+rerun. [Validation record](validation/usb-powered-hub-20261030.json).
