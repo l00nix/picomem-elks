@@ -361,5 +361,6 @@ captured an enabled, still-pending receive with advancing USB frames. The
 are recorded; the reason for the missing reply remains unresolved.
 
 The [late status observation candidate](docs/USB-SYNC-LIFETIME.md#late-status-observation-candidate)
-will check for a delayed reply while retaining the normal two-second error and
-write quarantine. Builds and host tests pass; hardware testing is pending.
+recorded no completion during 30 additional seconds after the normal two-second
+timeout. The [result and screenshot](docs/USB-SYNC-LIFETIME.md#sandisk-late-status-result)
+are saved; the cause remains unresolved and writes remain blocked.

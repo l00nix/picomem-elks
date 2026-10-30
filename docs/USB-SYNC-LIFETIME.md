@@ -550,6 +550,27 @@ It does not retry, reset or send another USB command, and even late success cann
 enable writes. The original controller snapshot remains frozen.
 
 The build and sanitizer/FAT32 tests pass, including 43 dedicated observation cases.
-**Hardware testing is pending.** Existing ELKS and `pmstat --usb` display the result.
+**The hardware test below recorded no late completion.** Existing ELKS and `pmstat --usb` display the result.
 [Behavior, suffix fields and limitations](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-LATE-STATUS.md)
 · [Validation manifest](validation/usb-late-status-20261030.json).
+
+
+## SanDisk late-status result
+
+The PPC512 run on 30 October matched all three saved SanDisk file checksums.
+One guarded mkdir failed at the normal two-second flush timeout. The observer
+then changed from `obs=wait` to `obs=none os=255 why=0 ms=30000`: no completion
+or detach was recorded during the additional 30-second window. The original six
+controller/timeout lines stayed unchanged.
+
+This measures software callback delivery, not physical bus traffic. It does not
+identify whether the drive failed to respond or the host failed to deliver a
+completion. The frozen controller data is from the initial timeout, not expiry.
+I made no retry, unmounted USB and left ELKS running with writes blocked. The
+next investigation is the native controller status-transfer path and a controlled
+comparison. No new kernel was needed, and the upstream draft PR is unchanged.
+
+![PPC512 SanDisk late-status observation](screenshots/ppc512-sandisk-late-status-20261030.png)
+
+This is actual PPC text-video memory rendered with its BIOS font. Mount and
+status output are live; the saved native mkdir error is labelled and was not rerun.
