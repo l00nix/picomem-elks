@@ -353,3 +353,26 @@ or relaxed the current write guard. Independent device comparison and persistenc
 tests remain necessary before a RW release. [Linux cache defaults](https://github.com/torvalds/linux/blob/d89e1d186ec9271bf78e62771779e9fc03bf0fc3/drivers/scsi/sd.c#L3071-L3082).
 
 [Hardware evidence, file hashes and firmware manifest](validation/usb-mode10-prefix-20261029.json).
+
+
+## Bounded short MODE SENSE candidate
+
+I built a follow-up that accepts independently bounded actual DATA and residue
+counts for successful exact MODE SENSE cache queries. The parser consumes only
+`min(actual DATA bytes, 64 - residue)` and requires the matching terminal record.
+Raw counts remain visible; a header without a caching page remains unknown.
+Sector transfers, REQUEST SENSE and write quarantine are unchanged.
+
+The candidate passes 19,256 actual TinyUSB cases, 191 adapter scenarios, five
+FatFs/FAT32 tests, 14 legacy USB tests and ARM/stack-layout checks. Feature-off
+firmware is unchanged. It is not flashed yet; the existing kernel is sufficient.
+
+I will compare the Kingston 1 GB FAT32 with a SanDisk Cruzer Mini 512 MB FAT32,
+preserving existing files and using a fresh test directory. Each test starts with
+read-only checks and a clean MCU session after any fault. A rejected write ends
+that session's write test. A drive that accepts flush can proceed to byte-for-byte
+write/readback, remount, Mac FAT validation and power-cycle persistence checks.
+The SanDisk's cache behavior is not known yet.
+
+[Implementation, safeguards and test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-SHORT-MODE.md)
+· [Candidate manifest](validation/usb-short-mode-20261029.json).
