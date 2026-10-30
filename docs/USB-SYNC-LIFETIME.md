@@ -759,6 +759,30 @@ reply bytes and I/O state. Status reads are cached. No ELKS kernel or utility
 update is needed. A transport fault keeps USB I/O blocked until PicoMEM restarts.
 The candidate passed 64 new sanitizer scenarios, four real FAT32 scenarios with
 unchanged whole-image hashes, the existing test suites, both ARM builds and stack
-layout checks. **Physical validation is pending.**
+layout checks. **The first physical probe timed out; see below.**
 
 [Behavior, candidate hashes and planned hardware test](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-CACHE-PROBE.md).
+
+
+## Generic drive cache probe: 30 October 2026
+
+I tested the read-only cache probe on the PPC512 with generic drive `0011:7788`
+through powered hub `1a40:0101`. Before the probe, all nine non-hidden files
+(913,703 bytes) matched the Mac SHA256 baseline. Exactly one diagnostic directory
+creation attempt triggered MODE SENSE(10), which timed out. WCE remains unknown;
+MODE SENSE(6) was not attempted, and the firmware quarantined USB I/O.
+
+I made no retry and successfully unmounted USB. This diagnostic build blocks all
+USB sector writes and sends no flush command. The result therefore exposes a
+read-only command timeout independently of the earlier flush failure; it does not
+establish the cause or the drive's cache policy. No post-fault readback was made.
+PicoMEM needs a fresh restart before further USB I/O. The next controlled comparison
+is the same firmware and generic drive connected directly, without the hub.
+
+![PPC512 read-only cache probe result](screenshots/ppc512-usb-cache-probe-20261030.png)
+
+This is actual PPC text-video memory rendered with its BIOS font. Mount and cached
+status output are live; the saved native mkdir error is explicitly labelled and
+was not rerun. The checksum statement describes the completed pre-probe checks.
+[Hardware record](validation/usb-cache-probe-20261030.json) ·
+[Firmware test details](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-CACHE-PROBE.md#first-physical-probe-generic-drive-through-powered-hub).
