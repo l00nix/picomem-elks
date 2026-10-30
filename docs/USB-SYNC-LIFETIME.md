@@ -725,3 +725,22 @@ This is actual PPC text-video memory rendered with its BIOS font. Mount and stat
 output are live; the saved mkdir error is labelled and was not rerun. The checksum
 summary comes from verified whole-file reads.
 [Hardware record](validation/usb-generic-hub-20261030.json).
+
+
+## Command audit and cache-policy next step
+
+I reviewed the flush CDB, wrapper fields and command-to-status transition against
+USB BOT 1.0 and Linux v6.12. I found no encoding defect in that review. All 72 new
+tests joining the actual PicoMEM adapter and patched TinyUSB MSC implementation
+passed, as did the existing suites. The controller completions are modelled;
+these tests do not establish what happens on the physical bus.
+
+The candidate's policy is stricter than desktop Linux: it requires a successful
+flush before any sector write. Linux can fall back to assuming write-through
+when cache information is unavailable. I have not adopted that assumption for
+these drives. The next step is a read-only cache-capability probe before the
+first flush, with explicit enabled/disabled/unknown results. Unknown cache policy
+must not silently enable writes. No firmware or kernel changed during this audit,
+and no new flash is needed for it.
+
+[Audit, references, test coverage and limitations](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-COMMAND-AUDIT.md).
