@@ -622,8 +622,29 @@ and four downstream devices, with one storage volume exposed at a time.
 
 During a fault, the report keeps hub counts but prioritizes existing fault and
 transport diagnostics over hub detail rows. Builds, sanitizer tests and the
-existing ELKS status-reader tests pass. **Hardware testing is pending.** This
-reporting change does not resolve the cache-flush blocker or enable writes.
+existing ELKS status-reader tests pass. **The one-hub/two-disk hardware test below
+also passed.** This reporting change does not resolve the cache-flush blocker or
+enable writes.
 
 [Behavior, examples and bounds](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-INVENTORY.md)
 · [Validation manifest](validation/usb-inventory-20261030.json).
+
+
+## Hub inventory hardware result
+
+The PPC512 now reports the powered hub (`1a40:0101`) at USB address 5, the selected
+Kingston (`0951:1602`) at address 1 on hub port 4, and the inactive SanDisk
+(`0781:5150`) at address 2 on hub port 3. The SanDisk was added while ELKS was
+running; Kingston remained selected. All eight saved Kingston file checksums
+matched through a read-only mount with both disks connected.
+
+I safely unmounted USB and left ELKS running. No write was attempted, and no USB
+fault was reported. Only one storage volume is exposed; `inactive` does not mean
+a second ELKS mount exists. The first query already showed the hub and Kingston,
+so the empty-inventory hardware case was not observed.
+
+![PPC512 hub and two USB disks](screenshots/ppc512-usb-hub-inventory-20261030.png)
+
+This is actual PPC text-video memory rendered with its BIOS font. Status and
+mount output are live; the checksum summary comes from verified full-file reads.
+[Hardware evidence](validation/usb-inventory-20261030.json).

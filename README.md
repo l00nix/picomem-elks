@@ -373,5 +373,6 @@ through the hub has not yet been tested.
 
 The [hub inventory candidate](docs/USB-SYNC-LIFETIME.md#hub-and-multiple-device-inventory-candidate)
 adds hub/device IDs, port locations and selected/inactive disk reporting to the
-existing `pmstat --usb`. It is built and host-tested; hardware validation is
-pending. Simultaneous mounts of multiple USB drives are not implemented.
+existing `pmstat --usb`. The [hardware result and screenshot](docs/USB-SYNC-LIFETIME.md#hub-inventory-hardware-result)
+confirm one hub and two disks, with eight selected Kingston file checksums
+matching. Simultaneous mounts of multiple USB drives are not implemented.
