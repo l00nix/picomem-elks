@@ -502,3 +502,19 @@ The next investigation is the host-controller status-transfer/completion path.
 This is actual PPC text-video memory rendered with its BIOS font. The mount and
 status output are live; the saved native mkdir error is explicitly marked and
 was not rerun for the screenshot.
+
+
+## Native controller diagnostic candidate
+
+I added a read-only snapshot of the RP2350 USB controller to investigate the
+SanDisk's pending status reply. It records endpoint buffer/control flags, polling
+state, completion/interrupt bits and software transfer state, with frame samples
+from submission and timeout. The existing `pmstat --usb` can display the evidence.
+
+Host sanitizer tests, mock-register tests, FAT32 image tests, ARM build and stack
+layout checks pass. **Hardware testing is pending; read/write release remains
+blocked.** No new ELKS kernel is needed. This candidate does not change the
+timeout, send extra USB commands, retry, reset or bypass write safeguards.
+
+[Implementation, field meanings and limitations](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-HOST-STATE.md)
+· [Validation manifest](validation/usb-host-state-20261030.json).

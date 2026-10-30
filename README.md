@@ -354,3 +354,7 @@ now locates the SanDisk timeout at an accepted status-reply transfer after the
 command wrapper completed. The [PPC512 result and screenshot](docs/USB-SYNC-LIFETIME.md#sandisk-pending-status-result)
 are recorded; the underlying cause and RW release remain unresolved. It uses
 the existing ELKS kernel and `pmstat`, and retains all write safeguards.
+
+The [native controller diagnostic candidate](docs/USB-SYNC-LIFETIME.md#native-controller-diagnostic-candidate)
+adds endpoint and controller-state evidence for that timeout. Builds and host tests
+pass; its physical test is pending.
