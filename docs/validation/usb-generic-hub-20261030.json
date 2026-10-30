@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-30",
+  "firmware_commit": "92d36d47750c6e71ee489d182bb3219bce1cc600",
+  "firmware_uf2_sha256": "a7186d7616b64447ed46b8322dcccc918b6b02c8f0caa3d9217374a5e6633f80",
+  "device": "Generic Flash Disk; user reported 256 MB",
+  "topology": {
+    "hub_vid_pid": "1a40:0101",
+    "hub_address": 5,
+    "disk_vid_pid": "0011:7788",
+    "disk_address": 1,
+    "disk_hub_port": 3,
+    "powered_hub": "User reported",
+    "other_sticks_attached": false
+  },
+  "mac_inspection": {
+    "device_bytes": 1039138816,
+    "partition_bytes": 268435456,
+    "partition_offset": 1048576,
+    "filesystem": "FAT32",
+    "allocation_block_bytes": 512,
+    "read_only_fsck_exit": 0,
+    "files_hashed": 104,
+    "read_errors": 0,
+    "raw_sector_inspection": false,
+    "format_or_repair": false
+  },
+  "initial_mount": "Before Mac round trip: inactive at address2 hub5 port4; mount returned Invalid argument without USB fault. After round trip: selected address1 hub5 port3, read-only mount passed. Root cause not established; no format/repair performed.",
+  "read_only_mount": "passed",
+  "long_filename_listing": "passed",
+  "retained_file_baselines": [
+    {
+      "size": 1734,
+      "sha256": "0e9a1917cdfd6ad72d49ac4b9334eda3abb1cf910f2c8a5a9bdd7196097b5438"
+    },
+    {
+      "size": 200284,
+      "sha256": "fd6be1ba5e03e8f2503923a94eaf2003aa86b4a1189a8eee6cfb8b2be1cb2d96"
+    },
+    {
+      "size": 76,
+      "sha256": "f636ab0be0b5b9799fedfeb3b5fbd1dda9055a3bf18c3435ec2e199da74b95d1"
+    },
+    {
+      "size": 12,
+      "sha256": "27a80303e7514c617faaf5e76fb4a1e09730f91c7616d05a0645a8decfbe8ea0"
+    },
+    {
+      "size": 524288,
+      "sha256": "35135b00c36fbf672606e8e2e2b1178712fb025a3458edae204721742506c957"
+    },
+    {
+      "size": 80,
+      "sha256": "f57e2308761f84e445fd258e4d0b95751ac28ab9bf9d7af102b33c370f7db532"
+    },
+    {
+      "size": 87940,
+      "sha256": "79839865437b5dd70ef39f38f22ced54bce903ce61b73050f78b1b4a01df1638"
+    },
+    {
+      "size": 99224,
+      "sha256": "6246230ecd5b472902e6a49c95e857a5e3190c4fa6c462d6a8867e9a5e523a7c"
+    },
+    {
+      "size": 65,
+      "sha256": "922792fec5e21f229d83e15a5d6e5b577b3e1f971edafa2dcdb6954e31cecf74"
+    }
+  ],
+  "single_attempt": "mkdir /mnt/usb/PMGH1030",
+  "test_name_absent": true,
+  "exit_status": 1,
+  "native_error": "/mnt/usb/PMGH1030: cannot create directory",
+  "fault": "op=35 f=2 s=1 r=0 d=0 rs=70:5/26/00 n=18",
+  "sense": {
+    "response_format": "70",
+    "key": "05",
+    "asc": "26",
+    "ascq": "00",
+    "description": "INVALID FIELD IN PARAMETER LIST",
+    "reference": "https://www.t10.org/lists/asc-num.htm"
+  },
+  "cache_mode_queries": "Not attempted: current diagnostic only queries after current sense 05/20/00; 05/26/00 does not qualify.",
+  "interpretation": "Completed failed SYNCHRONIZE CACHE(10) and decoded REQUEST SENSE, not the SanDisk timeout and not Kingston unsupported-opcode sense. Does not establish malformed command, unsupported opcode, cache policy, or root cause.",
+  "sector_write_submission": "None inferred from audited pre-write guard and dirty=0; not a physical bus trace",
+  "write_retries": 0,
+  "post_fault_media_readback": false,
+  "usb_unmounted": true,
+  "sd_unmounted": true,
+  "elks_left_running": true,
+  "fault_latched_until_mcu_restart": true,
+  "screenshot": {
+    "source": "Actual PPC512 B800 text video memory rendered with BIOS font; live mount/pmstat, explicitly saved native error, summary from verified baseline",
+    "video_sha256": "3f5e6f97fdaec6db0f2f2c3876653145abc4b94f232fa6f0d71e0c65baad2c2c",
+    "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+    "png_sha256": "8085ff57791e624685e9341d335dc5e9fefe490c522dc6cf46b3526691d9278b"
+  }
+}

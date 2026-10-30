@@ -684,3 +684,44 @@ attempted. A third drive comparison, if available, needs a fresh MCU session.
 This is actual PPC text-video memory rendered with its BIOS font. Mount and status
 output are live; the saved native mkdir error is labelled and was not rerun.
 [Full hardware record](validation/usb-sandisk-hub-20261030.json).
+
+
+## Generic drive powered-hub result
+
+On 30 October I tested a third drive, reported as a generic 256 MB flash disk
+(`0011:7788`). The Mac identified a 256 MiB FAT32 partition on a device reporting
+about 1 GB total capacity. Its read-only FAT check passed, and all 104 files were
+readable. I did not format or repair it.
+
+Before the Mac round trip, PicoMEM listed this drive as inactive and ELKS could
+not mount it. After reconnection alone through the powered hub, it was selected
+at address 1, hub 5 port 3. ELKS mounted it read-only and displayed long names.
+All nine non-hidden files matched the Mac's whole-file SHA256 checksums. This
+successful reconnection does not establish the cause of the earlier mount failure.
+
+After confirming `PMGH1030` was absent, one guarded mkdir failed:
+
+```text
+op=35 f=2 s=1 r=0 d=0 rs=70:5/26/00 n=18
+```
+
+The flush returned a failed status and REQUEST SENSE returned `05/26/00`:
+[INVALID FIELD IN PARAMETER LIST](https://www.t10.org/lists/asc-num.htm).
+This differs from Kingston's unsupported-opcode response and SanDisk's timeout.
+It does not establish that the request is malformed or that flushing is unsupported.
+The current cache-mode diagnostic runs only after `05/20/00`, so it did not run
+for this response. Cache policy remains unknown.
+
+The audited pre-write guard and `d=0` indicate that no sector write was submitted;
+this is software evidence, not a physical bus trace. I made no retry, safely
+unmounted USB, and left ELKS running. No post-fault media readback was attempted.
+The fault remains latched until PicoMEM restarts. The next investigation is a
+review of the flush request and transport against a reference implementation,
+with the write safeguards retained.
+
+![PPC512 generic drive guarded flush test](screenshots/ppc512-generic-powered-hub-20261030.png)
+
+This is actual PPC text-video memory rendered with its BIOS font. Mount and status
+output are live; the saved mkdir error is labelled and was not rerun. The checksum
+summary comes from verified whole-file reads.
+[Hardware record](validation/usb-generic-hub-20261030.json).
