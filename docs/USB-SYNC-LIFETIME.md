@@ -786,3 +786,24 @@ status output are live; the saved native mkdir error is explicitly labelled and
 was not rerun. The checksum statement describes the completed pre-probe checks.
 [Hardware record](validation/usb-cache-probe-20261030.json) ·
 [Firmware test details](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-CACHE-PROBE.md#first-physical-probe-generic-drive-through-powered-hub).
+
+
+## Direct connection reproduces the cache-probe timeout
+
+I repeated the generic-drive probe after a physical cold restart, with the powered
+hub removed and the same firmware installed. Inventory confirmed one selected
+`0011:7788` disk and zero hubs. All nine files again matched the Mac baseline
+before the probe. One directory-creation attempt reproduced the same MODE SENSE(10)
+timeout, unknown WCE and quarantined USB I/O. MODE SENSE(6) was not attempted.
+USB is safely unmounted; no retry or post-fault media read was made.
+
+The hub is not required to reproduce the problem. The next diagnostic should
+capture the exact USB transfer stage and controller state at the cache-query
+timeout; the current report does not contain that detail. USB writes remain
+blocked, and this is still not a read/write release candidate.
+
+![PPC512 direct USB cache probe](screenshots/ppc512-usb-cache-direct-20261030.png)
+
+This is actual PPC text-video memory with live mount and cached status output.
+The saved native mkdir error is labelled and was not rerun.
+[Direct hardware record](validation/usb-cache-direct-20261030.json).
