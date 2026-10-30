@@ -350,6 +350,7 @@ AI coding assistance. Source references are recorded in
 Licensed under **GPL-2.0-or-later**; see [COPYING](COPYING).
 
 The [pending transfer diagnostic candidate](docs/USB-SYNC-LIFETIME.md#pending-transfer-diagnostic-candidate)
-adds evidence for the SanDisk flush timeout. Host tests and builds pass; physical
-testing is pending. It uses the existing ELKS kernel and `pmstat`, and retains
-all write safeguards.
+now locates the SanDisk timeout at an accepted status-reply transfer after the
+command wrapper completed. The [PPC512 result and screenshot](docs/USB-SYNC-LIFETIME.md#sandisk-pending-status-result)
+are recorded; the underlying cause and RW release remain unresolved. It uses
+the existing ELKS kernel and `pmstat`, and retains all write safeguards.

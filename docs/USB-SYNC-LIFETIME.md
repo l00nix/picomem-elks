@@ -475,10 +475,30 @@ can display the cached evidence. No new ELKS kernel is needed.
 
 Host sanitizer tests, disposable FAT32 tests, ARM build and stack-layout checks
 pass; the feature-disabled firmware remains byte-identical to the baseline.
-**Hardware testing is pending, and read/write release remains blocked.** The
+**The hardware result below locates the pending status transfer; read/write release remains blocked.** The
 candidate preserves the existing write safeguards and does not add retries or
 USB resets. I will first test SanDisk after booting ELKS without the stick and
 inserting it at login, preserving all existing files.
 
 [Implementation and hardware test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-TIMEOUT-STAGE.md)
 · [Validation manifest](validation/usb-timeout-stage-20261029.json).
+
+
+## SanDisk pending status result
+
+The 30 October PPC512 test matched all three saved file checksums through a
+read-only mount. One guarded directory-creation attempt then timed out. The new
+snapshot shows a successful 31-byte command-wrapper completion, followed by an
+accepted 13-byte status IN transfer with no completion callback by the two-second
+deadline. No sector write was submitted according to the guard and dirty flag.
+The exact cause remains unresolved; this does not prove an unsupported command.
+
+I saved the evidence, unmounted USB and left ELKS running. No write retry was made.
+The next investigation is the host-controller status-transfer/completion path.
+[Full result and interpretation](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-TIMEOUT-STAGE.md#ppc512-result--30-october-2026).
+
+![PPC512 SanDisk pending status transfer](screenshots/ppc512-sandisk-timeout-stage-20261030.png)
+
+This is actual PPC text-video memory rendered with its BIOS font. The mount and
+status output are live; the saved native mkdir error is explicitly marked and
+was not rerun for the screenshot.
