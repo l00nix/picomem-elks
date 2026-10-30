@@ -267,10 +267,9 @@ successfully; SD stayed unmounted. Initial stack use was 1632/4096 firmware byte
 and 418/700 kernel bytes with zero flags/invalid counts. Fault-path peak use was
 not measured. ELKS remains running with the fault latched until PicoMEM restarts.
 
-My next proposed diagnostic is a bounded capture of returned mode bytes and
-MODE SENSE(10) as the **first** cache query on a fresh boot. That would test the
-alternate command without continuing after this ambiguous MODE SENSE(6) response.
-It is not implemented or flashed yet. Strict transport checks, write quarantine
+This result motivated a bounded capture of returned mode bytes and
+MODE SENSE(10) as the **first** cache query on a fresh boot. The follow-up result
+is recorded below or in the linked report. Strict transport checks, write quarantine
 and the flush requirement remain; no cache-setting change or write retry was made.
 
 [Full hardware evidence and hashes](validation/usb-transport-detail-20261029.json).
@@ -291,7 +290,66 @@ reply leaves writes blocked in this diagnostic build.
 The candidate passes 19,222 transport cases, 153 adapter scenarios, five FAT32
 scenarios, 14 legacy USB tests, 30 ELKS status-parser scenarios, ARM builds and
 stack-layout checks. The feature-disabled firmware is byte-identical. Hardware
-validation is pending; the PPC is still running the previous transport diagnostic.
+validation is complete; the PPC is running this firmware. See the result below.
 
 [Design, output fields and hardware test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-MODE10-PREFIX.md)
 · [Candidate manifest](validation/usb-mode10-prefix-20261029.json).
+
+
+## MODE SENSE(10)-first PPC512 result
+
+I flashed the candidate after a fresh full recovery backup; both backup and new
+firmware passed readback verification. USB was detected without reconnecting, and
+all eight retained files passed full-content checks through a read-only mount.
+After confirming `PMMD1029` was absent, I remounted read/write and made exactly
+one `mkdir /mnt/usb/PMMD1029` attempt. It returned exit 1 and
+`/mnt/usb/PMMD1029: cannot create directory`. I did not retry.
+
+```text
+?USB fault op=35 f=2 s=1 r=0 d=0 rs=70:5/20/00 n=18 c6=- c10=phase
+USB query op=5a tag=427 why=8 stage=3 event=0
+USB xfer ep=81/81 got=13 want=13 data=8
+USB CSW ck=1f s=0 r=0 n=8 b=0006000000000000
+```
+
+The captured eight bytes form a MODE SENSE(10) header: length field 6 means eight
+bytes including that field, with no block descriptors or mode pages. There is no
+caching page and no WCE bit. **Cache state remains unknown.** The host recorded
+eight DATA bytes for a 64-byte allocation, then a successful 13-byte CSW transfer
+with status 0 and residue 0. The checked transport rejected that count mismatch
+and synthesized a phase error; the device did not report status 2. MODE SENSE(6)
+was skipped. A device residue quirk or host counting issue still needs independent
+verification; this is not a USB bus trace.
+
+No sector write was submitted according to the pre-write guard control flow and
+`dirty=0` evidence. Initial stack use was 1632/4096 firmware bytes and 418/700
+kernel bytes, with zero flags/invalid counts. After the fault, `pmperf /mnt/usb`
+returned exit 1, `pmperf ioctl: I/O error`; the fault-path peak remains unavailable.
+USB unmounted successfully; SD stayed unmounted. ELKS remains running with the
+fault latched until PicoMEM restarts.
+
+![PPC512 MODE SENSE(10) header-only reply and saved native error](screenshots/ppc512-usb-mode10-prefix-20261029.png)
+
+The screenshot is rendered from actual PPC B800 video memory. Mount and cached
+status output are live; the saved native mkdir error is explicitly labelled and
+was not rerun. The installed firmware is source `ef16c87` / UF2 SHA-256
+`48b56652948bacb28ce6988cbdc07799e189de8b9aa04dfbff6bd2752c5cd4b7`.
+
+## Next compatibility work (not implemented)
+
+I will design and host-test bounded short MODE SENSE reply handling, preserving
+actual received length and raw CSW evidence while keeping exact sector-transfer
+checks. Linux USB storage combines actual transfer residue with the bounded CSW
+residue instead of demanding exact agreement; a successful command can have a
+short reply. This is a useful implementation reference, not proof of this drive's
+persistence behavior. [Linux transport source](https://github.com/torvalds/linux/blob/d89e1d186ec9271bf78e62771779e9fc03bf0fc3/drivers/usb/storage/transport.c#L1195-L1229).
+
+Write policy needs a separate decision: distinguish successful cache flush,
+reported cache-disabled operation, and unknown cache state. Linux's disk driver
+uses explicit defaults when a caching page is absent, including an assumed
+write-through mode unless configured otherwise. An assumption must remain visible;
+it cannot be presented as a device-reported WCE=0. I have not enabled that fallback
+or relaxed the current write guard. Independent device comparison and persistence
+tests remain necessary before a RW release. [Linux cache defaults](https://github.com/torvalds/linux/blob/d89e1d186ec9271bf78e62771779e9fc03bf0fc3/drivers/scsi/sd.c#L3071-L3082).
+
+[Hardware evidence, file hashes and firmware manifest](validation/usb-mode10-prefix-20261029.json).
