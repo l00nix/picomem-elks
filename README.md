@@ -348,3 +348,8 @@ AI coding assistance. Source references are recorded in
 [DESIGN.md](docs/DESIGN.md) and [PORTING.md](docs/PORTING.md).
 
 Licensed under **GPL-2.0-or-later**; see [COPYING](COPYING).
+
+The [pending transfer diagnostic candidate](docs/USB-SYNC-LIFETIME.md#pending-transfer-diagnostic-candidate)
+adds evidence for the SanDisk flush timeout. Host tests and builds pass; physical
+testing is pending. It uses the existing ELKS kernel and `pmstat`, and retains
+all write safeguards.

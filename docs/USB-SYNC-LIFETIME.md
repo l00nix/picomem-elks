@@ -464,3 +464,21 @@ checked. This remains an observation to investigate, not proof of a firmware,
 keyboard, power or USB-device cause. No screen-control code changed in this test.
 
 [Two-drive evidence and hashes](validation/usb-short-mode-20261029.json).
+
+
+## Pending transfer diagnostic candidate
+
+I added a diagnostic candidate for the SanDisk's initial flush timeout. It records
+which USB stage is pending, whether the host driver accepted the transfer, and
+the last completion callback at the existing deadline. The existing `pmstat --usb`
+can display the cached evidence. No new ELKS kernel is needed.
+
+Host sanitizer tests, disposable FAT32 tests, ARM build and stack-layout checks
+pass; the feature-disabled firmware remains byte-identical to the baseline.
+**Hardware testing is pending, and read/write release remains blocked.** The
+candidate preserves the existing write safeguards and does not add retries or
+USB resets. I will first test SanDisk after booting ELKS without the stick and
+inserting it at login, preserving all existing files.
+
+[Implementation and hardware test plan](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-TIMEOUT-STAGE.md)
+· [Validation manifest](validation/usb-timeout-stage-20261029.json).
