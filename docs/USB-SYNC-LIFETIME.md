@@ -512,9 +512,29 @@ state, completion/interrupt bits and software transfer state, with frame samples
 from submission and timeout. The existing `pmstat --usb` can display the evidence.
 
 Host sanitizer tests, mock-register tests, FAT32 image tests, ARM build and stack
-layout checks pass. **Hardware testing is pending; read/write release remains
-blocked.** No new ELKS kernel is needed. This candidate does not change the
+layout checks pass. **The hardware snapshot below captured a pending receive;
+read/write release remains blocked.** No new ELKS kernel is needed. This candidate does not change the
 timeout, send extra USB commands, retry, reset or bypass write safeguards.
 
 [Implementation, field meanings and limitations](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-HOST-STATE.md)
 · [Validation manifest](validation/usb-host-state-20261030.json).
+
+
+## SanDisk controller-state result
+
+The 30 October PPC512 run matched all three saved file checksums, then one guarded
+mkdir failed. At timeout, the status receive buffer was still available for 13
+bytes, its endpoint/polling slot enabled, and software marked the transfer active.
+USB frame samples advanced by 1999 modulo 2048. No current STALL flag, buffer
+completion or masked interrupt was present.
+
+This points toward a still-pending status receive. The global NAK flag is latched
+and is not proof of repeated NAKs on this command. I made no retry, unmounted USB,
+and left ELKS running. The next proposed experiment is a separate bounded window
+observing late completion while retaining the normal timeout and write quarantine.
+[Full interpretation and limitations](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-HOST-STATE.md#ppc512-controller-result--30-october-2026).
+
+![PPC512 SanDisk native controller snapshot](screenshots/ppc512-sandisk-host-state-20261030.png)
+
+The screenshot is actual PPC text-video memory rendered with its BIOS font. Status
+and mount output are live; the saved native error is labelled and was not rerun.
