@@ -610,3 +610,20 @@ PicoMEM session is needed to compare the SanDisk's flush behavior through the hu
 The screenshot is actual PPC text-video memory rendered with its BIOS font.
 Mount and status output are live; the saved mkdir error is labelled and was not
 rerun. [Validation record](validation/usb-powered-hub-20261030.json).
+
+
+## Hub and multiple-device inventory candidate
+
+I added explicit hub and downstream-device rows to `pmstat --usb`. The candidate
+shows cached vendor/product IDs, hub ports and whether a disk is selected,
+inactive or blocked. It uses the existing utility and kernel, with no extra USB
+transfer or change to storage selection. The configured limit remains one hub
+and four downstream devices, with one storage volume exposed at a time.
+
+During a fault, the report keeps hub counts but prioritizes existing fault and
+transport diagnostics over hub detail rows. Builds, sanitizer tests and the
+existing ELKS status-reader tests pass. **Hardware testing is pending.** This
+reporting change does not resolve the cache-flush blocker or enable writes.
+
+[Behavior, examples and bounds](https://github.com/l00nix/ISA-PicoMEM/blob/codex/usb-sync-lifetime/USB-INVENTORY.md)
+· [Validation manifest](validation/usb-inventory-20261030.json).

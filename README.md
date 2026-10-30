@@ -370,3 +370,8 @@ A [powered USB hub comparison](docs/USB-SYNC-LIFETIME.md#powered-hub-comparison)
 confirmed read access to both sticks separately, but the Kingston still rejected
 the cache-flush command. Writes remain blocked; the SanDisk's flush behavior
 through the hub has not yet been tested.
+
+The [hub inventory candidate](docs/USB-SYNC-LIFETIME.md#hub-and-multiple-device-inventory-candidate)
+adds hub/device IDs, port locations and selected/inactive disk reporting to the
+existing `pmstat --usb`. It is built and host-tested; hardware validation is
+pending. Simultaneous mounts of multiple USB drives are not implemented.
