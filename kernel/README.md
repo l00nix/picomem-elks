@@ -1,5 +1,13 @@
 # Optional PicoMEM kernel extensions
 
+**Status, 2 November 2026:** the newer paired firmware/kernel candidate has
+completed long-name USB read/write tests on nine media. See the
+[current hardware report and limitations](../docs/STATUS-20261102.md).
+This page and the source on `main` describe the earlier short-name kernel;
+the commands below do not build or install that newer candidate. Internal SD
+remains read-only. Development is paused pending upstream feedback, with the
+intermittent read failure still unresolved.
+
 I am developing this experimental ELKS integration as l00nix, with AI coding
 assistance. It combines the optional mouse driver with mounted USB/SD file
 access and an **experimental, opt-in USB write mode** through PicoMEM's embedded DFS service. It does not

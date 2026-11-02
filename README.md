@@ -4,6 +4,25 @@ I'm developing `pmconfig`, a native 8086 PicoMEM configuration utility for ELKS,
 with small companion commands for support dumps, status and memory inspection.
 I test it on an Amstrad PPC512. This is an independent experimental project.
 
+## Development status — 2 November 2026
+
+I have tested an experimental paired firmware/kernel candidate for USB reads,
+writes, creation, append, truncation, deletion and same-directory file rename
+with ASCII long names up to 26 bytes on the PPC512. Nine media completed guarded
+ELKS–Mac–ELKS data checks, covering FAT16 and FAT32; DOS 8.3 compatibility also
+passed on a USB-to-SD adapter/card. Internal PicoMEM SD mounts remain read-only.
+
+**This is not a released long-filename build.** The source and downloads on
+`main` still describe the earlier short-name implementation. The newer candidate
+requires matching development firmware, kernel and utilities. An intermittent
+USB read failure and a separate FTP greeting timeout remain unresolved.
+Development and hardware testing are paused pending upstream feedback.
+
+[Current results, media matrix and limitations](docs/STATUS-20261102.md) ·
+[Published upstream updates](docs/UPSTREAM-UPDATES-20261102.md)
+
+## Earlier utility and mount builds
+
 **The 0.5 development build detects the PPC512's wireless USB receiver as
 Logitech Mouse.** `pmstat --usb` and `pmstat --disks` now query bounded firmware
 status responses. Repeated queries completed successfully, configuration stayed
@@ -22,12 +41,13 @@ USB and SD read-only. I have added experimental, opt-in USB writes while keeping
 [new build](dist/kernel-usb-rw-20261025/README.md) has passed host, emulator and
 PPC512 write tests, including independent readback after remount and normal
 reboot. [Hardware results and screenshot](docs/HARDWARE-USB-RW-20261025.md).
-Long filenames remain pending.
+These published binaries use short names. Long-name read/write testing is
+covered by the separate [development status](docs/STATUS-20261102.md).
 
 I published this source snapshot under `l00nix`, with fresh public commit history.
 The project credits, GPL license, tested binaries and hardware evidence are
-included. The [long-filename proposal](docs/LONG-FILENAMES.md) describes the
-firmware extension I would like to discuss with FreddyV.
+included. The [long-filename audit](docs/LONG-FILENAMES.md) records the original design;
+[current development and upstream feedback](docs/STATUS-20261102.md) are tracked separately.
 
 ## Commands
 

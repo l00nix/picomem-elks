@@ -1,4 +1,22 @@
-# Long filenames: interface audit and proposed next step
+# Long filenames: current status and original interface audit
+
+## Current status — 2 November 2026
+
+The experiment has progressed to tested USB long-name reads and writes,
+creation, append, truncation, deletion and same-directory file rename, using
+a paired development firmware/kernel. Names are limited to 26 ASCII bytes;
+internal SD remains read-only. The newer candidate is not the code or binary
+release currently supplied on `main`.
+
+See the [nine-media results, DOS compatibility, remaining issues and exact
+tested versions](STATUS-20261102.md). Development is paused pending upstream
+feedback; the candidate is not release-ready.
+
+## Historical audit — 25 October 2026
+
+The remainder of this page records the original proposal and its limitations
+at that date. Statements below about unimplemented features describe that
+earlier snapshot, not the later hardware-tested candidate.
 
 I investigated long filenames for the mounted PicoMEM USB and SD volumes on
 25 October 2026, with AI coding assistance. **This is an implementation proposal,
