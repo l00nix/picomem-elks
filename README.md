@@ -9,54 +9,7 @@ My work builds on the published interfaces and examples from
 [jdredd87’s PicoMEM tools](https://github.com/jdredd87/CH375USBTools/tree/main/PicoMEM).
 I implemented the ELKS utilities separately in C using those projects as references.
 
-## Development status — 3 November 2026
-
-I have tested an experimental paired firmware/kernel candidate for USB reads,
-writes, creation, append, truncation, deletion and same-directory file rename
-with ASCII long names up to 26 bytes on the PPC512. Nine media completed guarded
-ELKS–Mac–ELKS data checks, covering FAT16 and FAT32; DOS 8.3 compatibility also
-passed on a USB-to-SD adapter/card. Internal PicoMEM SD mounts remain read-only.
-
-**This is not a released long-filename build.** The source and downloads on
-`main` still describe the earlier short-name implementation. The newer candidate
-requires matching development firmware, kernel and utilities. An intermittent
-USB read failure and a separate FTP greeting timeout remain unresolved.
-Upstream feedback has arrived. I am preparing focused validation for nested
-directories, kernel-stack use, resource reuse and mount lifecycle before
-packaging the candidate for review. These additional checks are not yet complete.
-
-[Current results, media matrix and limitations](docs/STATUS-20261102.md) ·
-[Published upstream updates](docs/UPSTREAM-UPDATES-20261102.md)
-
-## Earlier utility and mount builds
-
-**The 0.5 development build detects the PPC512's wireless USB receiver as
-Logitech Mouse.** `pmstat --usb` and `pmstat --disks` now query bounded firmware
-status responses. Repeated queries completed successfully, configuration stayed
-unchanged, and an HTTP transfer passed its checksum afterward.
-[New hardware results and screenshots](docs/HARDWARE-USB-20261023.md).
-
-The earlier 0.4 round validated expanded inspection, support dumps and all
-64 active memory-map queries. [Earlier results and six screenshots](docs/HARDWARE-TEST-20261023.md).
-
-The supported extended/configuration profile is **PicoMEM 2, board ID 11,
-BIOS 2026-06-16**. Other profiles get the common inspection prefix only.
-
-The optional [kernel filesystem integration](kernel/README.md) already mounts
-USB and SD read-only. I have added experimental, opt-in USB writes while keeping SD read-only. See
-[Mounting USB and SD in ELKS](#mounting-usb-and-sd-in-elks) for commands and screenshots. The
-[new build](dist/kernel-usb-rw-20261025/README.md) has passed host, emulator and
-PPC512 write tests, including independent readback after remount and normal
-reboot. [Hardware results and screenshot](docs/HARDWARE-USB-RW-20261025.md).
-These published binaries use short names. Long-name read/write testing is
-covered by the separate [development status](docs/STATUS-20261102.md).
-
-I published this source snapshot under `l00nix`, with fresh public commit history.
-The project credits, GPL license, tested binaries and hardware evidence are
-included. The [long-filename audit](docs/LONG-FILENAMES.md) records the original design;
-[current development and upstream feedback](docs/STATUS-20261102.md) are tracked separately.
-
-## Commands
+## Commands and Usage
 
 | Command | Current function |
 | --- | --- |
@@ -73,7 +26,7 @@ included. The [long-filename audit](docs/LONG-FILENAMES.md) records the original
 for the configuration mode. I adopted `pmconfig` as the clearer primary name;
 all command names fit eight characters.
 
-## Mounting USB and SD in ELKS
+### Mounting USB and SD in ELKS
 
 I have tested **USB read/write and SD read-only mounts on the PPC512** using
 the optional `picofs` kernel filesystem. Ordinary ELKS commands such as `ls`,
@@ -144,7 +97,7 @@ text-screen captures rendered with the PPC's BIOS font.
 [Filesystem limits and build instructions](kernel/README.md) ·
 [Long-filename proposal](docs/LONG-FILENAMES.md)
 
-## Screenshots from the PPC512
+### Screenshots from the PPC512
 
 ![USB receiver detected by PicoMEM](docs/screenshots/20261023-pmstat-usb.png)
 
@@ -179,7 +132,7 @@ rebooted and verified DHCP plus HTTP. The original
 [working networking screenshot](docs/screenshots/network-ppc512.png) and
 [test record](docs/HARDWARE-TEST.md) remain available.
 
-## Install and use
+### Install and use
 
 Download [dist/pmconfig](dist/pmconfig), the tested **21,088-byte ELKS/i8086**
 executable. It is not a DOS or modern Linux executable.
@@ -226,7 +179,7 @@ Support files may contain personal image names or paths; inspect before sharing.
 They are troubleshooting snapshots, **not restore files or copies of the SD
 card's `PICOMEM.CFG`**. [Format and query design](docs/TOOLS.md).
 
-## Next-boot configuration changes
+### Next-boot configuration changes
 
 Only `nic-irq=3|5|7` and `fast-boot=on|off` are editable. IRQ choices must also
 appear in the detected hardware IRQ mask. These settings take effect after a
@@ -302,6 +255,53 @@ cases. Fake hardware
 backends cannot send commands to a real PicoMEM. Native critical sections were
 also inspected for compiler-inserted calls. External `buildext.sh` integration
 remains a follow-up; this repository currently supplies the standalone build.
+
+## Development status — 3 November 2026
+
+I have tested an experimental paired firmware/kernel candidate for USB reads,
+writes, creation, append, truncation, deletion and same-directory file rename
+with ASCII long names up to 26 bytes on the PPC512. Nine media completed guarded
+ELKS–Mac–ELKS data checks, covering FAT16 and FAT32; DOS 8.3 compatibility also
+passed on a USB-to-SD adapter/card. Internal PicoMEM SD mounts remain read-only.
+
+**This is not a released long-filename build.** The source and downloads on
+`main` still describe the earlier short-name implementation. The newer candidate
+requires matching development firmware, kernel and utilities. An intermittent
+USB read failure and a separate FTP greeting timeout remain unresolved.
+Upstream feedback has arrived. I am preparing focused validation for nested
+directories, kernel-stack use, resource reuse and mount lifecycle before
+packaging the candidate for review. These additional checks are not yet complete.
+
+[Current results, media matrix and limitations](docs/STATUS-20261102.md) ·
+[Published upstream updates](docs/UPSTREAM-UPDATES-20261102.md)
+
+## Earlier utility and mount builds
+
+**The 0.5 development build detects the PPC512's wireless USB receiver as
+Logitech Mouse.** `pmstat --usb` and `pmstat --disks` now query bounded firmware
+status responses. Repeated queries completed successfully, configuration stayed
+unchanged, and an HTTP transfer passed its checksum afterward.
+[New hardware results and screenshots](docs/HARDWARE-USB-20261023.md).
+
+The earlier 0.4 round validated expanded inspection, support dumps and all
+64 active memory-map queries. [Earlier results and six screenshots](docs/HARDWARE-TEST-20261023.md).
+
+The supported extended/configuration profile is **PicoMEM 2, board ID 11,
+BIOS 2026-06-16**. Other profiles get the common inspection prefix only.
+
+The optional [kernel filesystem integration](kernel/README.md) already mounts
+USB and SD read-only. I have added experimental, opt-in USB writes while keeping SD read-only. See
+[Mounting USB and SD in ELKS](#mounting-usb-and-sd-in-elks) for commands and screenshots. The
+[new build](dist/kernel-usb-rw-20261025/README.md) has passed host, emulator and
+PPC512 write tests, including independent readback after remount and normal
+reboot. [Hardware results and screenshot](docs/HARDWARE-USB-RW-20261025.md).
+These published binaries use short names. Long-name read/write testing is
+covered by the separate [development status](docs/STATUS-20261102.md).
+
+I published this source snapshot under `l00nix`, with fresh public commit history.
+The project credits, GPL license, tested binaries and hardware evidence are
+included. The [long-filename audit](docs/LONG-FILENAMES.md) records the original design;
+[current development and upstream feedback](docs/STATUS-20261102.md) are tracked separately.
 
 ## Relationship, credits and license
 
