@@ -4,7 +4,7 @@ I'm developing `pmconfig`, a native 8086 PicoMEM configuration utility for ELKS,
 with small companion commands for support dumps, status and memory inspection.
 I test it on an Amstrad PPC512. This is an independent experimental project.
 
-## Development status — 2 November 2026
+## Development status — 3 November 2026
 
 I have tested an experimental paired firmware/kernel candidate for USB reads,
 writes, creation, append, truncation, deletion and same-directory file rename
@@ -16,7 +16,9 @@ passed on a USB-to-SD adapter/card. Internal PicoMEM SD mounts remain read-only.
 `main` still describe the earlier short-name implementation. The newer candidate
 requires matching development firmware, kernel and utilities. An intermittent
 USB read failure and a separate FTP greeting timeout remain unresolved.
-Development and hardware testing are paused pending upstream feedback.
+Upstream feedback has arrived. I am preparing focused validation for nested
+directories, kernel-stack use, resource reuse and mount lifecycle before
+packaging the candidate for review. These additional checks are not yet complete.
 
 [Current results, media matrix and limitations](docs/STATUS-20261102.md) ·
 [Published upstream updates](docs/UPSTREAM-UPDATES-20261102.md)

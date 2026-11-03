@@ -80,3 +80,17 @@ Following the earlier advice here, I am keeping the tools external during active
 development. I plan to prepare the PicoMEM firmware, ELKS driver and independent
 FTP corrections as separate reviewable changes. Feedback on that split and the
 ELKS integration approach would be welcome.
+
+## Architecture follow-up — 3 November 2026
+
+[Published reply to ghaerr](https://github.com/ghaerr/elks/discussions/2841#discussioncomment-19375606)
+
+Hi @ghaerr, yes—that is the approach I’m taking. `picofs` is a separate filesystem that sends file-level requests directly to PicoMEM. It doesn’t sit below the `/dev/fdX` or `/dev/hdX` BIOS driver, and I haven’t added a block driver.
+
+The path is ELKS VFS → `picofs` → PicoMEM file service → FatFs → USB/SD. PicoMEM handles the underlying FAT filesystem and media access.
+
+The current integration explicitly selects `FST_PICOFS` and handles the `usb` or `sd` source before the normal block-device lookup, avoiding MINIX/FAT autodetection. I currently use a small `pmmount` helper; I’ll make sure the upstream submission presents the explicit `mount -t picofs` interface clearly.
+
+Your description of packaging requests is broadly correct, although the ELKS side also maintains inode and open-file state. I’ll still include the nested-directory tests and stack review before submitting it.
+
+Thanks for helping clarify the integration direction!
