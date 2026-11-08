@@ -1,0 +1,2 @@
+PASS real SSD master: legacy writable lifecycle, reentry, bounds, read/write policy, failed request and size cap
+PASS real SSD master: read-only lifecycle, reentry, bounds, read/write policy, failed request and size cap

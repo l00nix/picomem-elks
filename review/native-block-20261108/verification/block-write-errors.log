@@ -1,0 +1,15 @@
+PASS 10 characterization cases: actual queue/SSD/end_request/sync/release; ASYNCIO=0
+PASS: sync reports persistent EIO after failed writes, without replay.
+PASS 10 characterization cases: actual queue/SSD/end_request/sync/release; ASYNCIO=1
+PASS: sync reports persistent EIO after failed writes, without replay.
+{
+  "source_sha256": {
+    "elks/arch/i86/drivers/block/ll_rw_blk.c": "84465a5c9ee8a512cd5c28cf5c6531e4e4894b3c7a8165ca056ee6b367bec422",
+    "elks/arch/i86/drivers/block/blk.h": "89265fb4cab68ad5e868b9da439a16062c0ade014a2dffaf77b77cdab73ab51b",
+    "elks/arch/i86/drivers/block/ssd.c": "c44a4a6c5fc7f43c570939c197f6fa1019e77a69bac545ceff26e76b7e9ad8f9",
+    "elks/fs/buffer.c": "8e32080b5995e2918c44ac383e0914d6c5ac2c19274272e305b346b603c43189"
+  },
+  "physical_io": false,
+  "base_core": false,
+  "base_commit": "052b4be698d9fb780ebdd9c9510ecdc4c2f9dd33"
+}

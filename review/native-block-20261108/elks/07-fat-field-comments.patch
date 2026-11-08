@@ -1,0 +1,17 @@
+diff --git a/elks/include/linuxmt/msdos_fs.h b/elks/include/linuxmt/msdos_fs.h
+index a3c1df7f..3e500102 100644
+--- a/elks/include/linuxmt/msdos_fs.h
++++ b/elks/include/linuxmt/msdos_fs.h
+@@ -59,10 +59,10 @@ struct msdos_boot_sector {
+ 
+ 	/* The following fields are only used by FAT32 */
+ 	__u32	fat32_length;	/* sectors/FAT 36 */
+-	__u16	flags;		/* bit 8: fat mirroring, low 4: active fat (unused) */
++	__u16	flags;		/* bit 7 disables mirroring; low 4 select active FAT */
+ 	__u8	version[2];	/* major, minor filesystem version (unused) */
+ 	__u32	root_cluster;	/* first cluster of root directory 44 */
+-	__u16	info_sector;	/* filesystem info sector (unused) */
++	__u16	info_sector;	/* filesystem info sector */
+ 	__u16	backup_boot;	/* backup boot sector (unused) */
+ 	__u16	reserved2[6];	/* Unused */
+ } __attribute__((packed));

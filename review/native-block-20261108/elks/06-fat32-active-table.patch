@@ -1,0 +1,40 @@
+diff --git a/elks/fs/msdos/inode.c b/elks/fs/msdos/inode.c
+index c48fa4bf..26f4680f 100644
+--- a/elks/fs/msdos/inode.c
++++ b/elks/fs/msdos/inode.c
+@@ -116,14 +116,15 @@ static int msdos_invalidate_fsinfo(struct super_block *s)
+ 	struct buffer_head *bh;
+ 	void *data;
+ 	__u32 *info;
+-	unsigned short sector;
++	unsigned short sector, reserved;
+ 
+ 	if (MSDOS_SB(s)->fat_bits != 32) return 0;
+ 	if (!(bh = msdos_sread(s, 0, &data))) return -EIO;
+ 	sector = ((struct msdos_boot_sector *)data)->info_sector;
++	reserved = ((struct msdos_boot_sector *)data)->reserved;
+ 	unmap_brelse(bh);
+ 	/* Never mistake the boot sector or a FAT/data sector for FSInfo. */
+-	if (!sector || sector == 0xffff || sector >= MSDOS_SB(s)->fat_start)
++	if (!sector || sector == 0xffff || sector >= reserved)
+ 		return 0;
+ 	if (!(bh = msdos_sread(s, sector, &data))) return -EIO;
+ 	info = data;
+@@ -208,6 +209,17 @@ static struct super_block *msdos_read_super(struct super_block *s, char *data,
+ 	sb->clusters = sb->cluster_size?  data_sectors / sb->cluster_size : 0;
+ 	sb->fat_bits = fat32 ? 32 : sb->clusters > MSDOS_FAT12_MAX_CLUSTERS ? 16 : 12;
+ 	sb->previous_cluster = 0;
++	/* Keep the full disk layout above; only FAT access uses the active table. */
++	if (fat32 && (b->flags & 0x80)) {
++		if ((b->flags & 0x0f) >= b->fats || b->fat32_length > 0xffffUL ||
++		    (unsigned long)b->reserved + b->fats * b->fat32_length > 0xffffUL) {
++			unmap_brelse(bh);
++			printk("FAT: Unsupported active FAT\n");
++			return NULL;
++		}
++		sb->fat_start += (b->flags & 0x0f) * sb->fat_length;
++		sb->fats = 1;
++	}
+ 	unmap_brelse(bh);
+ 
+ printk("FAT: me=%x,csz=%d,#f=%d,floc=%d,fsz=%d,rloc=%d,#d=%d,dloc=%d,#s=%,lu,ts=%,lu\n",

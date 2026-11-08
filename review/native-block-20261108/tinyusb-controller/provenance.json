@@ -1,0 +1,12 @@
+{
+  "upstream": "https://github.com/hathach/tinyusb",
+  "revision": "871b843245666786857f54b7ffc1454d4acad7a0",
+  "pull_request": "https://github.com/hathach/tinyusb/pull/3561",
+  "files": {
+    "hcd_rp2040.c": "010a86c3dc1fefba040789438f2783dec03e1f0176a0d5e2689d4f23c2aa1e52",
+    "rp2040_usb.c": "c75c11a4c8c7947199b5b2a14ed4ac0edcc046a270a412b1b2d93128d064d6e8",
+    "rp2040_usb.h": "743b4491fb4a2e40afb727b2ac749a6b549aa19501e39e638cbc06847a998ba9"
+  },
+  "imported_bytes_unchanged": false,
+  "local_changes": "Guarded hcd_edpt_clear_stall hook under PM_RAW_USB_CSW_RECOVERY; current hashes in source-manifest.json."
+}

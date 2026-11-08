@@ -1,0 +1,33 @@
+diff --git a/elks/fs/super.c b/elks/fs/super.c
+index d5e670c1..f69e46c6 100644
+--- a/elks/fs/super.c
++++ b/elks/fs/super.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <linuxmt/config.h>
++#include <linuxmt/fcntl.h>
+ #include <linuxmt/types.h>
+ #include <linuxmt/sched.h>
+ #include <linuxmt/kernel.h>
+@@ -352,6 +353,11 @@ static int do_remount_sb(register struct super_block *sb, int flags, char *data)
+ 
+     debug_sup("REMOUNT sb check %d,%d\n", sb->s_flags, flags);
+ 
++    if (!(flags & MS_RDONLY)) {
++        struct file_operations *fops = get_blkfops(MAJOR(sb->s_dev));
++        if (fops && !fops->write) return -EROFS;
++    }
++
+     /* If we are remounting RDONLY, make sure there are no rw files open */
+     if ((flags & MS_RDONLY) && !(sb->s_flags & MS_RDONLY))
+         if (!fs_may_remount_ro(sb->s_dev)) return -EBUSY;
+@@ -412,7 +418,7 @@ int sys_mount(char *dev_name, char *dir_name, int type, int flags)
+     else if (MAJOR(inodep->i_rdev) >= MAX_BLKDEV)
+         retval = -ENXIO;
+     else
+-        retval = open_filp((flags & MS_RDONLY) ? 1 : 3, inodep, &filp);
++        retval = open_filp((flags & MS_RDONLY) ? O_RDONLY : O_RDWR, inodep, &filp);
+     if (retval) {
+         iput(inodep);
+         return retval;

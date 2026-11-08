@@ -1,0 +1,65 @@
+diff --git a/elks/fs/msdos/inode.c b/elks/fs/msdos/inode.c
+index 428bf3ec..c48fa4bf 100644
+--- a/elks/fs/msdos/inode.c
++++ b/elks/fs/msdos/inode.c
+@@ -110,6 +110,39 @@ static void print_formatted(unsigned long n)
+ 	printk("%lu%c", n, kbytes_or_mbytes);
+ }
+ 
++/* ELKS does not maintain FAT32 free-space hints. Invalidate them for writes. */
++static int msdos_invalidate_fsinfo(struct super_block *s)
++{
++	struct buffer_head *bh;
++	void *data;
++	__u32 *info;
++	unsigned short sector;
++
++	if (MSDOS_SB(s)->fat_bits != 32) return 0;
++	if (!(bh = msdos_sread(s, 0, &data))) return -EIO;
++	sector = ((struct msdos_boot_sector *)data)->info_sector;
++	unmap_brelse(bh);
++	/* Never mistake the boot sector or a FAT/data sector for FSInfo. */
++	if (!sector || sector == 0xffff || sector >= MSDOS_SB(s)->fat_start)
++		return 0;
++	if (!(bh = msdos_sread(s, sector, &data))) return -EIO;
++	info = data;
++	if (info[0] == 0x41615252UL && info[484/4] == 0x61417272UL &&
++	    info[508/4] == 0xaa550000UL &&
++	    (info[488/4] != 0xffffffffUL || info[492/4] != 0xffffffffUL)) {
++		info[488/4] = info[492/4] = 0xffffffffUL;
++		mark_buffer_dirty(bh);
++	}
++	unmap_brelse(bh);
++	return 0;
++}
++
++static int msdos_remount(struct super_block *s, int *flags, char *data)
++{
++	if (*flags & MS_RDONLY) return 0;
++	return msdos_invalidate_fsinfo(s);
++}
++
+ /* Read the super block of an MS-DOS FS. */
+ static struct super_block *msdos_read_super(struct super_block *s, char *data,
+ 	int silent)
+@@ -221,6 +254,11 @@ printk("FAT: me=%x,csz=%d,#f=%d,floc=%d,fsz=%d,rloc=%d,#d=%d,dloc=%d,#s=%,lu,ts=
+ 
+ 	/*s->s_magic = MSDOS_SUPER_MAGIC;*/
+ 
++	if (!(s->s_flags & MS_RDONLY) && msdos_invalidate_fsinfo(s)) {
++		printk("FAT: can't read FSInfo\n");
++		return NULL;
++	}
++
+ 	/* set up enough so that it can read an inode */
+ 	s->s_op = &msdos_sops;
+ 	if (!(s->s_mounted = iget(s,(ino_t)MSDOS_ROOT_INO))) {
+@@ -407,7 +445,7 @@ static struct super_operations msdos_sops = {
+ 	msdos_put_inode,
+ 	msdos_put_super,
+ 	NULL,		/* write_super*/
+-	NULL,		/* remount*/
++	msdos_remount,
+ 	msdos_statfs
+ };
+ 

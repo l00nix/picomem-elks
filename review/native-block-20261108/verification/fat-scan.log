@@ -1,0 +1,2 @@
+PASS 4200 actual-source sector scans: FAT12/16/32, 512/1024 sectors, wrap/full/high clusters/reserved bits/read errors/balanced release
+PASS 1800 actual-source sector scans: FAT12/16/32, 512/1024 sectors, wrap/full/high clusters/reserved bits/read errors/balanced release

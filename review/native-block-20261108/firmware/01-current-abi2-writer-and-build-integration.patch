@@ -1,0 +1,660 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 76e46ce..52c0d8a 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -23,11 +23,47 @@ endif()
+ 
+ cmake_minimum_required(VERSION 3.13)
+ 
++option(PM_RAW_USB_RW_LAB "LOCAL ONLY: experimental raw USB read/write ABI 2" OFF)
++option(PM_RAW_USB_EMPTY_CACHE_WT "LOCAL ONLY: assume write-through for two valid empty cache replies" OFF)
++if(PM_RAW_USB_EMPTY_CACHE_WT)
++    if(NOT PM_RAW_USB_RW_LAB)
++        message(FATAL_ERROR "Empty-cache write-through requires PM_RAW_USB_RW_LAB")
++    endif()
++    add_compile_definitions(PM_RAW_USB_EMPTY_CACHE_WT=1)
++endif()
++if(PM_RAW_USB_RW_LAB)
++    set(PM_RAW_USB_RO ON) # Reuse exclusive-USB and internal-SD boot guards.
++    add_compile_definitions(PM_RAW_USB_RW_LAB=1)
++endif()
+ option(PM_RAW_USB_RO "Experimental exclusive raw USB read-only interface" OFF)
+ if(PM_RAW_USB_RO)
+     add_compile_definitions(PM_RAW_USB_RO=1 PICO_STACK_SIZE=0x1000 PICO_CORE1_STACK_SIZE=0x800)
+ endif()
+ 
++option(PM_RAW_USB_RP2_COMPARE "LOCAL ONLY: upstream RP2 controller; sector writes blocked by default" OFF)
++if(PM_RAW_USB_RP2_COMPARE)
++    if(NOT PM_RAW_USB_RW_LAB OR NOT PICO_BOARD STREQUAL "pimoroni_pico_plus2_rp2350")
++        message(FATAL_ERROR "RP2 comparison requires RP2350 and raw ABI2 laboratory mode")
++    endif()
++    add_compile_definitions(PM_RAW_USB_RP2_COMPARE=1)
++endif()
++
++option(PM_RAW_USB_CSW_RECOVERY "LOCAL ONLY: one cache-query CSW recovery" OFF)
++if(PM_RAW_USB_CSW_RECOVERY)
++    if(NOT PM_RAW_USB_RP2_COMPARE)
++        message(FATAL_ERROR "CSW recovery requires the RP2 comparison")
++    endif()
++    add_compile_definitions(PM_RAW_USB_CSW_RECOVERY=1)
++endif()
++
++option(PM_RAW_USB_RECOVERED_WRITE "LOCAL ONLY: enable checked sector writes with native CSW recovery" OFF)
++if(PM_RAW_USB_RECOVERED_WRITE)
++    if(NOT PM_RAW_USB_CSW_RECOVERY OR NOT PM_RAW_USB_RP2_COMPARE OR NOT PM_RAW_USB_RW_LAB)
++        message(FATAL_ERROR "Recovered writes require raw ABI2, RP2 comparison and CSW recovery")
++    endif()
++    add_compile_definitions(PM_RAW_USB_RECOVERED_WRITE=1)
++endif()
++
+ set(CMAKE_C_STANDARD 11)
+ set(CMAKE_CXX_STANDARD 17)
+ 
+diff --git a/src/USB_Host_Driver2/CMakeLists.txt b/src/USB_Host_Driver2/CMakeLists.txt
+index 555c65a..9f66427 100644
+--- a/src/USB_Host_Driver2/CMakeLists.txt
++++ b/src/USB_Host_Driver2/CMakeLists.txt
+@@ -41,7 +41,12 @@ target_compile_definitions(tinyusb_config INTERFACE
+     CFG_TUSB_CONFIG_FILE="../../../USB_Host_Driver/tusb_config.h"
+ )
+ 
+-if(PM_RAW_USB_RO)
++if(PM_RAW_USB_RW_LAB)
++ target_sources(USB_Host_Driver INTERFACE
++  ${CMAKE_CURRENT_LIST_DIR}/../rawblock/rw/writer.c
++  ${CMAKE_CURRENT_LIST_DIR}/../rawblock/rw/mailbox.c
++  ${CMAKE_CURRENT_LIST_DIR}/../rawblock/rw/glue.c)
++elseif(PM_RAW_USB_RO)
+  target_sources(USB_Host_Driver INTERFACE
+   ${CMAKE_CURRENT_LIST_DIR}/../rawblock/core.c
+   ${CMAKE_CURRENT_LIST_DIR}/../rawblock/service.c)
+diff --git a/src/rawblock/rw/glue.c b/src/rawblock/rw/glue.c
+new file mode 100644
+index 0000000..6b1b54f
+--- /dev/null
++++ b/src/rawblock/rw/glue.c
+@@ -0,0 +1,51 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later
++ * Local ABI 2 adapter. Different identity prevents ABI 1 clients claiming it.
++ * ISA handlers own mailbox reception/replies; USB loop owns task and media.
++ */
++#include "pico/stdlib.h"
++#include "tusb.h"
++#include "ff.h"
++#include "diskio.h"
++#include "../service.h"
++#include "writer.h"
++#include "mailbox.h"
++static uint8_t selected;
++static uint32_t epoch;
++#ifndef PWM_GLUE_TEST
++uint32_t pmw_now_us(void) {return time_us_32();}
++void pmw_pump(void) {tuh_task();}
++#endif
++uint8_t pm_raw_ior(unsigned port)
++{
++    if(port==6)return 0xb8;
++    if(port==5)return 0xb0+pwm_state();
++    if(port==7)return pwm_read();
++    return 0xff;
++}
++void pm_raw_iow(unsigned port,uint8_t value)
++{
++    if(port==7){pwm_byte(value);return;}
++    if(port!=5)return;
++    if(value==0xa5)(void)pwm_begin();
++    else if(value==0x5a)(void)pwm_submit();
++    else if(value==0xc3)(void)pwm_ack();
++    else if(value==0x96)pwm_abort();
++}
++void pm_raw_task(void) {pwm_task();}
++void tuh_msc_mount_cb(uint8_t addr)
++{
++    struct pmw_info info;pmw_info(&info);
++    if(selected || info.present || info.fault || epoch==UINT32_MAX)return;
++    if(pmw_attach(addr,++epoch)==PMW_OK)selected=addr;
++}
++void tuh_msc_umount_cb(uint8_t addr)
++{
++    if(addr!=selected)return;
++    pmw_detach(addr);selected=0;
++}
++/* USB never becomes a firmware filesystem or a BIOS disk in this build. */
++DSTATUS usb_disk_status(void) {return STA_NOINIT|STA_NODISK|STA_PROTECT;}
++DSTATUS usb_disk_initialize(void) {return usb_disk_status();}
++DRESULT usb_disk_read(BYTE *b,LBA_t s,UINT n) {(void)b;(void)s;(void)n;return RES_NOTRDY;}
++DRESULT usb_disk_write(const BYTE *b,LBA_t s,UINT n) {(void)b;(void)s;(void)n;return RES_WRPRT;}
++DRESULT usb_disk_ioctl(BYTE c,void *b) {(void)c;(void)b;return RES_NOTRDY;}
+diff --git a/src/rawblock/rw/mailbox.c b/src/rawblock/rw/mailbox.c
+new file mode 100644
+index 0000000..d4b2053
+--- /dev/null
++++ b/src/rawblock/rw/mailbox.c
+@@ -0,0 +1,113 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#include <string.h>
++#include "writer.h"
++#include "mailbox.h"
++static struct {
++    unsigned state, count, cursor, reply_size;
++    bool overflow, running;
++    uint32_t token, owner_generation, last_seq;
++    uint8_t request[PWM_FRAME], reply[PWM_FRAME];
++} box;
++static uint32_t get32(const uint8_t *p)
++{ return (uint32_t)p[0]|(uint32_t)p[1]<<8|(uint32_t)p[2]<<16|(uint32_t)p[3]<<24; }
++static void putle32(uint8_t *p,uint32_t n)
++{ p[0]=n;p[1]=n>>8;p[2]=n>>16;p[3]=n>>24; }
++/* Only state is shared concurrently. Release publishes the associated buffers;
++ * acquire transfers their ownership. Other fields are accessed exclusively. */
++_Static_assert(__atomic_always_lock_free(sizeof(unsigned),0), "state must be lock-free");
++unsigned pwm_state(void) { return __atomic_load_n(&box.state,__ATOMIC_ACQUIRE); }
++static void publish(unsigned state) { __atomic_store_n(&box.state,state,__ATOMIC_RELEASE); }
++bool pwm_begin(void)
++{
++    if (pwm_state()!=PWM_IDLE) return false;
++    memset(box.request,0,PWM_HEADER);
++    box.count=0;box.overflow=false;publish(PWM_RX);return true;
++}
++void pwm_byte(uint8_t b)
++{
++    if (pwm_state()!=PWM_RX) return;
++    if (box.count==PWM_FRAME) box.overflow=true;
++    else box.request[box.count++]=b;
++}
++void pwm_abort(void) { if (pwm_state()==PWM_RX) publish(PWM_IDLE); }
++bool pwm_submit(void)
++{ if(pwm_state()!=PWM_RX)return false;publish(PWM_BUSY);return true; }
++bool pwm_ack(void)
++{ if(pwm_state()!=PWM_DONE)return false;publish(PWM_IDLE);return true; }
++uint8_t pwm_read(void)
++{ return pwm_state()==PWM_DONE && box.cursor<box.reply_size ? box.reply[box.cursor++] : 0xff; }
++static unsigned mapped(int r)
++{
++    switch(r) {
++    case PMW_OK:return PWM_OK;
++    case PMW_STALE:return PWM_STALE;
++    case PMW_IO:return PWM_IO;
++    case PMW_FAULT:return PWM_FAULT;
++    default:return PWM_DENIED;
++    }
++}
++void pwm_task(void)
++{
++    const uint8_t *q=box.request;
++    struct pmw_info info;
++    unsigned result=PWM_BAD,op;
++    uint32_t seq,gen,token,lba;
++    if(pwm_state()!=PWM_BUSY || box.running)return;
++    box.running=true;
++    op=q[5];seq=get32(q+8);gen=get32(q+12);token=get32(q+16);lba=get32(q+20);
++    memset(box.reply,0,sizeof(box.reply));box.reply_size=PWM_HEADER;
++    pmw_info(&info);
++    if(!info.present || info.generation!=box.owner_generation)box.token=0;
++    if(box.overflow || box.count<PWM_HEADER)goto done;
++    if(memcmp(q,"PMW2",4) || q[4]!=2) {result=PWM_VERSION;goto done;}
++    if(q[6] || !seq)goto done;
++    for(unsigned i=26;i<PWM_HEADER;i++)if(q[i])goto done;
++    if(op<PWM_INFO || op>PWM_READ){result=PWM_UNSUPPORTED;goto done;}
++    if(box.count!=(op==PWM_WRITE?PWM_FRAME:PWM_HEADER))goto done;
++    if(op==PWM_CLAIM) {if(q[7]!=PWM_CAPS && q[7]!=PWM_READ_CAPS)goto done;}
++    else if(q[7])goto done;
++    if(op==PWM_WRITE || op==PWM_READ) {if(q[24]!=0 || q[25]!=2)goto done;}
++    else if(lba || q[24] || q[25])goto done;
++    if(op==PWM_INFO) {
++        if(gen || token)goto done;
++        result=PWM_OK;goto done;
++    }
++    if(seq<=box.last_seq){result=PWM_REPLAY;goto done;}
++    box.last_seq=seq; /* Never replay an uncertain write, even after ACK. */
++    if(info.fault){result=PWM_FAULT;goto done;}
++    if(!info.present || !gen || gen!=info.generation){result=PWM_STALE;goto done;}
++    if(op==PWM_CLAIM) {
++        if(token || box.token){result=PWM_OWNER;goto done;}
++        result=mapped(pmw_claim(gen,q[7]==PWM_CAPS));
++        if(result==PWM_IO)result=pmw_claim_error();
++        if(!result){box.token=seq;box.owner_generation=gen;}
++    } else {
++        if(!token || token!=box.token){result=PWM_OWNER;goto done;}
++        if(op==PWM_WRITE) result=mapped(pmw_write(gen,lba,q+PWM_HEADER,512));
++        else if(op==PWM_READ) {
++            result=mapped(pmw_read(gen,lba,box.reply+PWM_HEADER,512));
++            if(!result)box.reply_size=PWM_FRAME;
++        }
++        else if(op==PWM_FLUSH)result=mapped(pmw_flush(gen));
++        else { result=mapped(pmw_release(gen));if(!result)box.token=0; }
++    }
++done:
++    pmw_info(&info);
++    memcpy(box.reply,"PMW2",4);
++    box.reply[4]=2;box.reply[5]=op;box.reply[6]=result;
++    box.reply[7]=PWM_CAPS; /* Protocol capabilities, not current write permission. */
++    putle32(box.reply+8,seq);putle32(box.reply+12,info.generation);
++    putle32(box.reply+16,box.token);putle32(box.reply+20,info.capacity);
++    /* Lab-only failed MODE query: error capacity word carries diagnostic counts.
++     * Token, generation, sequence, flags and all successful replies stay intact. */
++    if(op==PWM_CLAIM && (result==0xab || result==0xcb))
++        putle32(box.reply+20,pmw_claim_counts());
++    /* Failed preparation timeout only: error capacity word is stage evidence.
++     * Success capacity and all authorization fields retain their meanings. */
++    if(op==PWM_CLAIM && (result==0x92 || result==0xa2 || result==0xb2 || result==0xc2))
++        putle32(box.reply+20,pmw_claim_trace());
++    box.reply[24]=0;box.reply[25]=2;
++    box.reply[26]=(info.present?1:0)|(info.prepared?2:0)|(info.fault?4:0)|(info.dirty?8:0)|(info.writable?16:0);
++    putle32(box.reply+28,box.last_seq);
++    box.cursor=0;box.running=false;publish(PWM_DONE);
++}
+diff --git a/src/rawblock/rw/mailbox.h b/src/rawblock/rw/mailbox.h
+new file mode 100644
+index 0000000..bb04ca6
+--- /dev/null
++++ b/src/rawblock/rw/mailbox.h
+@@ -0,0 +1,25 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#ifndef PM_WRITE_MAILBOX_H
++#define PM_WRITE_MAILBOX_H
++#include <stdbool.h>
++#include <stdint.h>
++/* Local ABI experiment only: no ISA ports/opcodes allocated upstream.
++ * One ISA context owns begin/byte/submit/ack/read; one USB context owns task.
++ * Attach/detach/writer calls remain on the USB context. */
++#define PWM_HEADER 32u
++#define PWM_FRAME (PWM_HEADER+512u)
++#define PWM_CAPS 15u /* write, exclusive ownership, checked flush, read */
++#define PWM_READ_CAPS 10u /* exclusive ownership and read; no cache query */
++enum { PWM_INFO=1, PWM_CLAIM, PWM_WRITE, PWM_FLUSH, PWM_RELEASE, PWM_READ };
++enum { PWM_IDLE, PWM_RX, PWM_BUSY, PWM_DONE };
++enum { PWM_OK, PWM_BAD, PWM_VERSION, PWM_STALE, PWM_OWNER, PWM_IO,
++       PWM_FAULT, PWM_DENIED, PWM_REPLAY, PWM_UNSUPPORTED };
++bool pwm_begin(void);
++void pwm_byte(uint8_t byte);
++void pwm_abort(void); /* RX only; never cancels a submitted USB command. */
++bool pwm_submit(void);
++void pwm_task(void);
++bool pwm_ack(void);
++unsigned pwm_state(void);
++uint8_t pwm_read(void); /* Header; successful READ adds 512 bytes; then 0xff. */
++#endif
+diff --git a/src/rawblock/rw/writer.c b/src/rawblock/rw/writer.c
+new file mode 100644
+index 0000000..e3c599d
+--- /dev/null
++++ b/src/rawblock/rw/writer.c
+@@ -0,0 +1,339 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later
++ * Experimental raw-sector writer.
++ * Default: valid MODE headers, WP clear; explicit WCE=0 or checked flushes.
++ * Opt-in EMPTY_CACHE_WT assumes write-through only when both valid MODE
++ * replies omit cache pages. This is compatibility, not proof of persistence.
++ * Malformed/failed queries deny preparation in either policy.
++ */
++#include <stdbool.h>
++#include <string.h>
++#include "tusb.h"
++#include "class/msc/msc_host.h"
++#include "writer.h"
++#define PMW_SECTOR 512u
++#define PMW_TIMEOUT_US 2000000u
++#define PMW_MODE10 0x5au
++#define PMW_MODE6 0x1au
++#define PMW_SYNC10 0x35u
++static struct {
++    uint8_t addr, failure_reason;
++    bool present, busy, pending, fault, dirty, prepared, writable, cache_enabled;
++    uint32_t generation, active_generation, tag, capacity;
++    uint32_t observed_count, observed_residue, timeout_trace;
++#ifdef PM_RAW_USB_CSW_RECOVERY
++    uint32_t started;
++    bool recovery_tried, recovery_pending;
++    tusb_control_request_t clear_setup;
++#endif
++    unsigned actual;
++    int outcome;
++    msc_cbw_t command;
++    uint8_t buffer[PMW_SECTOR] __attribute__((aligned(4)));
++} w;
++enum { TRANSPORT_BAD, COMMAND_FAILED, COMMAND_OK };
++static uint32_t be32(const uint8_t *p)
++{ return (uint32_t)p[0]<<24 | (uint32_t)p[1]<<16 | (uint32_t)p[2]<<8 | p[3]; }
++static unsigned be16(const uint8_t *p) { return (unsigned)p[0]<<8 | p[1]; }
++static void put32(uint8_t *p, uint32_t n)
++{ p[0]=n>>24; p[1]=n>>16; p[2]=n>>8; p[3]=n; }
++#ifdef PM_RAW_USB_CSW_RECOVERY
++static void clear_complete(tuh_xfer_t *x)
++{
++    /* The deadline is not cancellation: late completions must stay inert. */
++    if (!x || !w.pending || !w.recovery_pending || w.fault || !w.present ||
++        w.generation!=w.active_generation || x->daddr!=w.addr ||
++        x->user_data!=w.tag || x->ep_addr || !x->setup ||
++        memcmp(x->setup,&w.clear_setup,sizeof(w.clear_setup)) ||
++        (uint32_t)(pmw_now_us()-w.started)>=PMW_TIMEOUT_US) return;
++    w.recovery_pending=false;
++    /* Control actual_len counts DATA bytes, excluding the eight SETUP bytes. */
++    if (x->result!=XFER_RESULT_SUCCESS || x->actual_len) {
++        w.pending=false; w.failure_reason=13; return;
++    }
++    if (!tuh_msc_raw_retry_csw(w.addr,&w.command)) {
++        w.pending=false; w.failure_reason=14;
++    }
++}
++static bool recover_csw(const tuh_msc_complete_data_t *c)
++{
++    tuh_bus_info_t bus;
++    if (w.recovery_tried || w.fault || !c->cbw ||
++        memcmp(c->cbw,&w.command,sizeof(w.command)) ||
++        c->scsi_data!=w.buffer || c->data_result!=XFER_RESULT_SUCCESS ||
++        c->data_actual_len>64 || c->csw_result!=XFER_RESULT_STALLED ||
++        c->csw_actual_len ||
++        (uint32_t)(pmw_now_us()-w.started)>=PMW_TIMEOUT_US ||
++        !tuh_bus_info_get(w.addr,&bus) || bus.rhport || bus.hub_addr) return false;
++    uint8_t ep=tuh_msc_raw_stalled_csw_ep(w.addr,&w.command);
++    if (!ep) return false;
++    w.recovery_tried=true; w.recovery_pending=true;
++    w.clear_setup=(tusb_control_request_t){
++        .bmRequestType=0x02, .bRequest=TUSB_REQ_CLEAR_FEATURE,
++        .wValue=tu_htole16(0), .wIndex=tu_htole16(ep), .wLength=0
++    };
++    tuh_xfer_t x={.daddr=w.addr,.ep_addr=0,.setup=&w.clear_setup,
++        .buffer=NULL,.complete_cb=clear_complete,.user_data=w.tag};
++    if (!tuh_control_xfer(&x)) {
++        w.recovery_pending=false; w.pending=false; w.failure_reason=13;
++    }
++    return true;
++}
++#endif
++static bool pmw_complete(uint8_t addr, const tuh_msc_complete_data_t *c)
++{
++    if (!w.pending || !c || addr!=w.addr || !w.present ||
++        w.generation!=w.active_generation || c->user_arg!=w.tag) return false;
++#ifdef PM_RAW_USB_CSW_RECOVERY
++    if (recover_csw(c)) return true;
++#endif
++    w.pending=false;
++    w.outcome=TRANSPORT_BAD;
++    /* Diagnostic only, from an associated, complete CSW. Never used to accept I/O. */
++    if (c->cbw && !memcmp(c->cbw,&w.command,sizeof(w.command)) &&
++        c->csw && c->csw_result==XFER_RESULT_SUCCESS &&
++        c->csw_actual_len==sizeof(msc_csw_t) &&
++        c->csw->signature==MSC_CSW_SIGNATURE && c->csw->tag==w.tag) {
++        w.observed_count=c->data_actual_len;
++        w.observed_residue=c->csw->data_residue;
++    }
++    /* Diagnostic only: preserve the acceptance checks below. */
++    w.failure_reason=4;
++    if (c->data_result!=XFER_RESULT_SUCCESS)
++        w.failure_reason=c->data_result==XFER_RESULT_STALLED?5:6;
++    else if (c->csw_result!=XFER_RESULT_SUCCESS)
++        w.failure_reason=c->csw_result==XFER_RESULT_STALLED?7:8;
++    else if (c->csw_actual_len!=sizeof(msc_csw_t)) w.failure_reason=9;
++    else if (c->csw && (c->csw->signature!=MSC_CSW_SIGNATURE || c->csw->tag!=w.tag))
++        w.failure_reason=10;
++    else if (c->csw && (c->data_actual_len>w.command.total_bytes ||
++             c->csw->data_residue>w.command.total_bytes)) w.failure_reason=11;
++    if (!c->cbw || !c->csw || memcmp(c->cbw,&w.command,sizeof(w.command)) ||
++        c->scsi_data!=(w.command.total_bytes ? w.buffer : NULL) ||
++        c->data_result!=XFER_RESULT_SUCCESS || c->csw_result!=XFER_RESULT_SUCCESS ||
++        c->csw_actual_len!=sizeof(msc_csw_t) ||
++        c->csw->signature!=MSC_CSW_SIGNATURE || c->csw->tag!=w.tag ||
++        c->data_actual_len>w.command.total_bytes ||
++        c->csw->data_residue>w.command.total_bytes) return true;
++    /* A failed SCSI command is never accepted as a successful data transfer. */
++    if (c->csw->status==1) { w.outcome=COMMAND_FAILED; return true; }
++    w.failure_reason=c->csw->status?12:11;
++    if (c->csw->status) return true;
++    if (w.command.command[0]==PMW_MODE10 || w.command.command[0]==PMW_MODE6) {
++        /* Variable-length queries: never parse missing bytes or reported fill. */
++        w.actual=w.command.total_bytes-c->csw->data_residue;
++        if (w.actual>c->data_actual_len) w.actual=c->data_actual_len;
++    } else {
++        if (c->data_actual_len!=w.command.total_bytes-c->csw->data_residue)
++            return true;
++        w.failure_reason=9;
++        if (c->data_actual_len!=w.command.total_bytes) return true;
++        w.actual=c->data_actual_len;
++    }
++    w.failure_reason=0;
++    w.outcome=COMMAND_OK;
++    return true;
++}
++/* w.buffer and command persist after timeout. Never reuse them after a fault. */
++static int command(uint8_t opcode, uint32_t lba)
++{
++    uint32_t start=pmw_now_us();
++    if (w.fault || !w.present || w.tag==UINT32_MAX) return TRANSPORT_BAD;
++    memset(&w.command,0,sizeof(w.command));
++    w.command.signature=MSC_CBW_SIGNATURE;
++    w.command.tag=++w.tag;
++    w.command.cmd_len=10;
++    w.command.command[0]=opcode;
++    if (opcode==SCSI_CMD_WRITE_10 || opcode==SCSI_CMD_READ_10) {
++        if(opcode==SCSI_CMD_READ_10) w.command.dir=TUSB_DIR_IN_MASK;
++        w.command.total_bytes=PMW_SECTOR;
++        put32(w.command.command+2,lba);
++        w.command.command[8]=1;
++    } else if (opcode==SCSI_CMD_READ_CAPACITY_10) {
++        w.command.dir=TUSB_DIR_IN_MASK;
++        w.command.total_bytes=8;
++    } else if (opcode==PMW_MODE10 || opcode==PMW_MODE6) {
++        w.command.dir=TUSB_DIR_IN_MASK;
++        w.command.total_bytes=64;
++        w.command.command[1]=8; /* DBD: omit block descriptors if supported */
++        w.command.command[2]=8; /* current caching page */
++        if (opcode==PMW_MODE6) w.command.cmd_len=6;
++        w.command.command[opcode==PMW_MODE6?4:8]=64;
++    }
++    if (opcode!=SCSI_CMD_WRITE_10) memset(w.buffer,0,sizeof(w.buffer));
++    w.actual=0; w.outcome=TRANSPORT_BAD; w.failure_reason=0;
++    w.observed_count=w.observed_residue=w.timeout_trace=UINT32_MAX;
++    w.active_generation=w.generation; w.pending=true;
++#ifdef PM_RAW_USB_CSW_RECOVERY
++    w.started=start; w.recovery_tried=w.recovery_pending=false;
++#endif
++    if (!tuh_msc_scsi_command(w.addr,&w.command,
++            w.command.total_bytes ? w.buffer : NULL,pmw_complete,w.tag)) {
++        w.pending=false; w.failure_reason=1;
++        return TRANSPORT_BAD;
++    }
++    while (w.pending) {
++        pmw_pump();
++        if ((uint32_t)(pmw_now_us()-start)>=PMW_TIMEOUT_US) {
++            w.timeout_trace=tuh_msc_raw_trace(w.addr,w.tag);
++            w.pending=false; w.failure_reason=2;
++            return TRANSPORT_BAD;
++        }
++    }
++    return !w.fault && w.present && w.generation==w.active_generation ? w.outcome : TRANSPORT_BAD;
++}
++static int fault(void)
++{ w.fault=true; w.prepared=false; return PMW_IO; }
++static int check(uint32_t generation, bool need_prepared)
++{
++    if (w.fault) return PMW_FAULT;
++    if (w.busy) return PMW_BUSY;
++    if (!w.present || !generation || generation!=w.generation) return PMW_STALE;
++    if (need_prepared && !w.prepared) return PMW_DENIED;
++    return PMW_OK;
++}
++int pmw_attach(uint8_t addr, uint32_t generation)
++{
++    if (w.fault) return PMW_FAULT;
++    if (!addr || addr>CFG_TUH_DEVICE_MAX || !generation) return PMW_DENIED;
++    /* Generations never repeat within a firmware lifetime, including replug. */
++    if (generation<=w.generation) return PMW_STALE;
++    if (w.busy || w.pending || w.dirty) return fault();
++    if (w.present) return PMW_DENIED;
++    w.addr=addr; w.generation=generation; w.present=true;
++    w.prepared=false; w.capacity=0;
++    return PMW_OK;
++}
++void pmw_detach(uint8_t addr)
++{
++    if (!w.present || addr!=w.addr) return;
++    if (w.busy || w.pending || w.dirty) (void)fault();
++    w.present=false; w.prepared=false; w.pending=false;
++}
++int pmw_claim(uint32_t generation, bool writable)
++{
++    unsigned length, page;
++    int result=check(generation,false);
++    if (result) return result;
++    w.busy=true; w.prepared=false; w.writable=false; w.cache_enabled=false; w.capacity=0;
++    result=command(SCSI_CMD_READ_CAPACITY_10,0);
++    if (result!=COMMAND_OK) goto rejected;
++    uint32_t last=be32(w.buffer);
++    if (last==UINT32_MAX || be32(w.buffer+4)!=PMW_SECTOR) goto denied;
++    w.capacity=last+1;
++    if(!writable) {w.prepared=true;w.busy=false;return PMW_OK;}
++    result=command(PMW_MODE10,0);
++    if (result!=COMMAND_OK) goto rejected;
++    if (w.actual<8) goto denied;
++    length=be16(w.buffer)+2;
++    page=8+be16(w.buffer+6);
++    if (length<8 || length>w.actual || page>length || (w.buffer[3]&0x80)) goto denied;
++    /* A complete MODE10 header with no pages can precede a MODE6-only
++     * caching page. No fallback on malformed replies or transport failure. */
++    if (page==length) {
++        result=command(PMW_MODE6,0);
++        if (result!=COMMAND_OK) goto rejected;
++        if (w.actual<4) goto denied;
++        length=(unsigned)w.buffer[0]+1;
++        page=4+(unsigned)w.buffer[3];
++        if (length<4 || length>w.actual || page>length || (w.buffer[2]&0x80)) goto denied;
++    }
++    if (page==length) {
++#if PM_RAW_USB_EMPTY_CACHE_WT
++        /* Both valid headers omit cache settings. Explicit compatibility policy:
++         * trust checked WRITE completion without claiming power-loss durability. */
++        w.cache_enabled=false;
++#else
++        w.cache_enabled=true;
++#endif
++    } else {
++        /* Require the complete declared caching page inside the usable reply. */
++        if (length-page<20 || (w.buffer[page]&0x7f)!=8 ||
++            w.buffer[page+1]<18 || (unsigned)w.buffer[page+1]+2>length-page) goto denied;
++        w.cache_enabled=(w.buffer[page+2]&4)!=0;
++    }
++    if (w.cache_enabled) {
++        result=command(PMW_SYNC10,0);
++        if (result!=COMMAND_OK) goto rejected;
++    }
++    w.prepared=true; w.writable=true; w.busy=false;
++    return PMW_OK;
++rejected:
++    if (result==TRANSPORT_BAD) { w.busy=false; return fault(); }
++denied:
++    w.busy=false; w.capacity=0;
++    return PMW_DENIED;
++}
++int pmw_prepare(uint32_t generation) { return pmw_claim(generation,true); }
++int pmw_read(uint32_t generation, uint32_t lba, void *data, size_t length)
++{
++    int result=check(generation,true);
++    if(result)return result;
++    if(!data || length!=PMW_SECTOR || lba>=w.capacity)return PMW_DENIED;
++    w.busy=true;result=command(SCSI_CMD_READ_10,lba);w.busy=false;
++    if(result!=COMMAND_OK)return fault();
++    memcpy(data,w.buffer,PMW_SECTOR);return PMW_OK;
++}
++int pmw_write(uint32_t generation, uint32_t lba, const void *data, size_t length)
++{
++    int result=check(generation,true);
++    if (result) return result;
++#if defined(PM_RAW_USB_RP2_COMPARE) && !defined(PM_RAW_USB_RECOVERED_WRITE)
++    /* Controller comparison only: preparation/read diagnostics, never sectors. */
++    return PMW_DENIED;
++#endif
++    if (!w.writable || !data || length!=PMW_SECTOR || lba>=w.capacity) return PMW_DENIED;
++    w.busy=true;
++    memcpy(w.buffer,data,PMW_SECTOR);
++    /* From submission onward the physical write may have happened. */
++    w.dirty=true;
++    result=command(SCSI_CMD_WRITE_10,lba);
++    if (result==COMMAND_OK && w.cache_enabled) result=command(PMW_SYNC10,0);
++    w.busy=false;
++    if (result!=COMMAND_OK) return fault();
++    w.dirty=false;
++    return PMW_OK;
++}
++int pmw_flush(uint32_t generation)
++{
++    int result=check(generation,true);
++    if (result) return result;
++    w.busy=true;
++    result=w.cache_enabled ? command(PMW_SYNC10,0) : COMMAND_OK;
++    w.busy=false;
++    return result==COMMAND_OK ? PMW_OK : fault();
++}
++int pmw_release(uint32_t generation)
++{
++    int result=check(generation,true);
++    if (result) return result;
++    if (w.dirty) return fault();
++    /* Does not enable firmware FatFs/DOS access or transfer USB ownership. */
++    w.prepared=false;
++    return PMW_OK;
++}
++
++void pmw_info(struct pmw_info *out)
++{
++    out->generation=w.generation;out->capacity=w.present?w.capacity:0;
++    out->present=w.present;out->prepared=w.prepared;out->writable=w.prepared && w.writable;
++    out->fault=w.fault;out->dirty=w.dirty;
++}
++
++/* ABI 2 lab diagnostic error: 0x80 | query(1=capacity,2=mode10,3=sync,4=mode6)<<4
++ * | reason. Only replaces a failed CLAIM's generic I/O status. */
++uint8_t pmw_claim_error(void)
++{
++    unsigned op=w.command.command[0];
++    unsigned query=op==SCSI_CMD_READ_CAPACITY_10?1:op==PMW_MODE10?2:op==PMW_SYNC10?3:op==PMW_MODE6?4:0;
++    return query ? 0x80|(query<<4)|(!w.present?3:w.failure_reason) : 5;
++}
++
++/* Failed MODE query only: two 16-bit counts; 0xffff means absent/too large.
++ * Allocation is 64 bytes. No policy or transfer decision uses these fields. */
++uint32_t pmw_claim_trace(void) { return w.timeout_trace; }
++uint32_t pmw_claim_counts(void)
++{
++    uint32_t count=w.observed_count, residue=w.observed_residue;
++    return (count<UINT16_MAX?count:UINT16_MAX) |
++           (residue<UINT16_MAX?residue:UINT16_MAX)<<16;
++}
+diff --git a/src/rawblock/rw/writer.h b/src/rawblock/rw/writer.h
+new file mode 100644
+index 0000000..4143640
+--- /dev/null
++++ b/src/rawblock/rw/writer.h
+@@ -0,0 +1,32 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#ifndef PM_RAW_WRITER_H
++#define PM_RAW_WRITER_H
++#include <stddef.h>
++#include <stdint.h>
++#include <stdbool.h>
++enum pmw_result { PMW_OK, PMW_DENIED, PMW_STALE, PMW_BUSY, PMW_IO, PMW_FAULT };
++/* Local, unintegrated candidate. One USB/core context owns this singleton.
++ * Requires exclusive raw ownership, LUN 0, patched TinyUSB completion evidence.
++ * Attach generations must increase without wrap until firmware restart.
++ * Board glue supplies time/pump and forwards MSC attach/detach notifications.
++ * There is intentionally no reset API: fault recovery requires controller and
++ * firmware restart, so a late DMA cannot target reused transfer storage. */
++struct pmw_info {
++    uint32_t generation, capacity;
++    bool present, prepared, writable, fault, dirty;
++};
++uint32_t pmw_claim_trace(void); /* Frozen timeout observation only. */
++uint32_t pmw_claim_counts(void); /* Diagnostic only; packed count/residue. */
++uint8_t pmw_claim_error(void); /* Serialized USB context; diagnostic only. */
++void pmw_info(struct pmw_info *out); /* Same serialized USB context. */
++uint32_t pmw_now_us(void);
++void pmw_pump(void);
++int pmw_attach(uint8_t addr, uint32_t generation);
++void pmw_detach(uint8_t addr);
++int pmw_claim(uint32_t generation, bool writable);
++int pmw_prepare(uint32_t generation); /* Writable claim shorthand. */
++int pmw_read(uint32_t generation, uint32_t lba, void *data, size_t length);
++int pmw_write(uint32_t generation, uint32_t lba, const void *data, size_t length);
++int pmw_flush(uint32_t generation);
++int pmw_release(uint32_t generation);
++#endif

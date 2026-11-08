@@ -1,0 +1,53 @@
+diff --git a/elks/fs/msdos/misc.c b/elks/fs/msdos/misc.c
+index 4dd65c86..320ae46d 100644
+--- a/elks/fs/msdos/misc.c
++++ b/elks/fs/msdos/misc.c
+@@ -80,9 +80,45 @@ int FATPROC msdos_add_cluster(struct inode *inode, int dontuseisize)
+ 	while (lock) sleep_on(&wait);
+ 	lock = 1;
+ 	limit = sb->clusters;
+-	for (count = 0; count < limit; count++) {
+-		this = ((count+prev) % limit)+2;
+-		if (fat_access(inode->i_sb,this,-1L) == 0) break;
++	this = (prev % limit) + 2;
++	/* Keep each FAT16/32 sector mapped while checking its entries. */
++	count = 0;
++	while (count < limit) {
++#ifndef FAT_BITS_32
++		if (fatsz == 12) {
++			if (fat_access(inode->i_sb,this,-1L) == 0) break;
++			count++;
++			if (++this == limit + 2) this = 2;
++			continue;
++		}
++#endif
++		{
++			void *data;
++			unsigned shift = fatsz == 32 ? 2 : 1;
++			unsigned entries = SECTOR_SIZE_SB(inode->i_sb) >> shift;
++			unsigned slot = (unsigned)this & (entries - 1);
++			int found = 0;
++
++			bh = msdos_sread(inode->i_sb, sb->fat_start +
++				(this >> (SECTOR_BITS_SB(inode->i_sb) - shift)), &data);
++			if (!bh) {
++				lock = 0;
++				wake_up(&wait);
++				return -EIO;
++			}
++			do {
++				if (fatsz == 32 ?
++				    !(((unsigned long *)data)[slot] & 0x0fffffffUL) :
++				    !((unsigned short *)data)[slot]) {
++					found = 1;
++					break;
++				}
++				count++;
++				if (++this == limit + 2) { this = 2; break; }
++			} while (++slot < entries && count < limit);
++			unmap_brelse(bh);
++			if (found) break;
++		}
+ 	}
+ 	debug_fat("free cluster: %d\r\n",this);
+ 

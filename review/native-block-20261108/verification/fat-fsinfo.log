@@ -1,0 +1,1 @@
+PASS 28 FSInfo cases: exact-byte preservation, RO/FAT12/FAT16 no I/O, signatures, absent/out-of-range sectors, already-unknown hints and read errors

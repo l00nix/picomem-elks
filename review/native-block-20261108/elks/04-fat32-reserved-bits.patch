@@ -1,0 +1,23 @@
+diff --git a/elks/fs/msdos/fat.c b/elks/fs/msdos/fat.c
+index 31a06b87..7e192165 100644
+--- a/elks/fs/msdos/fat.c
++++ b/elks/fs/msdos/fat.c
+@@ -65,7 +65,7 @@ next_fat:
+ 		if (fatsz == 32)
+ #endif
+ 		{
+-			next = ((unsigned long *)data)[(first & (SECTOR_SIZE_SB(sb)-1)) >> 2];
++			next = ((unsigned long *)data)[(first & (SECTOR_SIZE_SB(sb)-1)) >> 2] & 0x0fffffffUL;
+ 			if (next >= 0xffffff8L) next = -1;
+ 		}
+ #ifndef FAT_BITS_32
+@@ -84,7 +84,8 @@ next_fat:
+ 		if (fatsz == 32)
+ #endif
+ 			((unsigned long *)data)[(first & (SECTOR_SIZE_SB(sb)-1))>>2] =
+-				(unsigned long)new_value;
++				(((unsigned long *)data)[(first & (SECTOR_SIZE_SB(sb)-1))>>2] & 0xf0000000UL) |
++				((unsigned long)new_value & 0x0fffffffUL);
+ #ifndef FAT_BITS_32
+ 		else if (fatsz == 16)
+ 			((unsigned short *)data)[(first & (SECTOR_SIZE_SB(sb)-1)) >> 1] =

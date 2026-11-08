@@ -1,0 +1,702 @@
+diff --git a/elks/arch/i86/drivers/block/Makefile b/elks/arch/i86/drivers/block/Makefile
+index 14451d32..2a01d5fc 100644
+--- a/elks/arch/i86/drivers/block/Makefile
++++ b/elks/arch/i86/drivers/block/Makefile
+@@ -51,6 +51,12 @@ endif
+ #
+ # SSD driver
+ #
++ifdef CONFIG_BLK_DEV_SSD_PICOMEM
++ifdef CONFIG_FS_XMS_RAMDISK
++$(error PicoMEM SSD and XMS ramdisk cannot share /dev/ssd)
++endif
++OBJS += ssd.o ssd-picomem.o
++endif
+ ifdef CONFIG_FS_XMS
+   ifdef CONFIG_FS_XMS_RAMDISK
+     OBJS += ssd.o ssd-xms.o
+diff --git a/elks/arch/i86/drivers/block/config.in b/elks/arch/i86/drivers/block/config.in
+index ced03471..7c079c5d 100644
+--- a/elks/arch/i86/drivers/block/config.in
++++ b/elks/arch/i86/drivers/block/config.in
+@@ -24,7 +24,22 @@ mainmenu_option next_comment
+ 	choice 'SSD disk driver' \
+ 		"None CONFIG_BLK_DEV_SSD_NONE \
+ 		Test CONFIG_BLK_DEV_SSD_TEST \
+-		SDCard CONFIG_BLK_DEV_SSD_SD" None
++		SDCard CONFIG_BLK_DEV_SSD_SD \
++        PicoMEM CONFIG_BLK_DEV_SSD_PICOMEM" None
++
++    if [ "$CONFIG_BLK_DEV_SSD_PICOMEM" == "y" ]; then
++        bool 'Experimental PicoMEM ABI 2' CONFIG_SSD_PICOMEM_ABI2 n
++        if [ "$CONFIG_SSD_PICOMEM_ABI2" == "y" ]; then
++            bool 'Experimental PicoMEM writes (legacy sync errors)' CONFIG_SSD_PICOMEM_WRITE n
++        fi
++        hex 'PicoMEM I/O base (IBM PC only)' CONFIG_PICOBLK_PORT 2a0
++        bool 'Emulator ONLY PicoMEM transport (never hardware)' CONFIG_SSD_PICOMEM_EMULATOR n
++        define_bool CONFIG_ASYNCIO y
++    fi
++
++    if [ "$CONFIG_BLK_DEV_SSD_PICOMEM" == "y" ] || [ "$CONFIG_BLK_DEV_SSD_SD" == "y" ]; then
++        bool 'SSD MBR partitions (experimental)' CONFIG_SSD_PARTITIONS n
++    fi
+ 
+ 	if [ "$CONFIG_BLK_DEV_SSD_SD" == "y" ] && [ "$CONFIG_ARCH_NECV25" == "y" ]; then
+       bool 'Interface SD card with hardware SPI'	CONFIG_HW_SPI	y
+diff --git a/elks/arch/i86/drivers/block/ll_rw_blk.c b/elks/arch/i86/drivers/block/ll_rw_blk.c
+index 4e92b6cf..c381934e 100644
+--- a/elks/arch/i86/drivers/block/ll_rw_blk.c
++++ b/elks/arch/i86/drivers/block/ll_rw_blk.c
+@@ -376,7 +376,7 @@ void INITPROC blk_dev_init(void)
+ #endif
+ 
+ #if defined(CONFIG_BLK_DEV_SSD_TEST) || defined(CONFIG_BLK_DEV_SSD_SD) || \
+-    defined(CONFIG_FS_XMS_RAMDISK)
++    defined(CONFIG_FS_XMS_RAMDISK) || defined(CONFIG_BLK_DEV_SSD_PICOMEM)
+     ssd_init();         /* SSD block device*/
+ #endif
+ 
+diff --git a/elks/arch/i86/drivers/block/picoblk-protocol.h b/elks/arch/i86/drivers/block/picoblk-protocol.h
+new file mode 100644
+index 00000000..2531ae97
+--- /dev/null
++++ b/elks/arch/i86/drivers/block/picoblk-protocol.h
+@@ -0,0 +1,60 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later
++ * Experimental raw USB block ABI 1, or opt-in ABI 2 client.
++ * Not an upstream allocation.
++ * Byte encoding avoids host packing/endianness and 16-bit int assumptions.
++ */
++#ifndef PM_BLOCK_PROTOCOL_H
++#define PM_BLOCK_PROTOCOL_H
++#ifdef CONFIG_SSD_PICOMEM_ABI2
++#define PMB_VERSION 2
++#define PMB_MAGIC "PMW2"
++#define PMB_IDENT 0xB8
++#define PMB_READ 6
++#define PMB_RELEASE 5
++#define PMB_FLAGS 15
++#define PMB_RO_CLAIM 10
++#define PMB_WRITE 3
++#ifdef CONFIG_SSD_PICOMEM_WRITE
++#define PMB_CLAIM_CAPS PMB_FLAGS
++#define PMB_OWNED_STATE 19 /* present, prepared, writable; never dirty/fault */
++#else
++#define PMB_CLAIM_CAPS PMB_RO_CLAIM
++#define PMB_OWNED_STATE 3
++#endif
++#else
++#define PMB_VERSION 1
++#define PMB_MAGIC "PMB1"
++#define PMB_IDENT 0xB7
++#define PMB_READ 3
++#define PMB_RELEASE 4
++#define PMB_FLAGS 3
++#endif
++#define PMB_HEADER 32
++#define PMB_SECTOR 512
++#define PMB_FRAME (PMB_HEADER + PMB_SECTOR)
++#define PMB_STATUS_PORT 5
++#define PMB_IDENT_PORT 6
++#define PMB_DATA_PORT 7
++#define PMB_IDLE 0xB0
++#define PMB_RX 0xB1
++#define PMB_BUSY 0xB2
++#define PMB_DONE 0xB3
++#define PMB_BEGIN 0xA5
++#define PMB_SUBMIT 0x5A
++#define PMB_ACK 0xC3
++#define PMB_INFO 1
++#define PMB_CLAIM 2
++#define PMB_OK 0
++#define PMB_BAD_REQUEST 1
++#define PMB_NO_MEDIA 2
++#define PMB_STALE 3
++#define PMB_NOT_OWNER 4
++#define PMB_RANGE 5
++#define PMB_IO 6
++#define PMB_FAULT 7
++#define PMB_UNSUPPORTED 8
++#define PMB_GET16(p) ((unsigned)(p)[0] | ((unsigned)(p)[1] << 8))
++#define PMB_GET32(p) ((unsigned long)PMB_GET16(p) | ((unsigned long)PMB_GET16((p)+2) << 16))
++#define PMB_PUT16(p,v) do { unsigned pmb_v16=(v); (p)[0]=(unsigned char)pmb_v16; (p)[1]=(unsigned char)(pmb_v16>>8); } while (0)
++#define PMB_PUT32(p,v) do { unsigned long pmb_v32=(v); PMB_PUT16(p,pmb_v32); PMB_PUT16((p)+2,pmb_v32>>16); } while (0)
++#endif
+diff --git a/elks/arch/i86/drivers/block/picoblk-v2-test.inc b/elks/arch/i86/drivers/block/picoblk-v2-test.inc
+new file mode 100644
+index 00000000..76a6dcc5
+--- /dev/null
++++ b/elks/arch/i86/drivers/block/picoblk-v2-test.inc
+@@ -0,0 +1,78 @@
++/* Emulator ONLY. An ABI 2 peer backed by BIOS disk 0x81.
++ * Host tests exercise the real firmware parser; this fixture exercises the
++ * actual 16-bit client, SSD partition layer and native filesystem in QEMU.
++ * Never enable CONFIG_SSD_PICOMEM_EMULATOR on physical hardware.
++ */
++#include <linuxmt/biosparm.h>
++#include <linuxmt/genhd.h>
++static unsigned char test_request[PMB_FRAME],test_reply[544],test_state=PMB_IDLE;
++static unsigned test_cursor,test_polls;
++static unsigned long test_seq,test_token,test_capacity;
++static unsigned test_fault, test_writable;
++static struct drive_infot test_geometry={130,63,16,512,HARDDISK};
++static void test_execute(void)
++{
++ unsigned op=test_request[5],result=0;
++ unsigned long seq=PMB_GET32(test_request+8),lba=PMB_GET32(test_request+20);
++ memset(test_reply,0,sizeof(test_reply));
++ if(memcmp(test_request,PMB_MAGIC,4) || test_request[4]!=2 || !seq)result=1;
++ else if(op!=PMB_INFO) {
++  if(seq<=test_seq)result=8;
++  else {
++   test_seq=seq;
++   if(test_fault)result=6;
++   else if(PMB_GET32(test_request+12)!=1)result=3;
++   else if(op==PMB_CLAIM) {
++    if(test_token || PMB_GET32(test_request+16))result=4;
++    else if(test_request[7]!=PMB_RO_CLAIM && test_request[7]!=PMB_CLAIM_CAPS)result=7;
++    else {test_token=seq;test_capacity=131040;test_writable=test_request[7]==PMB_FLAGS;}
++   } else if(!test_token || PMB_GET32(test_request+16)!=test_token)result=4;
++   else if(op==PMB_RELEASE)test_token=0;
++   else if(op==PMB_READ && PMB_GET16(test_request+24)==512 && lba<test_capacity) {
++    if(bios_disk_rw(BIOSHD_READ,1,0x81,lba/(16UL*63),
++          (lba/63)%16,lba%63+1,DMASEG,0,&test_geometry)) {test_fault=1;result=5;}
++    else xms_fmemcpyw(test_reply+32,KERNEL_DS,0,DMASEG,256);
++#ifdef CONFIG_SSD_PICOMEM_WRITE
++   } else if(op==PMB_WRITE && test_writable && PMB_GET16(test_request+24)==512 && lba<test_capacity) {
++    xms_fmemcpyw(0,DMASEG,test_request+32,KERNEL_DS,256);
++    if(bios_disk_rw(BIOSHD_WRITE,1,0x81,lba/(16UL*63),
++          (lba/63)%16,lba%63+1,DMASEG,0,&test_geometry)) {test_fault=1;result=5;}
++#endif
++   } else result=9;
++  }
++ }
++ memcpy(test_reply,PMB_MAGIC,4);test_reply[4]=2;test_reply[5]=op;
++ test_reply[6]=result;test_reply[7]=PMB_FLAGS;
++ PMB_PUT32(test_reply+8,seq);PMB_PUT32(test_reply+12,1);
++ PMB_PUT32(test_reply+16,test_token);PMB_PUT32(test_reply+20,test_capacity);
++ PMB_PUT16(test_reply+24,512);test_reply[26]=(test_token?(test_writable?19:3):1)|(test_fault?4:0);
++ PMB_PUT32(test_reply+28,test_seq);
++}
++static unsigned char pmb_test_inb(unsigned port)
++{
++ switch(port-CONFIG_PICOBLK_PORT) {
++ case 5:
++  if(test_state==PMB_BUSY && ++test_polls==2) {
++   test_execute();test_cursor=0;test_state=PMB_DONE;
++  }
++  return test_state;
++ case 6:return PMB_IDENT;
++ case 7:if(test_state==PMB_DONE && test_cursor<544)return test_reply[test_cursor++];
++ }
++ return 0xff;
++}
++static void pmb_test_outb(unsigned char data,unsigned port)
++{
++ switch(port-CONFIG_PICOBLK_PORT) {
++ case 5:
++  if(data==PMB_BEGIN && test_state==PMB_IDLE){test_cursor=0;test_state=PMB_RX;}
++  else if(data==PMB_SUBMIT && test_state==PMB_RX && test_cursor==(test_request[5]==PMB_WRITE?PMB_FRAME:PMB_HEADER)){test_polls=0;test_state=PMB_BUSY;}
++  else if(data==PMB_ACK && test_state==PMB_DONE)test_state=PMB_IDLE;
++  break;
++ case 7:if(test_state==PMB_RX && test_cursor<PMB_FRAME)test_request[test_cursor++]=data;
++ }
++}
++#undef inb
++#undef outb
++#define inb pmb_test_inb
++#define outb pmb_test_outb
+diff --git a/elks/arch/i86/drivers/block/ssd-picomem.c b/elks/arch/i86/drivers/block/ssd-picomem.c
+new file mode 100644
+index 00000000..13a80bc4
+--- /dev/null
++++ b/elks/arch/i86/drivers/block/ssd-picomem.c
+@@ -0,0 +1,234 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later
++ * PicoMEM raw USB subdriver for the existing SSD master. One medium; writes default off.
++ * No partition parsing or filesystem operations. ABI is experimental.
++ */
++#include <linuxmt/config.h>
++#include <linuxmt/kernel.h>
++#include <linuxmt/fs.h>
++#include <linuxmt/sched.h>
++#include <linuxmt/errno.h>
++#include <linuxmt/string.h>
++#include <linuxmt/mm.h>
++#include <linuxmt/ioctl.h>
++#include <arch/io.h>
++#include <arch/segment.h>
++#include "ssd.h"
++#include "picoblk-protocol.h"
++#if !defined(CONFIG_ARCH_IBMPC) || !defined(CONFIG_ASYNCIO)
++#error PicoMEM SSD requires IBM PC and asynchronous I/O configuration
++#endif
++#ifdef CONFIG_FS_XMS_RAMDISK
++#error Select PicoMEM SSD or XMS ramdisk, not both
++#endif
++#ifdef CONFIG_SSD_PICOMEM_EMULATOR
++#ifdef CONFIG_SSD_PICOMEM_ABI2
++#include "picoblk-v2-test.inc"
++#else
++#include "picoblk-test.inc"
++#endif
++#endif
++#if defined(CONFIG_SSD_PICOMEM_WRITE) && !defined(CONFIG_SSD_PICOMEM_ABI2)
++#error PicoMEM writes require ABI 2
++#endif
++#define PORT(n) (CONFIG_PICOBLK_PORT+(n))
++static unsigned char frame[PMB_FRAME];
++static unsigned long sequence, generation, token;
++static sector_t capacity;
++static unsigned transport_busy, broken;
++#ifdef CONFIG_SSD_PICOMEM_WRITE
++static unsigned writable;
++#define CLAIM_CAPS (writable ? PMB_FLAGS : PMB_RO_CLAIM)
++#define OWNED_STATE (writable ? 19 : 3)
++#else
++#define CLAIM_CAPS PMB_CLAIM_CAPS
++#define OWNED_STATE PMB_OWNED_STATE
++#endif
++
++static int transact(unsigned op,sector_t lba)
++{
++ unsigned i,status;
++ unsigned long seq;
++ jiff_t deadline;
++ if (broken) return -EIO;
++#ifdef CONFIG_SSD_PICOMEM_ABI2
++ if (sequence==0xffffffffUL) { broken=1;return -EIO; }
++#endif
++ if (transport_busy) return -EBUSY;
++ if (inb(PORT(PMB_IDENT_PORT))!=PMB_IDENT ||
++     inb(PORT(PMB_STATUS_PORT))!=PMB_IDLE) return -ENODEV;
++ transport_busy=1;
++ memset(frame,0,PMB_HEADER);
++ memcpy(frame,PMB_MAGIC,4);frame[4]=PMB_VERSION;frame[5]=op;
++ if (++sequence==0) ++sequence;
++ seq=sequence;PMB_PUT32(frame+8,seq);
++ if (op!=PMB_INFO) {
++  PMB_PUT32(frame+12,generation);
++  if (op!=PMB_CLAIM) { PMB_PUT32(frame+16,token); }
++ }
++#ifdef CONFIG_SSD_PICOMEM_ABI2
++ if (op==PMB_CLAIM) frame[7]=CLAIM_CAPS;
++ if (op==PMB_READ || op==PMB_WRITE) {
++  PMB_PUT32(frame+20,lba); PMB_PUT16(frame+24,512);
++ }
++#else
++ if (op==PMB_READ) { PMB_PUT32(frame+20,lba); PMB_PUT16(frame+24,1); }
++#endif
++ outb(PMB_BEGIN,PORT(PMB_STATUS_PORT));
++ if (inb(PORT(PMB_STATUS_PORT))!=PMB_RX) goto bad;
++ for (i=0;i<PMB_HEADER;i++) outb(frame[i],PORT(PMB_DATA_PORT));
++#ifdef CONFIG_SSD_PICOMEM_WRITE
++ if (op==PMB_WRITE)
++  for (i=PMB_HEADER;i<PMB_FRAME;i++) outb(frame[i],PORT(PMB_DATA_PORT));
++#endif
++ outb(PMB_SUBMIT,PORT(PMB_STATUS_PORT));
++ deadline=jiffies+5*HZ;
++ while ((status=inb(PORT(PMB_STATUS_PORT)))==PMB_BUSY) {
++  if (time_after(jiffies,deadline)) goto bad;
++  /* Driver is opened after boot. Queue ownership serializes block requests;
++   * other processes, including BIOS-backed root I/O, may run meanwhile. */
++  current->timeout=jiffies+1;
++  current->state=TASK_INTERRUPTIBLE;
++  schedule();
++  current->timeout=0;
++ }
++ if (status!=PMB_DONE) goto bad;
++ for (i=0;i<PMB_HEADER;i++) frame[i]=inb(PORT(PMB_DATA_PORT));
++ if (memcmp(frame,PMB_MAGIC,4) || frame[4]!=PMB_VERSION || frame[5]!=op ||
++     frame[7]!=PMB_FLAGS || PMB_GET32(frame+8)!=seq) goto bad;
++ status=frame[6];
++#ifdef CONFIG_SSD_PICOMEM_ABI2
++ if (frame[27] || (frame[26]&~31) || PMB_GET16(frame+24)!=512) goto bad;
++ if (!status && op!=PMB_INFO) {
++  if (PMB_GET32(frame+12)!=generation || PMB_GET32(frame+28)!=seq) goto bad;
++  if (op==PMB_RELEASE) {
++   if (frame[26]!=1 || PMB_GET32(frame+16) || PMB_GET32(frame+20)!=capacity) goto bad;
++  } else {
++   if (frame[26]!=OWNED_STATE || !PMB_GET32(frame+20)) goto bad;
++   if (op!=PMB_CLAIM && (PMB_GET32(frame+16)!=token ||
++       PMB_GET32(frame+20)!=capacity)) goto bad;
++  }
++  if (op==PMB_CLAIM && PMB_GET32(frame+16)!=seq) goto bad;
++ }
++#endif
++ if (!status && op==PMB_READ) {
++  if (PMB_GET32(frame+12)!=generation || PMB_GET32(frame+16)!=token ||
++      PMB_GET16(frame+24)!=512) goto bad;
++#ifdef CONFIG_SSD_PICOMEM_ABI2
++  if (PMB_GET32(frame+20)!=capacity) goto bad;
++#else
++  if (PMB_GET16(frame+26)!=1) goto bad;
++#endif
++  for (i=PMB_HEADER;i<PMB_FRAME;i++) frame[i]=inb(PORT(PMB_DATA_PORT));
++ }
++ outb(PMB_ACK,PORT(PMB_STATUS_PORT));
++ transport_busy=0;
++ if (status) {
++#ifdef CONFIG_SSD_PICOMEM_ABI2
++  broken=1;
++#endif
++  return -EIO;
++ }
++ return 0;
++bad:
++ /* Do not reset/reuse a possibly outstanding transfer. Firmware never writes
++  * into an ELKS buffer and stays exclusively raw even if the client dies. */
++ broken=1;transport_busy=0;return -EIO;
++}
++static int media_info(void)
++{
++ int r=transact(PMB_INFO,0);
++ unsigned long gen;
++ if (r) return r;
++ gen=PMB_GET32(frame+12);
++#ifdef CONFIG_SSD_PICOMEM_ABI2
++ /* Capacity is deliberately unknown until the firmware validates a claim. */
++ if (frame[26]&12) {broken=1;return -EIO;}
++ if (!gen || !(frame[26]&1)) return -ENXIO;
++ if (PMB_GET32(frame+16)) return -EBUSY;
++ if (PMB_GET32(frame+28)>sequence) sequence=PMB_GET32(frame+28);
++#else
++ if (!gen || !PMB_GET32(frame+20)) return -ENXIO;
++#endif
++ if (PMB_GET16(frame+24)!=512) return -EINVAL;
++ if (generation && generation!=gen) { broken=1;return -EIO; }
++ generation=gen;capacity=PMB_GET32(frame+20);
++ return 0;
++}
++static int pico_open(unsigned mode)
++{
++    int r;
++#ifdef CONFIG_SSD_PICOMEM_WRITE
++    writable = mode & 2;
++#else
++    (void)mode;
++#endif
++    r = media_info();
++    if (!r) r = transact(PMB_CLAIM, 0);
++    if (r) return r;
++    token = PMB_GET32(frame + 16);
++    if (!token || PMB_GET32(frame + 12) != generation) {
++        broken = 1;
++        return -EIO;
++    }
++#ifdef CONFIG_SSD_PICOMEM_ABI2
++    capacity = PMB_GET32(frame + 20);
++#endif
++    ssd_num_sects = capacity;
++    ssd_initialized = 1;
++    return 0;
++}
++static void pico_release(void)
++{
++    if (transact(PMB_RELEASE, 0)) {
++#ifdef CONFIG_SSD_PICOMEM_WRITE
++        printk("PicoMEM release failed; I/O stopped\n");
++#endif
++        broken = 1;
++    } else {
++        /* Final close invalidated the caches; next open may claim new media. */
++        generation = 0;
++    }
++    token = 0;
++    ssd_initialized = 0;
++    ssd_num_sects = 0;
++}
++const struct ssd_lifecycle ssd_lifecycle = {
++#ifdef CONFIG_SSD_PICOMEM_WRITE
++    SSD_MAY_SLEEP, pico_open, pico_release
++#else
++    SSD_READ_ONLY | SSD_MAY_SLEEP, pico_open, pico_release
++#endif
++};
++/* Discovery must run on open after scheduling starts, not at kernel init. */
++sector_t ssddev_init(void) { return 0; }
++int ssddev_ioctl(struct inode *inode, struct file *file, unsigned cmd, unsigned arg)
++{
++    (void)inode; (void)file; (void)arg;
++    return cmd == IOCTL_BLK_GET_SECTOR_SIZE ? 512 : -EINVAL;
++}
++int ssddev_write(sector_t lba, char *buf, ramdesc_t seg)
++{
++#ifdef CONFIG_SSD_PICOMEM_WRITE
++    if (!writable || !ssd_initialized || !token || lba >= capacity || broken || transport_busy)
++        return 0;
++    /* SSD queue ownership serializes this buffer through completion. Firmware
++     * acknowledges WRITE only after its checked per-sector cache completion. */
++    xms_fmemcpyw(frame + PMB_HEADER, KERNEL_DS, buf, seg, 256);
++    if (transact(PMB_WRITE, lba)) {
++        broken = 1;
++        printk("PicoMEM write failed at %lu; I/O stopped\n", lba);
++        return 0;
++    }
++    return 1;
++#else
++    (void)lba; (void)buf; (void)seg;
++    return 0;
++#endif
++}
++int ssddev_read(sector_t lba, char *buf, ramdesc_t seg)
++{
++    if (!ssd_initialized || !token || lba >= capacity || transact(PMB_READ, lba))
++        return 0;
++    xms_fmemcpyw(buf, seg, frame + PMB_HEADER, KERNEL_DS, 256);
++    return 1;
++}
+diff --git a/elks/arch/i86/drivers/block/ssd-sd.c b/elks/arch/i86/drivers/block/ssd-sd.c
+index 272de279..f86ad068 100644
+--- a/elks/arch/i86/drivers/block/ssd-sd.c
++++ b/elks/arch/i86/drivers/block/ssd-sd.c
+@@ -659,3 +659,5 @@ int ssddev_read(sector_t start, char *buf, ramdesc_t seg)
+         return 0;
+     return 1;
+ }
++
++const struct ssd_lifecycle ssd_lifecycle = { 0, NULL, NULL };
+diff --git a/elks/arch/i86/drivers/block/ssd-test.c b/elks/arch/i86/drivers/block/ssd-test.c
+index 4ab6a8e6..62caac2e 100644
+--- a/elks/arch/i86/drivers/block/ssd-test.c
++++ b/elks/arch/i86/drivers/block/ssd-test.c
+@@ -95,3 +95,5 @@ int ssddev_read(sector_t start, char *buf, ramdesc_t seg)
+         SD_FIXED_SECTOR_SIZE/2);
+     return 1;   /* # sectors read */
+ }
++
++const struct ssd_lifecycle ssd_lifecycle = { 0, NULL, NULL };
+diff --git a/elks/arch/i86/drivers/block/ssd-xms.c b/elks/arch/i86/drivers/block/ssd-xms.c
+index 33330641..8c9cccc3 100644
+--- a/elks/arch/i86/drivers/block/ssd-xms.c
++++ b/elks/arch/i86/drivers/block/ssd-xms.c
+@@ -100,3 +100,5 @@ int ssddev_read(sector_t start, char *buf, ramdesc_t seg)
+     xms_fmemcpyw(buf, seg, 0, xms_ram_base + (start << 9), SD_FIXED_SECTOR_SIZE/2);
+     return 1;   /* # sectors read */
+ }
++
++const struct ssd_lifecycle ssd_lifecycle = { 0, NULL, NULL };
+diff --git a/elks/arch/i86/drivers/block/ssd.c b/elks/arch/i86/drivers/block/ssd.c
+index 78dd1b82..2d4cf66b 100644
+--- a/elks/arch/i86/drivers/block/ssd.c
++++ b/elks/arch/i86/drivers/block/ssd.c
+@@ -30,6 +30,29 @@ jiff_t ssd_timeout;
+ sector_t ssd_num_sects;         /* max # sectors on SSD device */
+ char ssd_initialized;
+ static int access_count;
++static int lifecycle_busy;
++#ifdef CONFIG_SSD_PARTITIONS
++#define SSD_MINORS 8
++static struct hd_struct ssd_part[SSD_MINORS];
++static struct gendisk ssd_disk = {
++    SSD_MAJOR, "ssd", 3, SSD_MINORS, 1, ssd_part, 1, NULL
++};
++#else
++#define SSD_MINORS 1
++#endif
++
++static void ssd_invalidate(void)
++{
++    unsigned int minor;
++
++    /* Include scan-only and whole-disk aliases, not just the last closed node. */
++    for (minor = 0; minor < SSD_MINORS; ++minor) {
++        kdev_t dev = MKDEV(SSD_MAJOR, minor);
++        fsync_dev(dev);
++        invalidate_inodes(dev);
++        invalidate_buffers(dev);
++    }
++}
+ 
+ static int ssd_open(struct inode *, struct file *);
+ static void ssd_release(struct inode *, struct file *);
+@@ -47,6 +70,15 @@ static struct file_operations ssd_fops = {
+ 
+ void INITPROC ssd_init(void)
+ {
++#ifdef IODELAY
++    /* Interrupt completion cannot call a backend that sleeps. */
++    if (ssd_lifecycle.flags & SSD_MAY_SLEEP) {
++        printk("ssd: IODELAY incompatible with sleeping backend\n");
++        return;
++    }
++#endif
++    if (ssd_lifecycle.flags & SSD_READ_ONLY)
++        ssd_fops.write = NULL;
+     if (register_blkdev(MAJOR_NR, DEVICE_NAME, &ssd_fops))
+         return;
+     blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST;
+@@ -61,35 +93,83 @@ void INITPROC ssd_init(void)
+     ssd_num_sects = ssddev_init();
+     if (ssd_num_sects)
+         printk("ssd: %ldK disk\n", ssd_num_sects/2UL);
++    else if (ssd_lifecycle.open) printk("ssd: discovery on open\n");
+     else printk("ssd: init error\n");
+ #endif
+ }
+ 
+ static int ssd_open(struct inode *inode, struct file *filp)
+ {
++    unsigned int minor = MINOR(inode->i_rdev);
++    sector_t size;
++    int ret;
++
+     debug_blk("SSD: open\n");
++    if (minor >= SSD_MINORS) return -ENXIO;
++    if (!ssd_fops.write && (filp->f_mode & 2))
++        return -EROFS;
++    if (lifecycle_busy) return -EBUSY;
++    if (!access_count) {
++        lifecycle_busy = 1;
++        if (ssd_lifecycle.open) {
++            ret = ssd_lifecycle.open(filp->f_mode);
++            if (ret) { lifecycle_busy = 0; return ret; }
++            /* All minors share this claim. Refuse write opens and rw remounts
++             * until a read-only claim has been closed and reopened. */
++            if (!(filp->f_mode & 2)) ssd_fops.write = NULL;
++            if (!ssd_num_sects) { ret = -ENODATA; goto failed; }
++        }
++#ifdef CONFIG_SSD_PARTITIONS
++        if (!ssd_num_sects) { ret = -ENODATA; goto failed; }
++        ssd_part[0].start_sect = 0;
++        ssd_part[0].nr_sects = ssd_num_sects;
++        /* bread uses the SSD request path; backend is claimed at this point.
++         * scan_partitions takes capacity here, without inventing CHS geometry. */
++        if (scan_partitions(&ssd_disk, 0) < 0) { ret = -EIO; goto failed; }
++        /* The parser may have used partition minors as temporary EBR aliases. */
++        ssd_invalidate();
++#endif
++        lifecycle_busy = 0;
++    }
+ #ifndef CONFIG_FS_XMS
+-    if (!ssd_num_sects)
+-        return -ENODATA;
++    if (!ssd_num_sects) { ret = -ENODATA; goto failed; }
++#endif
++    size = ssd_num_sects;
++#ifdef CONFIG_SSD_PARTITIONS
++    if (!ssd_part[minor].nr_sects ||
++        ssd_part[minor].start_sect >= ssd_num_sects ||
++        ssd_part[minor].nr_sects > ssd_num_sects - ssd_part[minor].start_sect) {
++        ret = -ENXIO;
++        goto failed;
++    }
++    size = ssd_part[minor].nr_sects;
+ #endif
+     ++access_count;
+-    inode->i_size = ssd_num_sects << 9;
+-    /* limit inode size to 2GB for num_sects >= 4MB (2^22) */
+-    if (ssd_num_sects >= 0x00400000L)   /* 2^22*/
+-        inode->i_size = 0x7ffffffL;     /* 2^31 - 1*/
+-
++    inode->i_size = size << 9;
++    if (size >= 0x00400000L)
++        inode->i_size = 0x7fffffffL;
+     return 0;
++
++failed:
++    if (!access_count) {
++        lifecycle_busy = 1;
++        ssd_invalidate();
++        if (ssd_lifecycle.release) ssd_lifecycle.release();
++        if (!(ssd_lifecycle.flags & SSD_READ_ONLY)) ssd_fops.write = block_write;
++        lifecycle_busy = 0;
++    }
++    return ret;
+ }
+ 
+ static void ssd_release(struct inode *inode, struct file *filp)
+ {
+-    kdev_t dev = inode->i_rdev;
+-
+     debug_blk("SSD: release\n");
+     if (--access_count == 0) {
+-        fsync_dev(dev);
+-        invalidate_inodes(dev);
+-        invalidate_buffers(dev);
++        lifecycle_busy = 1;
++        ssd_invalidate();
++        if (ssd_lifecycle.release) ssd_lifecycle.release();
++        if (!(ssd_lifecycle.flags & SSD_READ_ONLY)) ssd_fops.write = block_write;
++        lifecycle_busy = 0;
+     }
+ }
+ 
+@@ -112,7 +192,8 @@ void ssd_io_complete(void)
+     for (;;) {
+         char *buf;
+         int count;
+-        sector_t start;
++        sector_t start, limit, offset = 0;
++        unsigned int minor;
+ 
+         req = CURRENT;
+         if (!req)
+@@ -121,13 +202,24 @@ void ssd_io_complete(void)
+ 
+         buf = req->rq_buffer;
+         start = req->rq_sector;
+-
+-        if (start + req->rq_nr_sectors > ssd_num_sects) {
++        minor = MINOR(req->rq_dev);
++        limit = ssd_num_sects;
++        if (minor >= SSD_MINORS) { end_request(0); continue; }
++#ifdef CONFIG_SSD_PARTITIONS
++        offset = ssd_part[minor].start_sect;
++        limit = ssd_part[minor].nr_sects;
++#endif
++        if (!req->rq_nr_sectors || offset >= ssd_num_sects ||
++            limit > ssd_num_sects - offset || start >= limit ||
++            req->rq_nr_sectors > limit - start ||
++            (req->rq_cmd != READ && req->rq_cmd != WRITE) ||
++            (req->rq_cmd == WRITE && !ssd_fops.write)) {
+             printk("ssd: sector %lu+%d beyond max %lu\n", start,
+                 req->rq_nr_sectors, ssd_num_sects);
+             end_request(0);
+             continue;
+         }
++        start += offset;
+         for (count = 0; count < req->rq_nr_sectors; count++) {
+             if (req->rq_cmd == WRITE) {
+                 debug_blk("SSD: writing sector %lu\n", start);
+diff --git a/elks/arch/i86/drivers/block/ssd.h b/elks/arch/i86/drivers/block/ssd.h
+index 06f27c18..c5cbdc19 100644
+--- a/elks/arch/i86/drivers/block/ssd.h
++++ b/elks/arch/i86/drivers/block/ssd.h
+@@ -10,6 +10,18 @@ int ssddev_ioctl(struct inode *inode, struct file *file,
+ int ssddev_write(sector_t start, char *buf, ramdesc_t seg);
+ int ssddev_read(sector_t start, char *buf, ramdesc_t seg);
+ 
++/* Optional backend lifecycle. open runs on first open in process context;
++ * mode uses file.f_mode (bit 1 permits writes). Release runs after final-close
++ * cache invalidation. Zero preserves old SSDs. */
++#define SSD_READ_ONLY 1
++#define SSD_MAY_SLEEP 2
++struct ssd_lifecycle {
++    unsigned flags;
++    int (*open)(unsigned mode);
++    void (*release)(void);
++};
++extern const struct ssd_lifecycle ssd_lifecycle;
++
+ extern sector_t ssd_num_sects;      /* max # sectors on SSD device */
+ extern char ssd_initialized;
+ 
+diff --git a/image/Make.devices b/image/Make.devices
+index e1e125aa..d277f216 100755
+--- a/image/Make.devices
++++ b/image/Make.devices
+@@ -45,6 +45,13 @@ devices:
+ # Solid state disk
+ 
+ 	$(MKDEV) /dev/ssd	b 2 0
++	$(MKDEV) /dev/ssd1	b 2 1
++	$(MKDEV) /dev/ssd2	b 2 2
++	$(MKDEV) /dev/ssd3	b 2 3
++	$(MKDEV) /dev/ssd4	b 2 4
++	$(MKDEV) /dev/ssd5	b 2 5
++	$(MKDEV) /dev/ssd6	b 2 6
++	$(MKDEV) /dev/ssd7	b 2 7
+ 
+ ##############################################################################
+ # BIOS devices, hard and floppy disks.

@@ -1,0 +1,1 @@
+PASS alias case/identity/truncation/volume/deleted tests plus actual FAT directory/lookup: 11 length boundaries, alias fallback, prefix collisions, readdir bounds, checksum/deleted/end cases

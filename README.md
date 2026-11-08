@@ -11,6 +11,25 @@ My work builds on the published interfaces and examples from
 [jdredd87’s PicoMEM tools](https://github.com/jdredd87/CH375USBTools/tree/main/PicoMEM).
 I implemented the ELKS utilities separately in C using those projects as references.
 
+## Native block-device review — 8 November 2026
+
+The USB storage implementation has been reworked around **ELKS's existing SSD
+block driver, partition scanner, native FAT filesystem and normal mount/unmount
+path**. PicoMEM now provides raw USB sectors rather than firmware-level file
+operations. The experimental source snapshot includes the matching PicoMEM
+firmware changes and separately identified TinyUSB/controller changes.
+
+**[Review the current architecture, source patches and test status](review/native-block-20261108/README.md).**
+The scope is one directly connected MBR-partitioned FAT16/FAT32 USB device with
+512-byte sectors. Full native long-filename support is deferred pending
+architectural feedback. An intermittent read mismatch and a fault retained
+across warm reboot remain unresolved; this is not a release candidate.
+
+The utility documentation and downloads below remain available. **The old
+`picofs`/`pmmount` instructions and earlier nine-media/DOS results describe
+the superseded file-service architecture, not the new native block snapshot.**
+Do not mix those kernels, firmware or qualification results.
+
 ## Commands and Usage
 
 | Command | Current function |
@@ -19,7 +38,7 @@ I implemented the ELKS utilities separately in C using those projects as referen
 | `pmdump NEWFILE` | A bounded, CRC-checked 964-byte support file, created privately and verified by reading it back. Excludes command parameters and WiFi keys. |
 | `pmstat` | Passive summary by default; `--usb` queries cached USB inventory and `--disks` queries firmware disk/image geometry metadata. |
 | `pmmem` | Queries the card's active memory types and compares them with the configured map. `--probe` checks just the BIOS block first. No RAM write probes or remapping. |
-| `pmmount` | Mounts PicoMEM USB or SD read-only; `--rw usb` explicitly enables experimental USB writes; `-u` unmounts. Requires the optional PicoMEM kernel. |
+| `pmmount` (earlier picofs builds) | Mounts PicoMEM USB or SD read-only; `--rw usb` explicitly enables experimental USB writes; `-u` unmounts. Requires the optional PicoMEM kernel. |
 | `mount` (updated ELKS utility) | Lists mounted filesystems, including PicoMEM USB/SD mountpoints and their `ro`/`rw` status. Supplied with the kernel build. |
 
 `pmconfig`, `pmdump`, `pmstat` and `pmmem` select modes of one executable.
@@ -28,7 +47,10 @@ I implemented the ELKS utilities separately in C using those projects as referen
 for the configuration mode. I adopted `pmconfig` as the clearer primary name;
 all command names fit eight characters.
 
-### Mounting USB and SD in ELKS
+### Earlier picofs USB and SD mounts
+
+This section documents the earlier file-service builds. For the current native
+block-device design, use the [review snapshot](review/native-block-20261108/README.md).
 
 I have tested **USB read/write and SD read-only mounts on the PPC512** using
 the optional `picofs` kernel filesystem. Ordinary ELKS commands such as `ls`,
@@ -258,7 +280,7 @@ backends cannot send commands to a real PicoMEM. Native critical sections were
 also inspected for compiler-inserted calls. External `buildext.sh` integration
 remains a follow-up; this repository currently supplies the standalone build.
 
-## Development status — 3 November 2026
+## Earlier development status — 3 November 2026 (superseded architecture)
 
 I have tested an experimental paired firmware/kernel candidate for USB reads,
 writes, creation, append, truncation, deletion and same-directory file rename
@@ -320,3 +342,4 @@ AI coding assistance. Source references are recorded in
 [DESIGN.md](docs/DESIGN.md) and [PORTING.md](docs/PORTING.md).
 
 Licensed under **GPL-2.0-or-later**; see [COPYING](COPYING).
+

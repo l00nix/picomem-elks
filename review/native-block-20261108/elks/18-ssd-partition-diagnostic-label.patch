@@ -1,0 +1,16 @@
+diff --git a/elks/arch/i86/drivers/block/genhd.c b/elks/arch/i86/drivers/block/genhd.c
+index ef227fa3..a483840e 100644
+--- a/elks/arch/i86/drivers/block/genhd.c
++++ b/elks/arch/i86/drivers/block/genhd.c
+@@ -39,7 +39,10 @@ static void GENPROC print_minor_name(register struct gendisk *hd, unsigned int m
+     unsigned int part;
+     struct hd_struct *hdp = &hd->part[minor];
+ 
+-    printk("%s%c", hd->major_name, 'a' + (unsigned char)(minor >> hd->minor_shift));
++    if (hd->major == SSD_MAJOR)
++        printk("%s", hd->major_name);
++    else
++        printk("%s%c", hd->major_name, 'a' + (unsigned char)(minor >> hd->minor_shift));
+     if ((part = (unsigned) (minor & ((1 << hd->minor_shift) - 1))))
+         printk("%d", part);
+     //printk(":(%,lu;%,lu) ", hdp->start_sect, hdp->nr_sects);

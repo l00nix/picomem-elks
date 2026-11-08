@@ -1,0 +1,4 @@
+PASS actual fat_access: per-copy entry writes, original return value, neighbor preservation, 512/1024 sectors, bounded mappings and read-failure cleanup
+492 cases
+PASS actual fat_access: per-copy entry writes, original return value, neighbor preservation, 512/1024 sectors, bounded mappings and read-failure cleanup
+156 cases

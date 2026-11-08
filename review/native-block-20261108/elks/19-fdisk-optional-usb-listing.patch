@@ -1,0 +1,114 @@
+diff --git a/elkscmd/disk_utils/fdisk.c b/elkscmd/disk_utils/fdisk.c
+index 675337e5..7bbf22a4 100644
+--- a/elkscmd/disk_utils/fdisk.c
++++ b/elkscmd/disk_utils/fdisk.c
+@@ -79,7 +79,7 @@ void write_out();
+ void list_types();
+ void set_boot();
+ void set_type();
+-void list_partition(char *dev);
++int list_partition(char *dev, int optional);
+ 
+ #define sects_per_cyl ((unsigned long)(geometry.heads * geometry.sectors))
+ 
+@@ -139,7 +139,7 @@ void quit(void)
+ void list_part(void)
+ {
+     if (*dev != 0)
+-        list_partition(NULL);
++        list_partition(NULL, 0);
+ }
+ 
+ void add_part(void)
+@@ -350,7 +350,7 @@ void help()
+         printf("%c   %s\n", tmp->cmd, tmp->help);
+ }
+ 
+-void list_partition(char *devname)
++int list_partition(char *devname, int optional)
+ {
+     int i, fd = -1;
+     int bad_mbr = 0;
+@@ -358,13 +358,16 @@ void list_partition(char *devname)
+ 
+     if (devname!=NULL) {
+         if ((fd=open(devname,O_RDONLY))==-1) {
+-            printf("Error opening %s\n",devname);
+-            exit(1);
++            if (optional && (errno == ENOENT || errno == ENODEV || errno == ENXIO))
++                return 0;
++            printf("Error opening %s (%d)\n",devname,errno);
++            return 1;
+         }
+         if ((i=read(fd,table,512))!=512) {
+             printf("Unable to read first 512 bytes from %s, only read %d bytes\n",
+                    devname,i);
+-            exit(1);
++            close(fd);
++            return 1;
+         }
+     } else
+         memcpy(table,MBR,512);
+@@ -402,6 +405,7 @@ void list_partition(char *devname)
+         printf("\nWarning: Invalid MBR!\n");
+     if (fd >= 0)
+         close(fd);
++    return 0;
+ }
+ 
+ int main(int argc, char **argv)
+@@ -431,10 +435,10 @@ int main(int argc, char **argv)
+ 
+ 
+     if (mode == MODE_LIST) {
+-        if (*dev == 0)
+-            strcpy(dev,DEFAULT_DEV);
+-        list_partition(dev);
+-        return 0;
++        if (*dev != 0)
++            return list_partition(dev, 0);
++        i = list_partition(DEFAULT_DEV, 0);
++        return list_partition("/dev/ssd", 1) || i;
+     }
+ 
+     if (mode == MODE_EDIT) {
+@@ -501,6 +505,6 @@ int main(int argc, char **argv)
+     return 0;
+ 
+ usage:
+-    fprintf(stderr, "Usage: fdisk [-l] [/dev/{hda,hdb}]\n");
++    fprintf(stderr, "Usage: fdisk [-l] [block_device]\n");
+     return 1;
+ }
+diff --git a/elkscmd/man/man8/fdisk.8 b/elkscmd/man/man8/fdisk.8
+index bb7c9a13..1d79f142 100644
+--- a/elkscmd/man/man8/fdisk.8
++++ b/elkscmd/man/man8/fdisk.8
+@@ -7,7 +7,12 @@ fdisk \- create or update a partition table on a hard disk or SSD device
+ .SH OPTIONS
+ .TP 5
+ .B \-l
+-list the partition table and exit.
++List the partition table and exit. Without a device argument, list
++.B /dev/hda
++and also
++.B /dev/ssd
++if available. Devices are opened read-only; an absent SSD is skipped.
++An explicitly named device is listed by itself.
+ .SH DESCRIPTION
+ .PP
+ When \fBfdisk\fR starts up, it reads in the partition table from 
+@@ -23,6 +28,13 @@ or
+ .BR /dev/hdb ,
+ etc.
+ .PP
++To list a PicoMEM USB disk, use
++.BR "fdisk -l /dev/ssd" .
++Use the whole-disk device, not a partition such as
++.BR /dev/ssd1 .
++Listing does not require disk geometry; interactive editing does, and is
++not supported by every SSD driver.
++.PP
+ If the
+ .B -l
+ option is not specified,

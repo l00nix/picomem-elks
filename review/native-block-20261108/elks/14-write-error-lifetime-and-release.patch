@@ -1,0 +1,351 @@
+diff --git a/elks/arch/i86/drivers/block/blk.h b/elks/arch/i86/drivers/block/blk.h
+index 4d65a431..7bc27a3f 100644
+--- a/elks/arch/i86/drivers/block/blk.h
++++ b/elks/arch/i86/drivers/block/blk.h
+@@ -124,6 +124,7 @@ static void end_request(int uptodate)
+     req = CURRENT;
+ 
+     if (!uptodate) {
++        if (req->rq_cmd == WRITE) blk_write_error(req->rq_dev);
+         /*if (req->rq_errors >= 0)*/
+         printk(DEVICE_NAME ": I/O %s error %E (%D) LBA %lu\n",
+             (req->rq_cmd == WRITE)? "write": "read",
+diff --git a/elks/arch/i86/drivers/block/ll_rw_blk.c b/elks/arch/i86/drivers/block/ll_rw_blk.c
+index c381934e..8f2e127c 100644
+--- a/elks/arch/i86/drivers/block/ll_rw_blk.c
++++ b/elks/arch/i86/drivers/block/ll_rw_blk.c
+@@ -43,6 +43,36 @@ static struct request all_requests[NR_REQUEST];
+ /* current request and function pointer for each block device handler */
+ struct blk_dev_struct blk_dev[MAX_BLKDEV];      /* initialized by blk_dev_init() */
+ 
++/* Sticky write failures, one bit per major/minor. Cleared only by reboot.
++ * Buffer reuse and later successful I/O must not hide an earlier failure. */
++static unsigned char write_errors[MAX_BLKDEV][32];
++
++void FARPROC blk_write_error(kdev_t dev)
++{
++    flag_t flags;
++
++    if (MAJOR(dev) >= MAX_BLKDEV) return;
++    save_flags(flags);
++    clr_irq();
++    write_errors[MAJOR(dev)][MINOR(dev) >> 3] |= 1 << (MINOR(dev) & 7);
++    restore_flags(flags);
++}
++
++int FARPROC blk_write_error_status(kdev_t dev)
++{
++    unsigned int major, byte;
++
++    if (dev) {
++        if (MAJOR(dev) >= MAX_BLKDEV) return -EIO;
++        return (write_errors[MAJOR(dev)][MINOR(dev) >> 3] &
++                (1 << (MINOR(dev) & 7))) ? -EIO : 0;
++    }
++    for (major = 0; major < MAX_BLKDEV; ++major)
++        for (byte = 0; byte < 32; ++byte)
++            if (write_errors[major][byte]) return -EIO;
++    return 0;
++}
++
+ /* return hardware sector size for passed device */
+ int get_sector_size(kdev_t dev)
+ {
+diff --git a/elks/arch/i86/drivers/block/ssd-picomem.c b/elks/arch/i86/drivers/block/ssd-picomem.c
+index 13a80bc4..b7a0f171 100644
+--- a/elks/arch/i86/drivers/block/ssd-picomem.c
++++ b/elks/arch/i86/drivers/block/ssd-picomem.c
+@@ -5,6 +5,7 @@
+ #include <linuxmt/config.h>
+ #include <linuxmt/kernel.h>
+ #include <linuxmt/fs.h>
++#include <linuxmt/major.h>
+ #include <linuxmt/sched.h>
+ #include <linuxmt/errno.h>
+ #include <linuxmt/string.h>
+@@ -180,6 +181,9 @@ static int pico_open(unsigned mode)
+ static void pico_release(void)
+ {
+     if (transact(PMB_RELEASE, 0)) {
++        unsigned int minor;
++        for (minor = 0; minor < 8; ++minor)
++            blk_write_error(MKDEV(SSD_MAJOR, minor));
+ #ifdef CONFIG_SSD_PICOMEM_WRITE
+         printk("PicoMEM release failed; I/O stopped\n");
+ #endif
+diff --git a/elks/fs/buffer.c b/elks/fs/buffer.c
+index 3d1d253f..3b548b62 100644
+--- a/elks/fs/buffer.c
++++ b/elks/fs/buffer.c
+@@ -349,11 +349,7 @@ static void FARPROC sync_buffers(kdev_t dev, int wait)
+     do {
+         ebh = EBH(bh);
+ 
+-        /*
+-         *      Skip clean buffers.
+-         */
+-        if ((dev && (ebh->b_dev != dev)) || !ebh->b_dirty)
+-           continue;
++        if (dev && ebh->b_dev != dev) continue;
+ 
+         /*
+          *      Locked buffers..
+@@ -368,6 +364,8 @@ static void FARPROC sync_buffers(kdev_t dev, int wait)
+             if (!wait) continue;
+             wait_on_buffer(bh);
+         }
++        /* Queued writes are clean before completion. Check after waiting. */
++        if (!ebh->b_dirty) continue;
+ 
+         /*
+          *      Do the stuff
+@@ -376,6 +374,7 @@ static void FARPROC sync_buffers(kdev_t dev, int wait)
+             ebh->b_dev, buf_num(bh), ebh->b_blocknr, ebh->b_count, ebh->b_dirty);
+         ebh->b_count++;
+         ll_rw_blk(WRITE, bh);
++        if (wait) wait_on_buffer(bh);
+         ebh->b_count--;
+         count++;
+     } while ((bh = ebh->b_next_lru) != NULL);
+@@ -625,13 +624,14 @@ void mark_buffer_uptodate(struct buffer_head *bh, int on)
+     restore_flags(flags);
+ }
+ 
+-void fsync_dev(kdev_t dev)
++int fsync_dev(kdev_t dev)
+ {
+     debug_sup("fsync\n");
+     sync_buffers(dev, 0);
+     sync_supers(dev);
+     sync_inodes(dev);
+     sync_buffers(dev, 1);
++    return blk_write_error_status(dev);
+ }
+ 
+ void sync_dev(kdev_t dev)
+@@ -645,8 +645,7 @@ void sync_dev(kdev_t dev)
+ 
+ int sys_sync(void)
+ {
+-    fsync_dev(0);
+-    return 0;
++    return fsync_dev(0);
+ }
+ 
+ /* clear a buffer area to zeros, used to avoid slow map to L1 if possible */
+diff --git a/elks/fs/super.c b/elks/fs/super.c
+index f69e46c6..2f918a26 100644
+--- a/elks/fs/super.c
++++ b/elks/fs/super.c
+@@ -27,7 +27,7 @@ extern int root_mountflags;
+ 
+ struct super_block super_blocks[NR_SUPER];
+ 
+-static int do_remount_sb(register struct super_block *sb, int flags, char *data);
++static int FARPROC do_remount_sb(register struct super_block *sb, int flags, char *data);
+ 
+ kdev_t ROOT_DEV;
+ 
+@@ -211,10 +211,9 @@ int do_umount(kdev_t dev)
+             /* Special case for "unmounting" root.  We just try to remount
+             * it readonly, and sync() the device.
+             */
+-            retval = 0;
+-            if (!(sb->s_flags & MS_RDONLY)) {
++            retval = fsync_dev(dev);
++            if (!retval && !(sb->s_flags & MS_RDONLY)) {
+                 debug_sup("UMOUNT remount fsync\n");
+-                fsync_dev(dev);
+                 retval = do_remount_sb(sb, MS_RDONLY, 0);
+                 debug_sup("UMOUNT remount returns %d\n", retval);
+             }
+@@ -223,7 +222,11 @@ int do_umount(kdev_t dev)
+             if (!sb->s_covered->i_mount) panic("umount");
+             if (!fs_may_umount(dev, sb->s_mounted)) retval = -EBUSY;
+             else {
+-                retval = 0;
++                retval = fsync_dev(dev);
++                if (retval) return retval;
++                /* Sync can sleep: recheck references before detaching. */
++                if (!sb->s_covered || !sb->s_mounted ||
++                    !fs_may_umount(dev, sb->s_mounted)) return -EBUSY;
+                 sb->s_covered->i_mount = NULL;
+                 iput(sb->s_covered);
+                 sb->s_covered = NULL;
+@@ -286,14 +289,14 @@ int sys_umount(char *name)
+         return -ENXIO;
+     }
+     if (!(retval = do_umount(dev)) && dev != ROOT_DEV) {
++        /* Filesystem teardown may dirty metadata (e.g. Minix clean state).
++         * Flush it while the backend is still open, then check release too. */
++        retval = fsync_dev(dev);
+         fops = get_blkfops(MAJOR(dev));
+         if (fops && fops->release) fops->release(inodep, NULL);
++        if (!retval) retval = blk_write_error_status(dev);
+     }
+     iput(inodep);
+-    if (!retval) {
+-        debug_sup("UMOUNT fsync\n");
+-        fsync_dev(dev);
+-    }
+     return retval;
+ }
+ 
+@@ -346,7 +349,7 @@ int do_mount(kdev_t dev, char *dir, int type, int flags, char *data)
+  * FS-specific mount options can't be altered by remounting.
+  */
+ 
+-static int do_remount_sb(register struct super_block *sb, int flags, char *data)
++static int FARPROC do_remount_sb(register struct super_block *sb, int flags, char *data)
+ {
+     int retval;
+     register struct super_operations *sop = sb->s_op;
+@@ -361,6 +364,8 @@ static int do_remount_sb(register struct super_block *sb, int flags, char *data)
+     /* If we are remounting RDONLY, make sure there are no rw files open */
+     if ((flags & MS_RDONLY) && !(sb->s_flags & MS_RDONLY))
+         if (!fs_may_remount_ro(sb->s_dev)) return -EBUSY;
++    retval = fsync_dev(sb->s_dev);
++    if (retval) return retval;
+     if (sop && sop->remount_fs) {
+         retval = sop->remount_fs(sb, &flags, data);
+         if (retval) {
+@@ -368,6 +373,8 @@ static int do_remount_sb(register struct super_block *sb, int flags, char *data)
+                 return retval;
+         }
+     }
++    retval = fsync_dev(sb->s_dev);
++    if (retval) return retval;
+     sb->s_flags = (unsigned short int) ((sb->s_flags & ~MS_RMT_MASK) | (flags & MS_RMT_MASK));
+     debug_sup("REMOUNT ok\n");
+     return 0;
+diff --git a/elks/include/linuxmt/fs.h b/elks/include/linuxmt/fs.h
+index 8e78f37b..f53c5413 100644
+--- a/elks/include/linuxmt/fs.h
++++ b/elks/include/linuxmt/fs.h
+@@ -8,6 +8,7 @@
+ #ifdef __KERNEL__
+ 
+ #include <linuxmt/config.h>
++#include <linuxmt/init.h>
+ #include <linuxmt/trace.h>
+ #include <linuxmt/types.h>
+ #include <linuxmt/wait.h>
+@@ -357,7 +358,9 @@ extern void invalidate_inodes(kdev_t);
+ extern void invalidate_buffers(kdev_t);
+ extern void sync_inodes(kdev_t);
+ extern void sync_dev(kdev_t);
+-extern void fsync_dev(kdev_t);
++extern int fsync_dev(kdev_t);
++extern void FARPROC blk_write_error(kdev_t);
++extern int FARPROC blk_write_error_status(kdev_t);
+ extern void sync_supers(kdev_t);
+ extern int namei(const char *,struct inode **,int,int);
+ 
+diff --git a/tests/block-write-errors/README.md b/tests/block-write-errors/README.md
+index dda9b752..f5f85c3a 100644
+--- a/tests/block-write-errors/README.md
++++ b/tests/block-write-errors/README.md
+@@ -1,4 +1,4 @@
+-# Buffered write-error characterization
++# Buffered write-error regression
+ 
+ Run `python3 tests/block-write-errors/run.py` from the ELKS tree. Add
+ `--base-core` to use queue, completion and buffer functions from the pinned
+@@ -17,11 +17,17 @@ The asynchronous build checks that code path but does not simulate interrupts
+ or concurrent writes. The fixture uses two-sector (1 KiB) buffers, not every FAT
+ sector-size/cache configuration. Mounted-filesystem unmount is not executed.
+ 
+-These are characterization assertions, not tests claiming a fix. Both current
+-and pinned-base core behavior clear dirty state at queue insertion, mark a
+-failed buffer not up to date, log an I/O error, return zero from `sys_sync`, and
+-provide no error result from final release. Subsequent sync skips that clean
+-invalid buffer. An ambiguous completion may already have changed sector bytes.
++The candidate retains a per-device error bit when a WRITE request fails. The
++bit survives buffer reuse and successful later I/O. `fsync_dev` and the kernel
++`sys_sync` return `-EIO` for that device (or any affected device for global sync).
++The pinned-base mode instead characterizes the old zero return. Both versions
++clear dirty state at queue insertion and invalidate failed buffers; neither
++retries an ambiguous write. Only reboot clears the candidate's error bits.
++
++This fixture does not exercise VFS unmount, PicoMEM protocol RELEASE or the
++userspace `sync` program. The libc `sync()` interface remains void, so its
++command-line exit status does not expose the new kernel result. Separate VFS
++and protocol tests are required for unmount and release error handling.
+ 
+ Do not infer that a logged write error permits safe media removal, or that
+ re-dirtying buffers alone supplies error propagation or safe retry policy.
+diff --git a/tests/block-write-errors/run.py b/tests/block-write-errors/run.py
+index b6a9d7e4..a295e8bf 100644
+--- a/tests/block-write-errors/run.py
++++ b/tests/block-write-errors/run.py
+@@ -38,14 +38,17 @@ order = [('buffer','mark_buffer_uptodate'),('buffer','unlock_buffer'),
+          ('ssd','ssd_io_complete'),('ssd','do_ssd_request'),
+          ('buffer','sync_buffers'),('buffer','fsync_dev'),('buffer','sys_sync'),
+          ('buffer','invalidate_buffers'),('ssd','ssd_invalidate'),('ssd','ssd_release')]
++if '--base-core' not in sys.argv:
++    order = [('block','blk_write_error'),('block','blk_write_error_status')] + order
+ bodies = '\n\n'.join(function(sources[k],n) for k,n in order)
+ with tempfile.TemporaryDirectory(prefix='elks-write-errors-') as d:
+     p=Path(d);(p/'kernel-functions.c').write_text(bodies)
+     for asynchronous in [0,1]:
+         exe=p/('errors-'+str(asynchronous))
+-        cmd=['cc','-std=c11','-Wall','-Wextra','-Werror','-Wno-unused-parameter',
++        cmd=['cc','-std=c11','-DFARPROC=','-Wall','-Wextra','-Werror','-Wno-unused-parameter',
+              '-Wno-unused-function','-Wno-unused-but-set-variable','-fsanitize=address,undefined','-g','-I'+d]
+         if asynchronous: cmd+=['-DCONFIG_ASYNCIO=1']
++        if '--base-core' in sys.argv: cmd+=['-DBASE_CORE=1']
+         subprocess.run(cmd+[str(here/'test-errors.c'),'-o',str(exe)],check=True)
+         subprocess.run([str(exe)],check=True)
+ print(json.dumps({'source_sha256':{str(p.relative_to(root)):hashlib.sha256(sources[k].encode()).hexdigest() for k,p in files.items()},
+diff --git a/tests/block-write-errors/test-errors.c b/tests/block-write-errors/test-errors.c
+index 4f414288..5532c372 100644
+--- a/tests/block-write-errors/test-errors.c
++++ b/tests/block-write-errors/test-errors.c
+@@ -32,6 +32,14 @@ static struct { int (*write)(void); } ssd_fops = { block_write };
+ #define RQ_ACTIVE 1
+ #define RQ_INACTIVE 0
+ #define SSD_MAJOR 2
++#define MAX_BLKDEV 8
++#define EIO 5
++static unsigned char write_errors[MAX_BLKDEV][32];
++#ifdef BASE_CORE
++#define SYNC_FAILURE 0
++#else
++#define SYNC_FAILURE (-EIO)
++#endif
+ #define MAJOR_NR SSD_MAJOR
+ #define MAJOR(d) ((d)>>8)
+ #define MINOR(d) ((d)&255)
+@@ -98,6 +106,7 @@ static void ll_rw_blk(int rw,struct buffer_head *b)
+ static void setup(void)
+ {
+  memset(buffers,0,sizeof(buffers));memset(disk,0x33,sizeof(disk));
++ memset(write_errors,0,sizeof write_errors);
+  writes=reads=errors=releases=fail_at=uncertain_at=0;
+  bh_lru=&buffers[0];bh_llru=&buffers[1];
+  buffers[0].b_next_lru=&buffers[1];buffers[1].b_prev_lru=&buffers[0];
+@@ -120,11 +129,11 @@ int main(void)
+  for(unsigned at=1;at<=4;at++) {
+   for(unsigned uncertain=0;uncertain<2;uncertain++) {
+    setup();if(uncertain)uncertain_at=at;else fail_at=at;
+-   assert(sys_sync()==0); /* Existing API: failure is logged, not returned. */
++   assert(sys_sync()==SYNC_FAILURE);
+    unsigned bad=at<=2?0:1;
+    assert(errors==1 && !buffers[bad].b_uptodate && !buffers[bad].b_dirty);
+    assert(buffers[1-bad].b_uptodate && !buffers[1-bad].b_dirty);
+-   unsigned before=writes;assert(sys_sync()==0);assert(writes==before);
++   unsigned before=writes;assert(sys_sync()==SYNC_FAILURE);assert(writes==before);
+    /* Check failed-sector bytes: ambiguous completion may have changed media. */
+    unsigned lba=at+1;
+    unsigned char expected=uncertain?(unsigned char)(0x60+bad):0x33;
+@@ -143,5 +152,9 @@ int main(void)
+  0
+ #endif
+  );
+- puts("REPRODUCED: failed writes leave a clean invalid buffer; sync returns zero; final release has no error result.");
++ #ifdef BASE_CORE
++ puts("BASE: sync returns zero after failed writes.");
++#else
++ puts("PASS: sync reports persistent EIO after failed writes, without replay.");
++#endif
+ }

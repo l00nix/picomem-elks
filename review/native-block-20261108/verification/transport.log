@@ -1,0 +1,2 @@
+PASS 52 integrated host-control/MSC/writer recovery cases; no sector writes
+PASS 591 recovered-write scenarios; actual host-control/MSC/writer, simulated media

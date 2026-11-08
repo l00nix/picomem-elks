@@ -1,0 +1,22 @@
+diff --git a/elks/fs/block_dev.c b/elks/fs/block_dev.c
+index edce2341..ee85e262 100644
+--- a/elks/fs/block_dev.c
++++ b/elks/fs/block_dev.c
+@@ -38,7 +38,7 @@ size_t block_read(struct inode *inode, struct file *filp, char *buf, size_t coun
+ 	if (inode->i_op->getblk) {
+ 	    bh = inode->i_op->getblk(inode, (block_t)chars, 0);
+ 	} else {
+-	    bh = getblk(inode->i_rdev, (block_t)chars);
++	    bh = getblk32(inode->i_rdev, filp->f_pos >> BLOCK_SIZE_BITS);
+ 	}
+ 	/* Offset to block/offset */
+ 	chars = BLOCK_SIZE - (((size_t)(filp->f_pos)) & (BLOCK_SIZE - 1));
+@@ -85,7 +85,7 @@ size_t block_write(struct inode *inode, struct file *filp, char *buf, size_t cou
+ 	if (inode->i_op->getblk) {
+ 	    bh = inode->i_op->getblk(inode, (block_t)chars, 1);
+ 	} else {
+-	    bh = getblk(inode->i_rdev, (block_t)chars);
++	    bh = getblk32(inode->i_rdev, filp->f_pos >> BLOCK_SIZE_BITS);
+ 	}
+ 	if (!bh) {
+ 	    if (!written) written = -ENOSPC;

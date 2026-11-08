@@ -1,0 +1,178 @@
+diff --git a/elks/fs/msdos/namei.c b/elks/fs/msdos/namei.c
+index c630b278..34d3b303 100644
+--- a/elks/fs/msdos/namei.c
++++ b/elks/fs/msdos/namei.c
+@@ -63,6 +63,8 @@ static int FATPROC msdos_format_name(register const char *name,int len,char *res
+ }
+ 
+ 
++static int FATPROC msdos_format_alias(const char *name, int len, char *alias);
++
+ /* Locates a shortname directory entry. */
+ static int FATPROC msdos_find(struct inode *dir,const char *name,int len,
+     struct buffer_head **bh,struct msdos_dir_entry **de,ino_t *ino)
+@@ -70,13 +72,39 @@ static int FATPROC msdos_find(struct inode *dir,const char *name,int len,
+ 	int res;
+ 	ASYNCIO_REENTRANT char msdos_name[MSDOS_NAME+1];
+ 
+-	if ((res = msdos_format_name(name,len, msdos_name)) < 0) return res;
++	if ((res = msdos_format_alias(name,len, msdos_name)) < 0) return res;
+ 	res = msdos_scan(dir,msdos_name,bh,de,ino);
+ 	msdos_name[MSDOS_NAME] = 0;
+ 	debug_fat("find '%11s', ino=%ld\n", msdos_name, (unsigned long)*ino);
+ 	return res;
+ }
+ 
++/* Accept only a complete 8.3 alias: msdos_format_name alone truncates. */
++static int FATPROC msdos_format_alias(const char *name, int len, char *alias)
++{
++	int i, base = 0, ext = -1;
++	unsigned char c;
++
++	if (len < 1 || len > 12) return -ENOENT;
++	if (get_fs_byte(name) == '.' &&
++	    (len == 1 || (len == 2 && get_fs_byte(name+1) == '.')))
++		return msdos_format_name(name, len, alias);
++	for (i = 0; i < len; i++) {
++		c = get_fs_byte(name+i);
++		if (c == '.') {
++			if (!base || ext >= 0) return -ENOENT;
++			ext = 0;
++		} else {
++			if (c <= ' ') return -ENOENT;
++			if (ext < 0) {
++				if (++base > 8) return -ENOENT;
++			} else if (++ext > 3) return -ENOENT;
++		}
++	}
++	if (ext == 0) return -ENOENT;
++	return msdos_format_name(name, len, alias);
++}
++
+ static int FATPROC compare(char *s1, char *s2, int len, int nocase)
+ {
+ 	while (len--) {
+@@ -93,6 +121,7 @@ static int FATPROC msdos_find_long(struct inode *dir, const char *name, int len,
+     struct buffer_head **bh, ino_t *ino)
+ {
+ 	int i, entry_len, res;
++	struct msdos_dir_entry *de;
+ 	off_t dirpos, pos = 0;
+ 	int nocase = 0;
+ 	ASYNCIO_REENTRANT char entry_name[MAXNAMLEN];   /* FIXME large stack usage */
+@@ -101,7 +130,7 @@ static int FATPROC msdos_find_long(struct inode *dir, const char *name, int len,
+ 	if (len > MAXNAMLEN)
+ 		return -ENOENT;
+ 	for (i=0; i<len; i++)
+-		msdos_name[i] = get_fs_byte(name++);
++		msdos_name[i] = get_fs_byte(name+i);
+ 
+ 	*bh = NULL;
+ 	do {
+@@ -120,7 +149,9 @@ static int FATPROC msdos_find_long(struct inode *dir, const char *name, int len,
+ 	if (*bh)
+ 		unmap_brelse(*bh);
+ 	*bh = NULL;
+-	return -ENOENT;
++	/* readdir returns the long name, but DOS aliases must remain usable. */
++	if (msdos_format_alias(name, len, entry_name) < 0) return -ENOENT;
++	return msdos_scan(dir, entry_name, bh, &de, ino);
+ 
+ }
+ 
+diff --git a/tests/fat-names/run.py b/tests/fat-names/run.py
+index 26bd7c9e..e924f376 100644
+--- a/tests/fat-names/run.py
++++ b/tests/fat-names/run.py
+@@ -1,16 +1,18 @@
+ from pathlib import Path
+-import subprocess,tempfile
++import subprocess,tempfile,os
+ p=Path(__file__).resolve().parent;r=p.parents[1]
+ with tempfile.TemporaryDirectory(prefix='elks-fat-names-') as d:
+  t=Path(d)
+  s=(r/'elks/fs/msdos/dir.c').read_text();s=s[s.index('static int FATPROC\nunicode_to_ascii'):]
+  (t/'dir-under-test.c').write_text(s)
+- s=(r/'elks/fs/msdos/namei.c').read_text();s=s[s.index('static int FATPROC compare'):s.index('\nint msdos_lookup')]
++ s=Path(os.environ.get('NAMEI_SOURCE',r/'elks/fs/msdos/namei.c')).read_text()
++ start='/* Accept only a complete' if '/* Accept only a complete' in s else 'static int FATPROC compare'
++ s=s[s.index('static int FATPROC msdos_format_name'):s.index('/* Locates a shortname')] + s[s.index(start):s.index('\nint msdos_lookup')]
+  (t/'lookup-under-test.c').write_text(s)
+  s=(r/'elks/include/linuxmt/msdos_fs.h').read_text();s=s[s.index('struct msdos_dir_entry {'):s.index('\nstruct slot_info')]
+  # ELKS uses a 32-bit unsigned long; the Mac host uses 64 bits.
+  s=s.replace('unsigned long size;', 'uint32_t size;')
+  (t/'layout.h').write_text(s)
+  target=t/'test'
+- subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unknown-warning-option','-fsanitize=address,undefined','-fno-sanitize-recover=all','-I'+d,str(p/'test.c'),'-o',str(target)],check=True)
++ subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-function','-Wno-unknown-warning-option','-fsanitize=address,undefined','-fno-sanitize-recover=all','-I'+d,str(p/'test.c'),'-o',str(target)],check=True)
+  subprocess.run([str(target)],check=True)
+diff --git a/tests/fat-names/test.c b/tests/fat-names/test.c
+index f071d7fe..c8a6e228 100644
+--- a/tests/fat-names/test.c
++++ b/tests/fat-names/test.c
+@@ -40,6 +40,19 @@ static ino_t msdos_parent_ino(struct inode *d,int lock){return 10;}
+ static void unmap_brelse(struct buffer_head *b){(void)b;}
+ static unsigned char get_fs_byte(const void *v){return *(const unsigned char*)v;}
+ #include "dir-under-test.c"
++/* Directory storage mock; real formatter/lookup and LFN parser run below. */
++static int msdos_scan(struct inode *dir,char *name,struct buffer_head **bh,
++                     struct msdos_dir_entry **de,ino_t *ino)
++{
++ for(size_t i=0;i<used;i++){
++  struct msdos_dir_entry *d=(void*)entries[i];
++  if(d->name[0] && (unsigned char)d->name[0]!=DELETED_FLAG &&
++     !(d->attr&ATTR_VOLUME) && !memcmp(d->name,name,11)){
++   *bh=&buffer;*de=d;*ino=i+100;return 0;
++  }
++ }
++ *bh=NULL;return -ENOENT;
++}
+ #include "lookup-under-test.c"
+ static unsigned checksum(const char *s)
+ {
+@@ -68,7 +81,9 @@ static void scan(const char *expected,int type)
+ static void lookup(const char *name,int wanted)
+ {
+  struct inode dir={9,S_IFDIR};struct buffer_head *bh=NULL;ino_t ino;
+- assert(msdos_find_long(&dir,name,strlen(name),&bh,&ino)==wanted);
++ int actual=msdos_find_long(&dir,name,strlen(name),&bh,&ino);
++ if(actual!=wanted)fprintf(stderr,"lookup %s: expected %d, got %d\n",name,wanted,actual);
++ assert(actual==wanted);
+ }
+ static int filled;
+ static char listed[MAXNAMLEN+1];
+@@ -85,6 +100,7 @@ int main(void)
+   int n=lengths[j];memset(name,'a',n);name[n]=0;reset();add(name,"REFERE~1TXT");
+   scan(n<=26?name:"refere~1.txt",n<=26?2:1);
+   lookup(n<=26?name:"refere~1.txt",0);
++  lookup("refere~1.txt",0);lookup("REFERE~1.TXT",0);lookup("ReFeRe~1.TxT",0);
+   if(n>26)lookup(name,-ENOENT);
+   if(n>14&&n<=26){char prefix[15];memcpy(prefix,name,14);prefix[14]=0;lookup(prefix,-ENOENT);}
+   struct inode dir={9,S_IFDIR};struct file f={0};filled=0;
+@@ -94,9 +110,25 @@ int main(void)
+  lookup("IdenticalStart-one.txt",0);lookup("IdenticalStart-two.txt",0);lookup("IdenticalStart",-ENOENT);
+  reset();add("12345678901234567890123456A.txt","LONGNA~1TXT");add("12345678901234567890123456B.txt","LONGNA~2TXT");
+  lookup("longna~1.txt",0);lookup("longna~2.txt",0);lookup("12345678901234567890123456",-ENOENT);
++ reset();add("Preserved Long Name.txt","ABCDEFGHTXT");
++ lookup("abcdefgh.txt",0);lookup("ABCDEFGH.TXT",0);
++ lookup("abcdefghi.txt",-ENOENT);lookup("abcdefgh.txtx",-ENOENT);
++ lookup("abcdefgh..txt",-ENOENT);lookup("abcdefgh .txt",-ENOENT);
++ lookup(".txt",-ENOENT);lookup("abcdefgh.",-ENOENT);
++ lookup("abcdefgh.txt ",-ENOENT);lookup("abcd efgh.txt",-ENOENT);
++ reset();add("No extension name","ABCDEFGH   ");lookup("abcdefgh",0);lookup("abcdefghi",-ENOENT);
++ reset();add("Shared Name.txt","SHARED~1TXT");add("Other Name.txt","SHARED~2TXT");
++ {struct inode d={9,S_IFDIR};struct buffer_head *b=NULL;ino_t a,c;
++  assert(msdos_find_long(&d,"Shared Name.txt",15,&b,&a)==0);
++  assert(msdos_find_long(&d,"shared~1.txt",12,&b,&c)==0 && a==c);
++  assert(msdos_find_long(&d,"shared~2.txt",12,&b,&c)==0 && a!=c);}
++ reset();add("Volume label name","VOLUME  TXT");entries[used-1][11]=ATTR_VOLUME;
++ lookup("volume.txt",-ENOENT);
++ reset();add("Deleted name","DELETED TXT");entries[used-1][0]=DELETED_FLAG;
++ lookup("deleted.txt",-ENOENT);
+  reset();add("Checksum Name.txt","CHECKS~1TXT");entries[0][13]^=1;scan("checks~1.txt",1);
+  reset();entries[used++][0]=0xe5;add("After Deleted Slot.txt","AFTERD~1TXT");scan("After Deleted Slot.txt",2);
+  reset();add("End of directory.txt","ENDOFD~1TXT");used--;struct inode dir={9,S_IFDIR};struct buffer_head *bh=NULL;off_t pos=0,dp;ino_t ino;int n;char out[MAXNAMLEN];
+  assert(msdos_get_entry_long(&dir,&pos,&bh,out,&n,&dp,&ino)==0);
+- puts("PASS actual FAT directory/lookup: 11 length boundaries, alias fallback, prefix collisions, readdir bounds, checksum/deleted/end cases");
++ puts("PASS alias case/identity/truncation/volume/deleted tests plus actual FAT directory/lookup: 11 length boundaries, alias fallback, prefix collisions, readdir bounds, checksum/deleted/end cases");
+ }

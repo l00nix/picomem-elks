@@ -1,0 +1,129 @@
+{
+  "date": "2026-11-08",
+  "purpose": "Experimental source review, not a release",
+  "components": {
+    "elks": {
+      "base": "052b4be698d9fb780ebdd9c9510ecdc4c2f9dd33",
+      "repository": "https://github.com/ghaerr/elks",
+      "series": [
+        "01-fat32-clear-reused-entry-high-word.patch",
+        "02-fat-root-parent-zero.patch",
+        "03-fat-update-mirrors.patch",
+        "04-fat32-reserved-bits.patch",
+        "05-fat32-invalidate-fsinfo.patch",
+        "06-fat32-active-table.patch",
+        "07-fat-field-comments.patch",
+        "08-fat-bounded-existing-long-names.patch",
+        "09-vfs-mount-open-mode.patch",
+        "10-reusable-partition-scan.patch",
+        "11-ssd-picomem-integration.patch",
+        "12-optional-amstrad-display.patch",
+        "13-host-and-emulator-tests.patch",
+        "14-write-error-lifetime-and-release.patch",
+        "15-alias-lookup-and-deletion-name-validation.patch",
+        "16-raw-block-address-units.patch",
+        "17-sector-wise-fat-allocation-scan.patch",
+        "18-ssd-partition-diagnostic-label.patch",
+        "19-fdisk-optional-usb-listing.patch"
+      ],
+      "files": {
+        "elks/arch/i86/drivers/block/Makefile": "fcdc708e40c190b4afeedab5f8e4ed21219633c33aaf7ec8704e7a667ed8b6f6",
+        "elks/arch/i86/drivers/block/blk.h": "89265fb4cab68ad5e868b9da439a16062c0ade014a2dffaf77b77cdab73ab51b",
+        "elks/arch/i86/drivers/block/config.in": "23ca7a9d8fffca8fdf287c9e8ed0b155817b65e7c00b28f75c9b0c5391b00800",
+        "elks/arch/i86/drivers/block/genhd.c": "d9a0c0c0ef1392d76f02d9d56dcf2e4dab6c126ec124f67d6a79eee5db4a904d",
+        "elks/arch/i86/drivers/block/ll_rw_blk.c": "84465a5c9ee8a512cd5c28cf5c6531e4e4894b3c7a8165ca056ee6b367bec422",
+        "elks/arch/i86/drivers/block/picoblk-protocol.h": "4a897692e4d4c19a9962357bdb839f94ebc7bab0003f16b67fec93e926a9c87e",
+        "elks/arch/i86/drivers/block/picoblk-test-core.c": "db6e528eb8dab38b27a4f2331a363cf52bf7e91e1c70bfd9642bb3943b54d978",
+        "elks/arch/i86/drivers/block/picoblk-test-core.h": "970501e72986bb47cc7dbbcfb84034fd61766236ed6a67317cfcce56666638bc",
+        "elks/arch/i86/drivers/block/picoblk-test.inc": "44cea48f6efc383dbbe11d032769c7cc479afe9a18061b98306f25bead6320c4",
+        "elks/arch/i86/drivers/block/picoblk-v2-test.inc": "308c3425b25bab931034a057ed8970b9da3e8cb1740c573d28da2ca5007f071a",
+        "elks/arch/i86/drivers/block/ssd-picomem.c": "f4db4853c0a2e8572c661a9c5601dd17930d00fb39454639412288dd7369ddd8",
+        "elks/arch/i86/drivers/block/ssd-sd.c": "3a28230ce9df8eec03e2b2846a612ff5ac7ceffa3e01490270582323bee905dd",
+        "elks/arch/i86/drivers/block/ssd-test.c": "672a1d7d83633e778874c73fa831f742af8db1fbcff06583534b2fddadf7d164",
+        "elks/arch/i86/drivers/block/ssd-xms.c": "f9808ef05c634f4ab0c75bcb17c6368f62313a3147a47179501bd228c4ddd421",
+        "elks/arch/i86/drivers/block/ssd.c": "c44a4a6c5fc7f43c570939c197f6fa1019e77a69bac545ceff26e76b7e9ad8f9",
+        "elks/arch/i86/drivers/block/ssd.h": "0cd176a49d54fa7ba55122d33768c79c9489a956d4e38dd228b7afdc9c60d810",
+        "elks/arch/i86/drivers/char/Makefile": "7cb683cfea46aa0c33479dd977d866f2e7e79ecde497ee7b5b488415bf55b509",
+        "elks/arch/i86/drivers/char/config.in": "10a1ea0971ea427b3992e1f4b773a5eec2421e7539de0d2c17334396906a5658",
+        "elks/arch/i86/drivers/char/kbd-scancode.c": "2fca86df3451fefe24ebf212523c818c5636c0e51bd34bc34556b77ff8e5f9c3",
+        "elks/arch/i86/drivers/char/ppc-core.h": "1827c711c64dd6d4442792f12697eaa7543fe72c437f81145505304fd5b6ff07",
+        "elks/arch/i86/drivers/char/ppc-display.c": "a0e1198e851a4a3ec23c5cbac5bd49828e5321cb7d6cc48ce3a79119605da0d8",
+        "elks/arch/i86/drivers/char/ppc-hw.h": "ac0240dced302f6523faeeb8a1662761222d1ef90f89fdbc3991424bbe601e6a",
+        "elks/arch/i86/kernel/irq.c": "202e3ae6465e96c9038c98d31580c39fa6099f10b1df283aff35f047176bcccd",
+        "elks/fs/block_dev.c": "8c3da4708dedcf230f306d7b3ecb738732174bb498cee6f4cf58f02e6255f1c9",
+        "elks/fs/buffer.c": "8e32080b5995e2918c44ac383e0914d6c5ac2c19274272e305b346b603c43189",
+        "elks/fs/msdos/dir.c": "e75e8720562adebc5da958fffc149a69cc4b79354dc2068b85518e773ddb4927",
+        "elks/fs/msdos/fat.c": "fcf9c0acb40c3de0d8b40555278853490b2135b0a89b1c05127d9d6715610de6",
+        "elks/fs/msdos/inode.c": "8833bc6c225be2359f12b6132f21b7118f3e1e4feff7381f0855ee5db03ef48c",
+        "elks/fs/msdos/misc.c": "6235922922b2377c866057527ca8a2d2278fd6dac4facc02ddc32bd454cef391",
+        "elks/fs/msdos/namei.c": "a4f6d74e4387243e234f523f83234a2e8e9983c0640b1c65ff45a18b66f02430",
+        "elks/fs/super.c": "eca4c3564a00fca99f049bd35260337dbebb837356c10366c404875b5614c30c",
+        "elks/include/linuxmt/fs.h": "b9f5f48f6a656fc3182422928871e6ab4f2a249d13ee34990f10035ade0d7623",
+        "elks/include/linuxmt/genhd.h": "dca41577183c5ca84ffd42921b3ff585937857e672a00c6a3a48e48c8001784c",
+        "elks/include/linuxmt/msdos_fs.h": "7ad4a28c31940c160f091e41ab008a51e54775bd36a6a50946c9e449991e744d",
+        "elkscmd/disk_utils/fdisk.c": "d2dbba418d71269db485b0ae558f389c09ea912eb5e320ffcc83deacad89e99a",
+        "elkscmd/man/man8/fdisk.8": "5f3914a500a00efe36e1eb7b8a3d001b118de0a4fc522fef75c3c5984e98e539",
+        "image/Make.devices": "a960865bd6265d3eb9b82ec09ae4067a0f507ccddbc627889ff75993d3c446ff",
+        "tests/block-write-errors/README.md": "f12ad9c7a9ef2c94b84b5009e1ba0dbe8f36f2cfd402ce3256ee62f94e77dc04",
+        "tests/block-write-errors/run.py": "a906db866d7f8db9b12557becf8b3f75f9c06c156494650423c5b3fa4c326556",
+        "tests/block-write-errors/test-errors.c": "8d1f1186d7d0b9ae08228027f747ce90084f9512b1690081d860cb1f530c1271",
+        "tests/fat-fsinfo/run.py": "b8732387cfc48273409d98381cee37d3273003ee499e03dae1613d09737e5066",
+        "tests/fat-fsinfo/test.c": "e096c122ea79b2cb555f6f92973358e06edd5cb44038d6b4c00ebfde886aba04",
+        "tests/fat-mirror/run.py": "f8cbe637ecc649d824aff663e920cc3f77371107f77465b610a0f53ccfbe350f",
+        "tests/fat-mirror/test.c": "18f290f418b53cc2cdfbd905342d6f8d1016263b1df5e41cb2fced42cf1a64cb",
+        "tests/fat-names/run.py": "b5c46b5143c02071a0718d5742076d70a3aa009655a10e287b61e4381444df5e",
+        "tests/fat-names/test.c": "ef604f3b838c2624937eec8ef7ea435ce382e5c64b43ddf9cdd9bf3214c28abe",
+        "tests/fat32-access/run.py": "f8cbe637ecc649d824aff663e920cc3f77371107f77465b610a0f53ccfbe350f",
+        "tests/fat32-access/test.c": "ac12eb3ccefffe695e768f03bb27b8f46776a0d7d24a7a9d2efcff5f5bcbe255",
+        "tests/ssd-lifecycle/run.py": "f609d7e989fb02e2ad1a61ffe35e85ba8da6cb3c18c021761b7a0fc6fbb5af43",
+        "tests/ssd-lifecycle/test-master.c": "cc0a3874d99f5a394a7db571996aa86b292ec6c022feeb031d93a9d062fba4ed",
+        "tests/ssd-partitions/run.py": "6c1bc795ef9cbafbe5ff7ea9526cbdd065b9b92ca9ced6a0f1592ce41860eab7",
+        "tests/ssd-partitions/test.c": "83d85972315a3e933f5008cc49e8d053f71e8a373b84679e2991f89a07148035"
+      }
+    },
+    "firmware": {
+      "base": "25566f256af1013e20e2035027a641d79e17fa94",
+      "repository": "https://github.com/l00nix/ISA-PicoMEM",
+      "series": [
+        "01-current-abi2-writer-and-build-integration.patch"
+      ],
+      "files": {
+        "src/CMakeLists.txt": "15a93298f0bb4d0af9276cb34d224fb583ebf0a3a1bc3cf7ca6e9b159cefecf5",
+        "src/USB_Host_Driver2/CMakeLists.txt": "e29593276b23535d7dce580ed54181934c6f14e004ee1fc3293d62dbb78ba0db",
+        "src/rawblock/rw/glue.c": "d459568b45397c3f5f2be30936bdde13264925a04979669febfe2000c29a8c88",
+        "src/rawblock/rw/mailbox.c": "8027a67c680ef341810a169a51aff26e0d0d9d67f8d99dd996bfee637d3cd488",
+        "src/rawblock/rw/mailbox.h": "b515ed90e97229ba61b4aa92d1d7eface449cd9135734048267c4762f0c65a52",
+        "src/rawblock/rw/writer.c": "77a0fa3058c85c7f9e60854b2dccfdcd66813473710f954dd9626c47200c6155",
+        "src/rawblock/rw/writer.h": "23f0ab3615ed46da0f5487cbc6c42d2832c0dab983c28a2f3f6f0861ed2edd19"
+      }
+    },
+    "tinyusb-controller": {
+      "base": "25566f256af1013e20e2035027a641d79e17fa94",
+      "apply_to": "firmware root AFTER firmware series",
+      "upstream_import": "871b843245666786857f54b7ffc1454d4acad7a0",
+      "series": [
+        "01-rp2-controller-import-with-local-clear-stall-hook.patch"
+      ],
+      "files": {
+        "src/rawblock/rp2-upstream/hcd_rp2040.c": "1ae24cfce25ebe717d7319e105f2ac919014993b6d388291d7b62820b92338f4",
+        "src/rawblock/rp2-upstream/rp2040_usb.c": "c75c11a4c8c7947199b5b2a14ed4ac0edcc046a270a412b1b2d93128d064d6e8",
+        "src/rawblock/rp2-upstream/rp2040_usb.h": "743b4491fb4a2e40afb727b2ac749a6b549aa19501e39e638cbc06847a998ba9"
+      }
+    },
+    "tinyusb": {
+      "base": "331c263400dd5ccf77264cab1fa6bbd9f374b44e",
+      "repository": "https://github.com/hathach/tinyusb",
+      "series": [
+        "01-msc-completion-recovery-and-control-length.patch"
+      ],
+      "files": {
+        "src/class/msc/msc_host.c": "a142141b648b348984dd17804690fea5171bab6937e943b7b5e04d49251e4371",
+        "src/class/msc/msc_host.h": "e849177321b5ac66d1fb4cf59f20cf288c1acb93457cc38009bc172d94c35d7d",
+        "src/host/usbh.c": "497bcaffa3ff00ad737f5277743064147642352bb2ec2fb2674ea58aa954bacf",
+        "src/portable/raspberrypi/rp2040/hcd_rp2040.c": "3e734a88c31fec1aa0d83ac1dbf6869fd5cccbd4f8983a4d02326de1866aa2b4",
+        "src/portable/raspberrypi/rp2040/rp2040_usb.c": "79bdf16216be2c71a25b033081cd19f309b34f14d553d02032ace7c93d24843e",
+        "src/portable/raspberrypi/rp2040/rp2040_usb.h": "88350d5ab023154a227158ce132a4a64b8d70f2109fcb0876f194a1369a1e6cf"
+      }
+    }
+  }
+}

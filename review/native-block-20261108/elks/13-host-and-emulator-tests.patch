@@ -1,0 +1,1138 @@
+diff --git a/elks/arch/i86/drivers/block/picoblk-test-core.c b/elks/arch/i86/drivers/block/picoblk-test-core.c
+new file mode 100644
+index 00000000..c302859e
+--- /dev/null
++++ b/elks/arch/i86/drivers/block/picoblk-test-core.c
+@@ -0,0 +1,59 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#include <linuxmt/string.h>
++#include "picoblk-test-core.h"
++static void generation_next(struct pmb_media *m)
++{
++ if (++m->generation == 0) ++m->generation;
++ m->token=0;
++}
++void pmb_attach(struct pmb_media *m, uint32_t capacity, uint16_t size,
++                uint16_t vid, uint16_t pid)
++{
++ generation_next(m); m->capacity=capacity; m->sector_size=size;
++ m->vid=vid; m->pid=pid; m->present=1;
++ /* Fault is deliberately not cleared by detach/reattach or a new claim. */
++}
++void pmb_detach(struct pmb_media *m)
++{
++ generation_next(m); m->present=0; m->capacity=0;
++}
++void pmb_execute(struct pmb_media *m, const uint8_t *q, uint8_t *r, pmb_reader read)
++{
++ unsigned i, status=PMB_OK, op=q[5];
++ uint32_t seq=PMB_GET32(q+8), gen=PMB_GET32(q+12);
++ uint32_t token=PMB_GET32(q+16), lba=PMB_GET32(q+20);
++ memset(r,0,PMB_FRAME);
++ if (memcmp(q,"PMB1",4) || q[4]!=PMB_VERSION || q[6] || q[7] || !seq)
++  status=PMB_BAD_REQUEST;
++ for (i=26;i<PMB_HEADER;i++) if (q[i]) status=PMB_BAD_REQUEST;
++ if (op!=PMB_READ && (lba || PMB_GET16(q+24))) status=PMB_BAD_REQUEST;
++ if (!status && op==PMB_INFO) {
++  if (gen || token) status=PMB_BAD_REQUEST;
++ } else if (!status) {
++  if (op<PMB_CLAIM || op>PMB_RELEASE) status=PMB_UNSUPPORTED;
++  else if (m->fault) status=PMB_FAULT;
++  else if (!m->present) status=PMB_NO_MEDIA;
++  else if (!gen || gen!=m->generation) status=PMB_STALE;
++  else if (!m->capacity || m->sector_size!=PMB_SECTOR) status=PMB_UNSUPPORTED;
++  else if (op==PMB_CLAIM) {
++   if (token || m->token) status=PMB_NOT_OWNER;
++   else m->token=seq;
++  } else if (!token || token!=m->token) status=PMB_NOT_OWNER;
++  else if (op==PMB_RELEASE) m->token=0;
++  else if (PMB_GET16(q+24)!=1 || lba>=m->capacity) status=PMB_RANGE;
++  else {
++   int ok=read(lba,r+PMB_HEADER);
++   if (!ok || !m->present || m->generation!=gen || m->token!=token) {
++    memset(r+PMB_HEADER,0,PMB_SECTOR);
++    m->fault=1; status=PMB_IO;
++   }
++  }
++ }
++ memcpy(r,"PMB1",4); r[4]=PMB_VERSION; r[5]=op; r[6]=status;
++ r[7]=PMB_FLAGS;
++ PMB_PUT32(r+8,seq); PMB_PUT32(r+12,m->generation);
++ PMB_PUT32(r+16,m->token); PMB_PUT32(r+20,m->capacity);
++ PMB_PUT16(r+24,m->sector_size);
++ PMB_PUT16(r+26,(!status && op==PMB_READ)?1:0);
++ PMB_PUT16(r+28,m->vid); PMB_PUT16(r+30,m->pid);
++}
+diff --git a/elks/arch/i86/drivers/block/picoblk-test-core.h b/elks/arch/i86/drivers/block/picoblk-test-core.h
+new file mode 100644
+index 00000000..4daffb59
+--- /dev/null
++++ b/elks/arch/i86/drivers/block/picoblk-test-core.h
+@@ -0,0 +1,16 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#ifndef PM_BLOCK_CORE_H
++#define PM_BLOCK_CORE_H
++#include <stdint.h>
++#include "picoblk-protocol.h"
++struct pmb_media {
++ uint32_t generation, token, capacity;
++ uint16_t sector_size, vid, pid;
++ uint8_t present, fault;
++};
++/* The backend writes only into this private sector buffer. Never host memory. */
++typedef int (*pmb_reader)(uint32_t lba, uint8_t *data);
++void pmb_execute(struct pmb_media *, const uint8_t *, uint8_t *, pmb_reader);
++void pmb_attach(struct pmb_media *, uint32_t, uint16_t, uint16_t, uint16_t);
++void pmb_detach(struct pmb_media *);
++#endif
+diff --git a/elks/arch/i86/drivers/block/picoblk-test.inc b/elks/arch/i86/drivers/block/picoblk-test.inc
+new file mode 100644
+index 00000000..2e6fc290
+--- /dev/null
++++ b/elks/arch/i86/drivers/block/picoblk-test.inc
+@@ -0,0 +1,51 @@
++/* Emulator ONLY. Never enable on physical hardware. Emulates the new wire
++ * service with the real protocol core, reading BIOS disk 0x81, never writing.
++ * This validates the ELKS driver/filesystem path, not physical USB transport.
++ */
++#include <linuxmt/biosparm.h>
++#include <linuxmt/genhd.h>
++#include "picoblk-test-core.c"
++static struct pmb_media test_media;
++static unsigned char test_request[32],test_reply[544],test_state=PMB_IDLE;
++static unsigned test_cursor,test_polls;
++static struct drive_infot test_geometry={130,63,16,512,HARDDISK};
++static int test_read(uint32_t lba,uint8_t *data)
++{
++ int err;
++ err=bios_disk_rw(BIOSHD_READ,1,0x81,lba/(16UL*63),
++                 (lba/63)%16,lba%63+1,DMASEG,0,&test_geometry);
++ if(err) return 0;
++ xms_fmemcpyw(data,KERNEL_DS,0,DMASEG,256);
++ return 1;
++}
++static unsigned char pmb_test_inb(unsigned port)
++{
++ if(!test_media.present) pmb_attach(&test_media,131040,512,0x1234,0x5678);
++ switch(port-CONFIG_PICOBLK_PORT) {
++ case 5:
++  if(test_state==PMB_BUSY && ++test_polls==2) {
++   pmb_execute(&test_media,test_request,test_reply,test_read);
++   test_cursor=0;test_state=PMB_DONE;
++  }
++  return test_state;
++ case 6:return PMB_IDENT;
++ case 7:if(test_state==PMB_DONE && test_cursor<544)return test_reply[test_cursor++];
++ }
++ return 0xff;
++}
++static void pmb_test_outb(unsigned char data,unsigned port)
++{
++ switch(port-CONFIG_PICOBLK_PORT) {
++ case 5:
++  if(data==PMB_BEGIN && test_state==PMB_IDLE){test_cursor=0;test_state=PMB_RX;}
++  else if(data==PMB_SUBMIT && test_state==PMB_RX && test_cursor==32){
++   test_polls=0;test_state=PMB_BUSY;
++  }else if(data==PMB_ACK && test_state==PMB_DONE)test_state=PMB_IDLE;
++  break;
++ case 7:if(test_state==PMB_RX && test_cursor<32)test_request[test_cursor++]=data;
++ }
++}
++#undef inb
++#undef outb
++#define inb pmb_test_inb
++#define outb pmb_test_outb
+diff --git a/tests/block-write-errors/README.md b/tests/block-write-errors/README.md
+new file mode 100644
+index 00000000..dda9b752
+--- /dev/null
++++ b/tests/block-write-errors/README.md
+@@ -0,0 +1,27 @@
++# Buffered write-error characterization
++
++Run `python3 tests/block-write-errors/run.py` from the ELKS tree. Add
++`--base-core` to use queue, completion and buffer functions from the pinned
++upstream base while retaining the candidate SSD request dispatcher.
++
++The harness extracts kernel function bodies verbatim. Platform declarations,
++sector I/O, scheduling primitives, inode/superblock sync and buffer acquisition
++for a request are mocked. The real queue insertion, SSD sector loop,
++`end_request`, buffer sync/invalidation and final SSD release execute together.
++No disk device is opened and no kernel or firmware is installed.
++
++Ten cases run in each CONFIG_ASYNCIO configuration, with ASan/UBSan: successful
++writes, failure on either sector of either buffer, ambiguous completion after
++bytes reach the mock disk, repeat sync, final release, and device filtering.
++The asynchronous build checks that code path but does not simulate interrupts
++or concurrent writes. The fixture uses two-sector (1 KiB) buffers, not every FAT
++sector-size/cache configuration. Mounted-filesystem unmount is not executed.
++
++These are characterization assertions, not tests claiming a fix. Both current
++and pinned-base core behavior clear dirty state at queue insertion, mark a
++failed buffer not up to date, log an I/O error, return zero from `sys_sync`, and
++provide no error result from final release. Subsequent sync skips that clean
++invalid buffer. An ambiguous completion may already have changed sector bytes.
++
++Do not infer that a logged write error permits safe media removal, or that
++re-dirtying buffers alone supplies error propagation or safe retry policy.
+diff --git a/tests/block-write-errors/run.py b/tests/block-write-errors/run.py
+new file mode 100644
+index 00000000..b6a9d7e4
+--- /dev/null
++++ b/tests/block-write-errors/run.py
+@@ -0,0 +1,52 @@
++#!/usr/bin/env python3
++"""Exercise unchanged kernel function bodies with mocked sectors, never hardware."""
++from pathlib import Path
++import re, subprocess, tempfile, hashlib, json, sys
++here = Path(__file__).resolve().parent
++root = here.parent.parent
++files = {
++    'block': root/'elks/arch/i86/drivers/block/ll_rw_blk.c',
++    'end': root/'elks/arch/i86/drivers/block/blk.h',
++    'ssd': root/'elks/arch/i86/drivers/block/ssd.c',
++    'buffer': root/'elks/fs/buffer.c',
++}
++
++def function(text, name):
++    # Match a definition, not calls/forward declarations. Bodies remain verbatim.
++    m = re.search(r'^([^\n;]*\b' + name + r'\([^;]*?\)\s*\n\{)', text, re.M)
++    if not m: raise RuntimeError('definition missing: '+name)
++    start = text.index('{', m.start())
++    # Mask comments and literals only for brace counting, preserving character offsets.
++    masked = re.sub(r'/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'',
++                    lambda x: ' '*len(x.group()), text, flags=re.S)
++    depth = 0
++    for i in range(start, len(text)):
++        if masked[i] == '{': depth += 1
++        elif masked[i] == '}':
++            depth -= 1
++            if not depth: return text[m.start():i+1]
++    raise RuntimeError('unterminated '+name)
++
++sources = {k:p.read_text() for k,p in files.items()}
++base = '052b4be698d9fb780ebdd9c9510ecdc4c2f9dd33'
++if '--base-core' in sys.argv:
++    for k in ('block','end','buffer'):
++        sources[k] = subprocess.check_output(['git','-C',str(root),'show',base+':'+str(files[k].relative_to(root))],text=True)
++
++order = [('buffer','mark_buffer_uptodate'),('buffer','unlock_buffer'),
++         ('end','end_request'),('block','add_request'),
++         ('ssd','ssd_io_complete'),('ssd','do_ssd_request'),
++         ('buffer','sync_buffers'),('buffer','fsync_dev'),('buffer','sys_sync'),
++         ('buffer','invalidate_buffers'),('ssd','ssd_invalidate'),('ssd','ssd_release')]
++bodies = '\n\n'.join(function(sources[k],n) for k,n in order)
++with tempfile.TemporaryDirectory(prefix='elks-write-errors-') as d:
++    p=Path(d);(p/'kernel-functions.c').write_text(bodies)
++    for asynchronous in [0,1]:
++        exe=p/('errors-'+str(asynchronous))
++        cmd=['cc','-std=c11','-Wall','-Wextra','-Werror','-Wno-unused-parameter',
++             '-Wno-unused-function','-Wno-unused-but-set-variable','-fsanitize=address,undefined','-g','-I'+d]
++        if asynchronous: cmd+=['-DCONFIG_ASYNCIO=1']
++        subprocess.run(cmd+[str(here/'test-errors.c'),'-o',str(exe)],check=True)
++        subprocess.run([str(exe)],check=True)
++print(json.dumps({'source_sha256':{str(p.relative_to(root)):hashlib.sha256(sources[k].encode()).hexdigest() for k,p in files.items()},
++                  'physical_io':False,'base_core':('--base-core' in sys.argv),'base_commit':base},indent=2))
+diff --git a/tests/block-write-errors/test-errors.c b/tests/block-write-errors/test-errors.c
+new file mode 100644
+index 00000000..4f414288
+--- /dev/null
++++ b/tests/block-write-errors/test-errors.c
+@@ -0,0 +1,147 @@
++#include <assert.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <string.h>
++#include <stdarg.h>
++typedef uint32_t sector_t;
++typedef uint32_t jiff_t;
++typedef unsigned kdev_t;
++typedef unsigned ramdesc_t;
++typedef unsigned flag_t;
++struct buffer_head {
++ unsigned b_dirty,b_uptodate,b_locked,b_count,b_mapcount;
++ kdev_t b_dev; uint32_t b_blocknr;
++ struct buffer_head *b_next_lru,*b_prev_lru;
++ char data[1024];
++};
++typedef struct buffer_head ext_buffer_head;
++struct request {
++ kdev_t rq_dev; unsigned char rq_cmd,rq_status;
++ sector_t rq_sector; uint16_t rq_nr_sectors; char *rq_buffer; ramdesc_t rq_seg;
++ struct buffer_head *rq_bh; struct request *rq_next; int rq_errors;
++};
++struct blk_dev_struct {void (*request_fn)(void);struct request *current_request;};
++struct inode {int unused;};struct file {int unused;};struct wait_queue {int unused;};
++struct ssd_lifecycle {unsigned flags;int (*open)(unsigned mode);void (*release)(void);};
++struct hd_struct {sector_t start_sect,nr_sects;};
++static int block_write(void) { return 0; }
++static struct { int (*write)(void); } ssd_fops = { block_write };
++#define EBH(b) (b)
++#define READ 0
++#define WRITE 1
++#define RQ_ACTIVE 1
++#define RQ_INACTIVE 0
++#define SSD_MAJOR 2
++#define MAJOR_NR SSD_MAJOR
++#define MAJOR(d) ((d)>>8)
++#define MINOR(d) ((d)&255)
++#define MKDEV(a,b) (((a)<<8)|(b))
++#define SSD_MINORS 2
++#define CONFIG_SSD_PARTITIONS 1
++#define SSD_READ_ONLY 1
++#define SD_FIXED_SECTOR_SIZE 512
++#define BLOCK_SIZE 1024
++#define CURRENT (blk_dev[SSD_MAJOR].current_request)
++#define DEVICE_OFF(d) ((void)(d))
++#define DEVICE_NAME "ssd"
++#define CHECK_REQUEST(r) assert((r)->rq_status==RQ_ACTIVE)
++#define IN_ORDER(a,b) ((a)->rq_dev<(b)->rq_dev || ((a)->rq_dev==(b)->rq_dev && (a)->rq_sector<(b)->rq_sector))
++#define FARPROC
++#define debug_blk(...) ((void)0)
++#define debug_sup(...) ((void)0)
++#define save_flags(f) ((f)=0)
++#define restore_flags(f) ((void)(f))
++#define clr_irq() ((void)0)
++#define set_irq() ((void)0)
++static struct blk_dev_struct blk_dev[3];
++#ifdef CONFIG_ASYNCIO
++static struct wait_queue wait_for_request;
++#endif
++static struct buffer_head buffers[2],*bh_lru,*bh_llru;
++static struct hd_struct ssd_part[SSD_MINORS];
++static sector_t ssd_num_sects;
++static unsigned access_count,lifecycle_busy;
++static int ssd_initialized;
++static jiff_t ssd_timeout;
++static unsigned writes,reads,fail_at,uncertain_at,errors,releases,cases;
++static unsigned char disk[16][512];
++static void do_ssd_request(void);
++static void ssd_io_complete(void);
++static void ll_rw_blk(int,struct buffer_head*);
++static void wait_on_buffer(struct buffer_head *b){assert(!b->b_locked);}
++static void wake_up(struct wait_queue *q){(void)q;}
++static void mark_buffer_clean(struct buffer_head *b){b->b_dirty=0;}
++static void brelseL1(struct buffer_head *b,int copy){(void)b;(void)copy;}
++static void invalidate_inodes(kdev_t d){(void)d;}
++static void sync_supers(kdev_t d){(void)d;}
++static void sync_inodes(kdev_t d){(void)d;}
++static void printk(const char *fmt,...){if(strstr(fmt,"I/O"))errors++;}
++static void panic(const char *s){(void)s;assert(!"kernel panic");}
++static int ssddev_write(sector_t lba,char *buf,ramdesc_t seg)
++{
++ (void)seg;assert(lba<16);writes++;
++ if(writes==fail_at)return 0;
++ memcpy(disk[lba],buf,512);
++ return writes!=uncertain_at; /* sector reached device, completion/flush failed */
++}
++static int ssddev_read(sector_t lba,char *buf,ramdesc_t seg)
++{(void)seg;reads++;assert(lba<16);memcpy(buf,disk[lba],512);return 1;}
++static void release_hook(void){releases++;}
++static const struct ssd_lifecycle ssd_lifecycle={0,NULL,release_hook};
++#include "kernel-functions.c"
++static void ll_rw_blk(int rw,struct buffer_head *b)
++{
++ struct request req={b->b_dev,(unsigned char)rw,RQ_ACTIVE,b->b_blocknr*2,2,b->data,0,b,NULL,0};
++ assert(!CURRENT);b->b_locked=1;add_request(&blk_dev[SSD_MAJOR],&req);
++ assert(!CURRENT && req.rq_status==RQ_INACTIVE && !b->b_locked);
++}
++static void setup(void)
++{
++ memset(buffers,0,sizeof(buffers));memset(disk,0x33,sizeof(disk));
++ writes=reads=errors=releases=fail_at=uncertain_at=0;
++ bh_lru=&buffers[0];bh_llru=&buffers[1];
++ buffers[0].b_next_lru=&buffers[1];buffers[1].b_prev_lru=&buffers[0];
++ for(unsigned i=0;i<2;i++) {
++  buffers[i].b_dev=MKDEV(SSD_MAJOR,1);buffers[i].b_blocknr=i;
++  buffers[i].b_dirty=buffers[i].b_uptodate=1;
++  memset(buffers[i].data,0x60+i,1024);
++ }
++ ssd_num_sects=16;ssd_initialized=1;ssd_part[0]=(struct hd_struct){0,16};
++ ssd_part[1]=(struct hd_struct){2,8};
++ blk_dev[SSD_MAJOR].request_fn=do_ssd_request;CURRENT=NULL;
++ access_count=1;lifecycle_busy=0;
++}
++int main(void)
++{
++ setup();assert(sys_sync()==0);assert(writes==4 && !errors);
++ assert(!buffers[0].b_dirty && buffers[0].b_uptodate);
++ assert(!memcmp(disk[2],buffers[0].data,1024));cases++;
++ /* Test first and second sectors of both queued blocks. */
++ for(unsigned at=1;at<=4;at++) {
++  for(unsigned uncertain=0;uncertain<2;uncertain++) {
++   setup();if(uncertain)uncertain_at=at;else fail_at=at;
++   assert(sys_sync()==0); /* Existing API: failure is logged, not returned. */
++   unsigned bad=at<=2?0:1;
++   assert(errors==1 && !buffers[bad].b_uptodate && !buffers[bad].b_dirty);
++   assert(buffers[1-bad].b_uptodate && !buffers[1-bad].b_dirty);
++   unsigned before=writes;assert(sys_sync()==0);assert(writes==before);
++   /* Check failed-sector bytes: ambiguous completion may have changed media. */
++   unsigned lba=at+1;
++   unsigned char expected=uncertain?(unsigned char)(0x60+bad):0x33;
++   for(unsigned j=0;j<512;j++)assert(disk[lba][j]==expected);
++   ssd_release(NULL,NULL);assert(releases==1 && !access_count && !lifecycle_busy);
++   assert(writes==before); /* final release neither retries nor reports failure */
++   cases++;
++  }
++ }
++ setup();buffers[1].b_dirty=0;buffers[0].b_dev=MKDEV(SSD_MAJOR,0);
++ fsync_dev(MKDEV(SSD_MAJOR,1));assert(!writes && buffers[0].b_dirty);cases++;
++ printf("PASS %u characterization cases: actual queue/SSD/end_request/sync/release; ASYNCIO=%d\n",cases,
++#ifdef CONFIG_ASYNCIO
++ 1
++#else
++ 0
++#endif
++ );
++ puts("REPRODUCED: failed writes leave a clean invalid buffer; sync returns zero; final release has no error result.");
++}
+diff --git a/tests/fat-fsinfo/run.py b/tests/fat-fsinfo/run.py
+new file mode 100644
+index 00000000..b461d332
+--- /dev/null
++++ b/tests/fat-fsinfo/run.py
+@@ -0,0 +1,8 @@
++from pathlib import Path
++import tempfile,subprocess
++p=Path(__file__).resolve().parent;r=p.parent.parent
++s=(r/'elks/fs/msdos/inode.c').read_text();a=s.index('static int msdos_invalidate_fsinfo(');b=s.index('/* Read the super block',a)
++with tempfile.TemporaryDirectory(prefix='elks-fsinfo-') as tmp:
++ t=Path(tmp);(t/'actual.inc').write_text(s[a:b]);(t/'test.c').write_bytes((p/'test.c').read_bytes())
++ subprocess.run(['cc','-std=c99','-Wall','-Wextra','-Wno-unused-parameter','-Werror','-fsanitize=address,undefined','-fno-sanitize-recover=all','-g',str(t/'test.c'),'-o',str(t/'test')],check=True)
++ subprocess.run([str(t/'test')],check=True)
+diff --git a/tests/fat-fsinfo/test.c b/tests/fat-fsinfo/test.c
+new file mode 100644
+index 00000000..de2ebe82
+--- /dev/null
++++ b/tests/fat-fsinfo/test.c
+@@ -0,0 +1,65 @@
++#include <assert.h>
++#include <stdint.h>
++#include <string.h>
++#include <stdio.h>
++#include <errno.h>
++typedef uint32_t __u32;
++#define MS_RDONLY 1
++struct super_block { int fat_bits; unsigned short fat_start; };
++#define MSDOS_SB(s) (s)
++struct msdos_boot_sector { unsigned char padding[14]; uint16_t reserved; unsigned char rest[32]; uint16_t info_sector; };
++struct buffer_head { int unused; };
++static union { uint32_t aligned[256]; unsigned char bytes[1024]; } disk[32];
++static struct buffer_head buffers[32];
++static int reads, refs, dirty, fail_sector, current_sector;
++static struct buffer_head *msdos_sread(struct super_block *s, unsigned short sector, void **data)
++{
++ (void)s; ++reads; assert(refs==0); assert(sector<32);
++ if (sector==fail_sector) return NULL;
++ current_sector=sector; ++refs; *data=disk[sector].bytes; return &buffers[sector];
++}
++static void unmap_brelse(struct buffer_head *bh) { assert(bh==&buffers[current_sector]); assert(refs==1); --refs; }
++static void mark_buffer_dirty(struct buffer_head *bh) { assert(refs==1); assert(bh==&buffers[current_sector]); assert(current_sector!=0); ++dirty; }
++#include "actual.inc"
++static void put(unsigned sector,unsigned offset,uint32_t value) { memcpy(disk[sector].bytes+offset,&value,4); }
++static void setup(unsigned sector)
++{
++ unsigned i; for(i=0;i<32;i++) memset(disk[i].bytes,0x5a,1024);
++ ((struct msdos_boot_sector *)disk[0].bytes)->info_sector=sector;
++ ((struct msdos_boot_sector *)disk[0].bytes)->reserved=32;
++ if(sector<32) { put(sector,0,0x41615252);put(sector,484,0x61417272);put(sector,508,0xaa550000);put(sector,488,100);put(sector,492,20); }
++ reads=refs=dirty=0;fail_sector=-1;
++}
++int main(void)
++{
++ struct super_block s={32,64}; unsigned char before[sizeof disk], expected[sizeof disk];
++ unsigned sector,case_no,cases=0; int flags,rc;
++ for(sector=1;sector<=3;sector+=2) {
++  for(case_no=0;case_no<14;case_no++) {
++   setup(sector); s.fat_bits=32; flags=0;
++   if(case_no==1) flags=MS_RDONLY;
++   if(case_no==2) s.fat_bits=12;
++   if(case_no==3) s.fat_bits=16;
++   if(case_no>=4 && case_no<=6) put(sector,case_no==4?0:case_no==5?484:508,0);
++   if(case_no==7) {put(sector,488,0xffffffff);put(sector,492,0xffffffff);}
++   if(case_no==8) fail_sector=0;
++   if(case_no==9) fail_sector=sector;
++   if(case_no==10) ((struct msdos_boot_sector *)disk[0].bytes)->info_sector=0;
++   if(case_no==11) ((struct msdos_boot_sector *)disk[0].bytes)->info_sector=0xffff;
++   if(case_no==12) ((struct msdos_boot_sector *)disk[0].bytes)->info_sector=32;
++   if(case_no==13) put(sector,488,0xffffffff);
++   memcpy(before,disk,sizeof disk);memcpy(expected,before,sizeof disk);
++   rc=msdos_remount(&s,&flags,NULL);
++   assert(rc==((case_no==8||case_no==9)?-EIO:0));assert(refs==0);
++   if(case_no==0||case_no==13) {
++    memset(expected+sector*1024+488,0xff,8);assert(dirty==1);assert(reads==2);
++   } else assert(dirty==0);
++   assert(!memcmp(expected,disk,sizeof disk));
++   if(case_no>=1 && case_no<=3) assert(reads==0);
++   if(case_no>=10 && case_no<=12) assert(reads==1);
++   ++cases;
++  }
++ }
++ printf("PASS %u FSInfo cases: exact-byte preservation, RO/FAT12/FAT16 no I/O, signatures, absent/out-of-range sectors, already-unknown hints and read errors\n",cases);
++ return 0;
++}
+diff --git a/tests/fat-mirror/run.py b/tests/fat-mirror/run.py
+new file mode 100644
+index 00000000..46f105c6
+--- /dev/null
++++ b/tests/fat-mirror/run.py
+@@ -0,0 +1,14 @@
++from pathlib import Path
++import subprocess,tempfile,sys,resource
++p=Path(__file__).resolve().parent;r=p.parents[1]
++source=Path(sys.argv[1]) if len(sys.argv)>1 else r/'elks/fs/msdos/fat.c'
++resource.setrlimit(resource.RLIMIT_CORE,(0,0))
++with tempfile.TemporaryDirectory(prefix='elks-fat-mirror-') as d:
++ t=Path(d);s=source.read_text();s=s[s.index('cluster_t FATPROC fat_access'):s.index('\n\nvoid FATPROC cache_init')]
++ # ELKS unsigned long is 32 bits; the Mac host's is 64 bits.
++ s=s.replace('unsigned long','uint32_t')
++ (t/'fat-under-test.c').write_text(s)
++ for mode in ['all','fat32-only']:
++  exe=t/mode
++  subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-variable','-fsanitize=address,undefined','-fno-sanitize-recover=all','-I'+d]+(['-DFAT_BITS_32'] if mode=='fat32-only' else [])+[str(p/'test.c'),'-o',str(exe)],check=True)
++  subprocess.run([str(exe)],check=True)
+diff --git a/tests/fat-mirror/test.c b/tests/fat-mirror/test.c
+new file mode 100644
+index 00000000..177b5d5f
+--- /dev/null
++++ b/tests/fat-mirror/test.c
+@@ -0,0 +1,91 @@
++#include <assert.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <string.h>
++#define FATPROC
++#define MSDOS_SB(s) (&(s)->fat)
++#define SECTOR_BITS_SB(s) ((s)->bits)
++#define SECTOR_SIZE_SB(s) (1u << (s)->bits)
++#define debug_fat(...) ((void)0)
++#define buffer_blocknr(b) ((b)->number)
++#define printk(...) ((void)0)
++typedef int32_t cluster_t;
++typedef uint32_t sector_t;
++struct super_block { struct { uint16_t fat_start,fat_length; uint8_t fats,fat_bits; } fat; unsigned bits; };
++struct buffer_head { unsigned number,refs,dirty; };
++static unsigned char disk[262144],expected[sizeof(disk)];
++static struct buffer_head buffers[sizeof(disk)/1024];
++static int fail_sector;
++static unsigned reads,live,maxlive;
++static struct buffer_head *msdos_sread(struct super_block *s,sector_t sec,void **data)
++{
++ reads++;
++ if ((int)sec==fail_sector)return NULL;
++ unsigned byte=sec<<s->bits;assert(byte+SECTOR_SIZE_SB(s)<=sizeof(disk));
++ struct buffer_head *bh=&buffers[byte/1024];bh->number=byte/1024;
++ bh->refs++;live++;if(live>maxlive)maxlive=live;
++ *data=disk+byte;return bh;
++}
++static void mark_buffer_dirty(struct buffer_head *b){assert(b->refs);b->dirty=1;}
++static void unmap_brelse(struct buffer_head *b){assert(b&&b->refs&&live);b->refs--;live--;}
++#include "fat-under-test.c"
++static void reset(void)
++{
++ for(unsigned i=0;i<sizeof(disk);i++)disk[i]=(unsigned char)(i*17+3);
++ memset(buffers,0,sizeof(buffers));fail_sector=-1;reads=live=maxlive=0;
++}
++static unsigned offset(unsigned bits,unsigned entry){return bits==12?entry+entry/2:entry*(bits/8);}
++static void set(unsigned char *p,unsigned bits,unsigned entry,uint32_t value)
++{
++ unsigned n=offset(bits,entry);
++ if(bits==12){if(entry&1){p[n]=(p[n]&15)|((value&15)<<4);p[n+1]=value>>4;}else{p[n]=value;p[n+1]=(p[n+1]&240)|((value>>8)&15);}}
++ else for(unsigned i=0;i<bits/8;i++)p[n+i]=value>>(i*8);
++}
++static unsigned char *table(struct super_block *s,unsigned char *base,unsigned copy)
++{return base+((s->fat.fat_start+copy*s->fat.fat_length)<<s->bits);}
++static void released(void){assert(live==0);for(unsigned i=0;i<sizeof(buffers)/sizeof(*buffers);i++)assert(!buffers[i].refs);assert(maxlive<=2);}
++int main(void)
++{
++ unsigned cases=0;
++ for(unsigned bits=12;bits<=32;bits=bits==12?16:bits==16?32:33){
++#ifdef FAT_BITS_32
++  if(bits!=32)continue;
++#endif
++  for(unsigned sectorbits=9;sectorbits<=10;sectorbits++)for(unsigned copies=1;copies<=3;copies++){
++   struct super_block s={{1,16,copies,bits},sectorbits};
++   unsigned entries[]={2,3,127,255,341,682,683,1365};
++   for(unsigned j=0;j<sizeof(entries)/sizeof(*entries);j++)for(unsigned v=0;v<3;v++){
++    unsigned entry=entries[j];uint32_t value=v==0?0:v==1?123:bits==12?0xff8:bits==16?0xfff8:0xffffff8;
++    reset();for(unsigned c=0;c<copies;c++)set(table(&s,disk,c),bits,entry,77+c);
++    memcpy(expected,disk,sizeof(disk));for(unsigned c=0;c<copies;c++)set(table(&s,expected,c),bits,entry,value);
++    assert(fat_access(&s,entry,value)==77);assert(!memcmp(expected,disk,sizeof(disk)));released();
++    unsigned before=reads;assert(fat_access(&s,entry,-1)==(v==2?-1:(int32_t)value));released();
++    assert(reads-before<=2);cases++;
++   }
++   /* Read-only access must never fetch a mirror or dirty any buffer. */
++   reset();set(table(&s,disk,0),bits,2,88);memcpy(expected,disk,sizeof(disk));fail_sector=s.fat.fat_start+s.fat.fat_length;
++   assert(fat_access(&s,2,-1)==88);assert(reads==1&&!memcmp(expected,disk,sizeof(disk)));released();
++   for(unsigned i=0;i<sizeof(buffers)/sizeof(*buffers);i++)assert(!buffers[i].dirty);
++   for(unsigned failedcopy=0;failedcopy<copies;failedcopy++){
++    reset();for(unsigned c=0;c<copies;c++)set(table(&s,disk,c),bits,2,77+c);
++    memcpy(expected,disk,sizeof(disk));for(unsigned c=0;c<failedcopy;c++)set(table(&s,expected,c),bits,2,123);
++    fail_sector=s.fat.fat_start+failedcopy*s.fat.fat_length;
++    assert(fat_access(&s,2,123)==0);released();assert(!memcmp(expected,disk,sizeof(disk)));cases++;
++   }
++  }
++ }
++#ifndef FAT_BITS_32
++ /* FAT12 sector straddles: two reads can share one 1K buffer or use two. */
++ for(unsigned start=1;start<=2;start++)for(unsigned entry=341;entry<=682;entry+=341){
++  struct super_block s={{start,3,3,12},9};
++  for(unsigned failedcopy=0;failedcopy<3;failedcopy++)for(unsigned half=0;half<2;half++){
++   reset();for(unsigned c=0;c<3;c++)set(table(&s,disk,c),12,entry,77+c);
++   memcpy(expected,disk,sizeof(disk));for(unsigned c=0;c<failedcopy;c++)set(table(&s,expected,c),12,entry,123);
++   fail_sector=start+failedcopy*3+(offset(12,entry)>>9)+half;
++   assert(fat_access(&s,entry,123)==0);released();assert(!memcmp(expected,disk,sizeof(disk)));cases++;
++  }
++ }
++#endif
++ puts("PASS actual fat_access: per-copy entry writes, original return value, neighbor preservation, 512/1024 sectors, bounded mappings and read-failure cleanup");
++ printf("%u cases\n",cases);
++}
+diff --git a/tests/fat-names/run.py b/tests/fat-names/run.py
+new file mode 100644
+index 00000000..26bd7c9e
+--- /dev/null
++++ b/tests/fat-names/run.py
+@@ -0,0 +1,16 @@
++from pathlib import Path
++import subprocess,tempfile
++p=Path(__file__).resolve().parent;r=p.parents[1]
++with tempfile.TemporaryDirectory(prefix='elks-fat-names-') as d:
++ t=Path(d)
++ s=(r/'elks/fs/msdos/dir.c').read_text();s=s[s.index('static int FATPROC\nunicode_to_ascii'):]
++ (t/'dir-under-test.c').write_text(s)
++ s=(r/'elks/fs/msdos/namei.c').read_text();s=s[s.index('static int FATPROC compare'):s.index('\nint msdos_lookup')]
++ (t/'lookup-under-test.c').write_text(s)
++ s=(r/'elks/include/linuxmt/msdos_fs.h').read_text();s=s[s.index('struct msdos_dir_entry {'):s.index('\nstruct slot_info')]
++ # ELKS uses a 32-bit unsigned long; the Mac host uses 64 bits.
++ s=s.replace('unsigned long size;', 'uint32_t size;')
++ (t/'layout.h').write_text(s)
++ target=t/'test'
++ subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unknown-warning-option','-fsanitize=address,undefined','-fno-sanitize-recover=all','-I'+d,str(p/'test.c'),'-o',str(target)],check=True)
++ subprocess.run([str(target)],check=True)
+diff --git a/tests/fat-names/test.c b/tests/fat-names/test.c
+new file mode 100644
+index 00000000..f071d7fe
+--- /dev/null
++++ b/tests/fat-names/test.c
+@@ -0,0 +1,102 @@
++#include <assert.h>
++#include <stdint.h>
++#include <stdlib.h>
++#include <string.h>
++#include <stdio.h>
++#include <ctype.h>
++#include <errno.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#define FATPROC
++#define ASYNCIO_REENTRANT
++#define MAXNAMLEN 26
++#define MSDOS_NAME 11
++#define DELETED_FLAG 0xe5
++#define ATTR_EXT 15
++#define ATTR_VOLUME 8
++#define LAST_LONG_ENTRY 0x40
++#define MSDOS_ROOT_INO 1
++#define MSDOS_DOT ".          "
++#define MSDOS_DOTDOT "..         "
++#define debug_fat(...) ((void)0)
++typedef uint8_t __u8;
++typedef uint16_t __u16;
++typedef uint32_t __u32;
++#include "layout.h"
++struct inode { ino_t i_ino; unsigned i_mode; };
++struct file { off_t f_pos; };
++struct buffer_head { int unused; };
++typedef int (*filldir_t)(char *,char *,size_t,off_t,ino_t);
++static unsigned char entries[64][32];
++static size_t used;
++static struct buffer_head buffer;
++static ino_t msdos_get_entry(struct inode *dir,off_t *pos,struct buffer_head **bh,struct msdos_dir_entry **de)
++{
++ size_t i=(size_t)*pos/32;
++ if(i>=used)return (ino_t)-1L;
++ *de=(void*)entries[i];*bh=&buffer;*pos+=32;return i+100;
++}
++static ino_t msdos_parent_ino(struct inode *d,int lock){return 10;}
++static void unmap_brelse(struct buffer_head *b){(void)b;}
++static unsigned char get_fs_byte(const void *v){return *(const unsigned char*)v;}
++#include "dir-under-test.c"
++#include "lookup-under-test.c"
++static unsigned checksum(const char *s)
++{
++ unsigned char c=0;for(int i=0;i<11;i++)c=((c&1)<<7)+(c>>1)+(unsigned char)s[i];return c;
++}
++static void add(const char *name,const char *alias)
++{
++ size_t len=strlen(name),slots=(len+12)/13;
++ for(size_t slot=slots;slot;slot--){
++  struct msdos_dir_slot *d=(void*)entries[used++];unsigned short chars[13];
++  memset(d,0,sizeof(*d));d->id=slot|(slot==slots?0x40:0);d->attr=15;d->alias_checksum=checksum(alias);
++  for(size_t k=0;k<13;k++){size_t n=(slot-1)*13+k;chars[k]=n<len?(unsigned char)name[n]:n==len?0:0xffff;}
++  memcpy(d->name0_4,chars,10);memcpy(d->name5_10,chars+5,12);memcpy(d->name11_12,chars+11,4);
++ }
++ memcpy(entries[used++],alias,11);
++}
++static void reset(void){memset(entries,0,sizeof(entries));used=0;}
++static void scan(const char *expected,int type)
++{
++ struct { unsigned char before[8];char name[MAXNAMLEN];unsigned char after[8]; } out;
++ struct inode dir={9,S_IFDIR};struct buffer_head *bh=NULL;off_t pos=0,dirpos;ino_t ino;int n;
++ memset(&out,0xa5,sizeof(out));assert(msdos_get_entry_long(&dir,&pos,&bh,out.name,&n,&dirpos,&ino)==type);
++ assert(n==(int)strlen(expected)&&!memcmp(out.name,expected,n));
++ for(unsigned i=0;i<8;i++)assert(out.before[i]==0xa5&&out.after[i]==0xa5);
++}
++static void lookup(const char *name,int wanted)
++{
++ struct inode dir={9,S_IFDIR};struct buffer_head *bh=NULL;ino_t ino;
++ assert(msdos_find_long(&dir,name,strlen(name),&bh,&ino)==wanted);
++}
++static int filled;
++static char listed[MAXNAMLEN+1];
++static int fill(char *ctx,char *name,size_t n,off_t off,ino_t ino)
++{
++ assert(n<=MAXNAMLEN);memcpy(listed,name,n);listed[n]=0;filled++;return 0;
++}
++int main(void)
++{
++ int lengths[]={1,12,13,14,15,25,26,27,28,40,255};char name[256];
++ _Static_assert(sizeof(struct msdos_dir_entry)==32,"directory layout");
++ _Static_assert(sizeof(struct msdos_dir_slot)==32,"LFN layout");
++ for(unsigned j=0;j<sizeof(lengths)/sizeof(*lengths);j++){
++  int n=lengths[j];memset(name,'a',n);name[n]=0;reset();add(name,"REFERE~1TXT");
++  scan(n<=26?name:"refere~1.txt",n<=26?2:1);
++  lookup(n<=26?name:"refere~1.txt",0);
++  if(n>26)lookup(name,-ENOENT);
++  if(n>14&&n<=26){char prefix[15];memcpy(prefix,name,14);prefix[14]=0;lookup(prefix,-ENOENT);}
++  struct inode dir={9,S_IFDIR};struct file f={0};filled=0;
++  assert(msdos_readdir(&dir,&f,NULL,fill)==0&&filled==1);assert(!strcmp(listed,n<=26?name:"refere~1.txt"));
++ }
++ reset();add("IdenticalStart-one.txt","IDENTI~1TXT");add("IdenticalStart-two.txt","IDENTI~2TXT");
++ lookup("IdenticalStart-one.txt",0);lookup("IdenticalStart-two.txt",0);lookup("IdenticalStart",-ENOENT);
++ reset();add("12345678901234567890123456A.txt","LONGNA~1TXT");add("12345678901234567890123456B.txt","LONGNA~2TXT");
++ lookup("longna~1.txt",0);lookup("longna~2.txt",0);lookup("12345678901234567890123456",-ENOENT);
++ reset();add("Checksum Name.txt","CHECKS~1TXT");entries[0][13]^=1;scan("checks~1.txt",1);
++ reset();entries[used++][0]=0xe5;add("After Deleted Slot.txt","AFTERD~1TXT");scan("After Deleted Slot.txt",2);
++ reset();add("End of directory.txt","ENDOFD~1TXT");used--;struct inode dir={9,S_IFDIR};struct buffer_head *bh=NULL;off_t pos=0,dp;ino_t ino;int n;char out[MAXNAMLEN];
++ assert(msdos_get_entry_long(&dir,&pos,&bh,out,&n,&dp,&ino)==0);
++ puts("PASS actual FAT directory/lookup: 11 length boundaries, alias fallback, prefix collisions, readdir bounds, checksum/deleted/end cases");
++}
+diff --git a/tests/fat32-access/run.py b/tests/fat32-access/run.py
+new file mode 100644
+index 00000000..46f105c6
+--- /dev/null
++++ b/tests/fat32-access/run.py
+@@ -0,0 +1,14 @@
++from pathlib import Path
++import subprocess,tempfile,sys,resource
++p=Path(__file__).resolve().parent;r=p.parents[1]
++source=Path(sys.argv[1]) if len(sys.argv)>1 else r/'elks/fs/msdos/fat.c'
++resource.setrlimit(resource.RLIMIT_CORE,(0,0))
++with tempfile.TemporaryDirectory(prefix='elks-fat-mirror-') as d:
++ t=Path(d);s=source.read_text();s=s[s.index('cluster_t FATPROC fat_access'):s.index('\n\nvoid FATPROC cache_init')]
++ # ELKS unsigned long is 32 bits; the Mac host's is 64 bits.
++ s=s.replace('unsigned long','uint32_t')
++ (t/'fat-under-test.c').write_text(s)
++ for mode in ['all','fat32-only']:
++  exe=t/mode
++  subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-variable','-fsanitize=address,undefined','-fno-sanitize-recover=all','-I'+d]+(['-DFAT_BITS_32'] if mode=='fat32-only' else [])+[str(p/'test.c'),'-o',str(exe)],check=True)
++  subprocess.run([str(exe)],check=True)
+diff --git a/tests/fat32-access/test.c b/tests/fat32-access/test.c
+new file mode 100644
+index 00000000..7d03fabf
+--- /dev/null
++++ b/tests/fat32-access/test.c
+@@ -0,0 +1,104 @@
++#include <assert.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <string.h>
++#define FATPROC
++#define MSDOS_SB(s) (&(s)->fat)
++#define SECTOR_BITS_SB(s) ((s)->bits)
++#define SECTOR_SIZE_SB(s) (1u << (s)->bits)
++#define debug_fat(...) ((void)0)
++#define buffer_blocknr(b) ((b)->number)
++#define printk(...) ((void)0)
++typedef int32_t cluster_t;
++typedef uint32_t sector_t;
++struct super_block { struct { uint16_t fat_start,fat_length; uint8_t fats,fat_bits; } fat; unsigned bits; };
++struct buffer_head { unsigned number,refs,dirty; };
++static unsigned char disk[262144],expected[sizeof(disk)];
++static struct buffer_head buffers[sizeof(disk)/1024];
++static int fail_sector;
++static unsigned reads,live,maxlive;
++static struct buffer_head *msdos_sread(struct super_block *s,sector_t sec,void **data)
++{
++ reads++;
++ if ((int)sec==fail_sector)return NULL;
++ unsigned byte=sec<<s->bits;assert(byte+SECTOR_SIZE_SB(s)<=sizeof(disk));
++ struct buffer_head *bh=&buffers[byte/1024];bh->number=byte/1024;
++ bh->refs++;live++;if(live>maxlive)maxlive=live;
++ *data=disk+byte;return bh;
++}
++static void mark_buffer_dirty(struct buffer_head *b){assert(b->refs);b->dirty=1;}
++static void unmap_brelse(struct buffer_head *b){assert(b&&b->refs&&live);b->refs--;live--;}
++#include "fat-under-test.c"
++static void reset(void)
++{
++ for(unsigned i=0;i<sizeof(disk);i++)disk[i]=(unsigned char)(i*17+3);
++ memset(buffers,0,sizeof(buffers));fail_sector=-1;reads=live=maxlive=0;
++}
++static unsigned offset(unsigned bits,unsigned entry){return bits==12?entry+entry/2:entry*(bits/8);}
++static void set(unsigned char *p,unsigned bits,unsigned entry,uint32_t value)
++{
++ unsigned n=offset(bits,entry);
++ if(bits==12){if(entry&1){p[n]=(p[n]&15)|((value&15)<<4);p[n+1]=value>>4;}else{p[n]=value;p[n+1]=(p[n+1]&240)|((value>>8)&15);}}
++ else for(unsigned i=0;i<bits/8;i++)p[n+i]=value>>(i*8);
++}
++static unsigned char *table(struct super_block *s,unsigned char *base,unsigned copy)
++{return base+((s->fat.fat_start+copy*s->fat.fat_length)<<s->bits);}
++static void released(void){assert(live==0);for(unsigned i=0;i<sizeof(buffers)/sizeof(*buffers);i++)assert(!buffers[i].refs);assert(maxlive<=2);}
++int main(void)
++{
++ unsigned cases=0;
++ for(unsigned bits=12;bits<=32;bits=bits==12?16:bits==16?32:33){
++#ifdef FAT_BITS_32
++  if(bits!=32)continue;
++#endif
++  for(unsigned sectorbits=9;sectorbits<=10;sectorbits++)for(unsigned copies=1;copies<=3;copies++){
++   struct super_block s={{1,16,copies,bits},sectorbits};
++   unsigned entries[]={2,3,127,255,341,682,683,1365};
++   for(unsigned j=0;j<sizeof(entries)/sizeof(*entries);j++)for(unsigned v=0;v<3;v++){
++    unsigned entry=entries[j];uint32_t value=v==0?0:v==1?123:bits==12?0xff8:bits==16?0xfff8:0xffffff8;
++    reset();for(unsigned c=0;c<copies;c++)set(table(&s,disk,c),bits,entry,77+c);
++    memcpy(expected,disk,sizeof(disk));for(unsigned c=0;c<copies;c++)set(table(&s,expected,c),bits,entry,value);
++    assert(fat_access(&s,entry,value)==77);assert(!memcmp(expected,disk,sizeof(disk)));released();
++    unsigned before=reads;assert(fat_access(&s,entry,-1)==(v==2?-1:(int32_t)value));released();
++    assert(reads-before<=2);cases++;
++   }
++   /* Read-only access must never fetch a mirror or dirty any buffer. */
++   reset();set(table(&s,disk,0),bits,2,88);memcpy(expected,disk,sizeof(disk));fail_sector=s.fat.fat_start+s.fat.fat_length;
++   assert(fat_access(&s,2,-1)==88);assert(reads==1&&!memcmp(expected,disk,sizeof(disk)));released();
++   for(unsigned i=0;i<sizeof(buffers)/sizeof(*buffers);i++)assert(!buffers[i].dirty);
++   for(unsigned failedcopy=0;failedcopy<copies;failedcopy++){
++    reset();for(unsigned c=0;c<copies;c++)set(table(&s,disk,c),bits,2,77+c);
++    memcpy(expected,disk,sizeof(disk));for(unsigned c=0;c<failedcopy;c++)set(table(&s,expected,c),bits,2,123);
++    fail_sector=s.fat.fat_start+failedcopy*s.fat.fat_length;
++    assert(fat_access(&s,2,123)==0);released();assert(!memcmp(expected,disk,sizeof(disk)));cases++;
++   }
++  }
++ }
++#ifndef FAT_BITS_32
++ /* FAT12 sector straddles: two reads can share one 1K buffer or use two. */
++ for(unsigned start=1;start<=2;start++)for(unsigned entry=341;entry<=682;entry+=341){
++  struct super_block s={{start,3,3,12},9};
++  for(unsigned failedcopy=0;failedcopy<3;failedcopy++)for(unsigned half=0;half<2;half++){
++   reset();for(unsigned c=0;c<3;c++)set(table(&s,disk,c),12,entry,77+c);
++   memcpy(expected,disk,sizeof(disk));for(unsigned c=0;c<failedcopy;c++)set(table(&s,expected,c),12,entry,123);
++   fail_sector=start+failedcopy*3+(offset(12,entry)>>9)+half;
++   assert(fat_access(&s,entry,123)==0);released();assert(!memcmp(expected,disk,sizeof(disk)));cases++;
++  }
++ }
++#endif
++ /* Each FAT32 copy owns its reserved high nibble; never copy it from FAT 0. */
++ for(unsigned hi=0;hi<16;hi++)for(unsigned sectorbits=9;sectorbits<=10;sectorbits++)for(unsigned copies=1;copies<=3;copies++){
++  struct super_block s={{1,16,copies,32},sectorbits};
++  const uint32_t values[]={0,123,0x0ffffff7,0x0ffffff8,0xf000004d};
++  for(unsigned v=0;v<sizeof(values)/sizeof(*values);v++){
++   reset();for(unsigned c=0;c<copies;c++)set(table(&s,disk,c),32,127,((hi+c)%16u<<28)|77);
++   memcpy(expected,disk,sizeof(disk));assert(fat_access(&s,127,-1)==77);assert(!memcmp(expected,disk,sizeof(disk)));released();
++   for(unsigned c=0;c<copies;c++)set(table(&s,expected,c),32,127,((hi+c)%16u<<28)|(values[v]&0x0fffffff));
++   assert(fat_access(&s,127,values[v])==77);assert(!memcmp(expected,disk,sizeof(disk)));released();
++   uint32_t value=values[v]&0x0fffffff;
++   assert(fat_access(&s,127,-1)==(value>=0x0ffffff8?-1:(int32_t)value));released();cases++;
++  }
++ }
++ puts("PASS actual fat_access: per-copy entry writes, original return value, neighbor preservation, 512/1024 sectors, bounded mappings and read-failure cleanup");
++ printf("%u cases\n",cases);
++}
+diff --git a/tests/ssd-lifecycle/run.py b/tests/ssd-lifecycle/run.py
+new file mode 100644
+index 00000000..9c885fcd
+--- /dev/null
++++ b/tests/ssd-lifecycle/run.py
+@@ -0,0 +1,10 @@
++from pathlib import Path
++import subprocess,tempfile
++p=Path(__file__).resolve().parent;source=p.parents[1]/'elks/arch/i86/drivers/block/ssd.c'
++# Preserve the actual function bodies; substitute only platform declarations.
++text='\n'.join(x for x in source.read_text().splitlines() if not x.startswith('#include'))
++with tempfile.TemporaryDirectory(prefix='elks-ssd-test-') as d:
++ t=Path(d);(t/'ssd-master-under-test.c').write_text(text)
++ for ro in [0,1]:
++  target=t/('test'+str(ro));subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-function','-fsanitize=address,undefined','-DTEST_RO='+str(ro),'-I'+d,str(p/'test-master.c'),'-o',str(target)],check=True)
++  subprocess.run([str(target)],check=True)
+diff --git a/tests/ssd-lifecycle/test-master.c b/tests/ssd-lifecycle/test-master.c
+new file mode 100644
+index 00000000..0ec28bd5
+--- /dev/null
++++ b/tests/ssd-lifecycle/test-master.c
+@@ -0,0 +1,93 @@
++#include <stdint.h>
++#include <assert.h>
++#include <stdio.h>
++#include <errno.h>
++#include <stddef.h>
++typedef uint32_t sector_t;
++typedef uint32_t jiff_t;
++typedef unsigned long ramdesc_t;
++typedef unsigned kdev_t;
++struct inode { kdev_t i_rdev; int32_t i_size; };
++struct file { unsigned f_mode; };
++struct file_operations { void *seek; int (*read)(void); int (*write)(void); void *readdir,*select; int (*ioctl)(struct inode*,struct file*,unsigned,unsigned); int (*open)(struct inode*,struct file*); void (*release)(struct inode*,struct file*); };
++struct request { unsigned rq_dev; unsigned char rq_cmd; sector_t rq_sector; unsigned short rq_nr_sectors; char *rq_buffer; ramdesc_t rq_seg; };
++struct blk_dev_struct { void (*request_fn)(void); };
++static struct blk_dev_struct blk_dev[3];
++static struct request *request_head;
++#define READ 0
++#define WRITE 1
++#define SSD_MAJOR 2
++#define MKDEV(m,n) (((m)<<8)|(n))
++#define MINOR(d) ((d)&255)
++#define DEVICE_NAME "ssd"
++#define DEVICE_REQUEST do_ssd_request
++#define CURRENT request_head
++#define CHECK_REQUEST(r) ((void)(r))
++#define INITPROC
++#define debug_blk(...) ((void)0)
++#define printk(...) ((void)0)
++#define SD_FIXED_SECTOR_SIZE 512
++#define SSD_READ_ONLY 1
++#define SSD_MAY_SLEEP 2
++struct ssd_lifecycle { unsigned flags; int (*open)(unsigned mode); void (*release)(void); };
++static void do_ssd_request(void);
++static int hook_open(unsigned mode);
++static void hook_release(void);
++static int reads,writes,completed,last_ok,releases,open_mode,fail_read;
++static sector_t capacity=100;
++static struct inode inode={MKDEV(SSD_MAJOR,0),0};
++static struct file file={1};
++const struct ssd_lifecycle ssd_lifecycle={TEST_RO?SSD_READ_ONLY|SSD_MAY_SLEEP:0,TEST_RO?hook_open:NULL,TEST_RO?hook_release:NULL};
++static int block_read(void){return 0;}
++static int block_write(void){return 0;}
++static int register_blkdev(int major,const char *name,struct file_operations *fops){(void)major;(void)name;(void)fops;return 0;}
++static void fsync_dev(kdev_t d){(void)d;}
++static void invalidate_inodes(kdev_t d){(void)d;}
++static void invalidate_buffers(kdev_t d){(void)d;}
++static void end_request(int ok){completed++;last_ok=ok;request_head=NULL;}
++static sector_t ssddev_init(void){return capacity;}
++static int ssddev_read(sector_t l,char *b,ramdesc_t s){(void)l;(void)b;(void)s;reads++;return !fail_read;}
++static int ssddev_write(sector_t l,char *b,ramdesc_t s){(void)l;(void)b;(void)s;writes++;return 1;}
++static int ssddev_ioctl(struct inode *i,struct file*f,unsigned c,unsigned a){(void)i;(void)f;(void)c;(void)a;return -EINVAL;}
++#include "ssd-master-under-test.c"
++static int hook_open(unsigned mode)
++{
++ assert(mode == file.f_mode);
++ assert(ssd_open(&inode,&file)==-EBUSY);
++ if(open_mode==1)return -EIO;
++ ssd_num_sects=open_mode==2?0:capacity;ssd_initialized=1;return 0;
++}
++static void hook_release(void)
++{
++ releases++;assert(ssd_open(&inode,&file)==-EBUSY);
++ ssd_initialized=0;ssd_num_sects=0;
++}
++static void request(unsigned cmd,uint32_t start,unsigned short n,int ok)
++{
++ static char buf[2048];struct request r={MKDEV(SSD_MAJOR,0),(unsigned char)cmd,start,n,buf,0};
++ request_head=&r;completed=0;do_ssd_request();assert(!request_head&&completed==1&&last_ok==ok);
++}
++int main(void)
++{
++ ssd_init();assert((ssd_fops.write==NULL)==TEST_RO);
++ if(TEST_RO) {
++  file.f_mode=2;assert(ssd_open(&inode,&file)==-EROFS);file.f_mode=1;
++  open_mode=1;assert(ssd_open(&inode,&file)==-EIO);assert(!access_count&&!lifecycle_busy);
++  open_mode=2;assert(ssd_open(&inode,&file)==-ENODATA);assert(!access_count&&!lifecycle_busy&&releases==1);
++  open_mode=0;
++ }
++ assert(ssd_open(&inode,&file)==0);assert(access_count==1&&inode.i_size==51200);
++ assert(ssd_open(&inode,&file)==0);assert(access_count==2);
++ ssd_initialized=1;
++ request(READ,0,2,1);assert(reads==2);
++ request(READ,100,1,0);request(READ,99,2,0);request(READ,0,0,0);request(3,0,1,0);assert(reads==2);
++ ssd_num_sects=0xffffffffu;request(READ,0xfffffffeu,2,0);assert(reads==2);ssd_num_sects=100;
++ request(WRITE,0,1,TEST_RO?0:1);assert(writes==(TEST_RO?0:1));
++ fail_read=1;request(READ,0,2,0);assert(reads==3);fail_read=0;
++ ssd_release(&inode,&file);assert(access_count==1);
++ ssd_release(&inode,&file);assert(!access_count&&!lifecycle_busy);
++ if(TEST_RO)assert(releases==2);
++ capacity=0x400000u;ssd_num_sects=capacity;
++ assert(ssd_open(&inode,&file)==0);assert(inode.i_size==0x7fffffffL);ssd_release(&inode,&file);
++ printf("PASS real SSD master: %s lifecycle, reentry, bounds, read/write policy, failed request and size cap\n",TEST_RO?"read-only":"legacy writable");
++}
+diff --git a/tests/ssd-partitions/run.py b/tests/ssd-partitions/run.py
+new file mode 100644
+index 00000000..134af987
+--- /dev/null
++++ b/tests/ssd-partitions/run.py
+@@ -0,0 +1,11 @@
++from pathlib import Path
++import subprocess,tempfile
++p=Path(__file__).resolve().parent;repo=p.parents[1]
++with tempfile.TemporaryDirectory(prefix='ssd-partitions-') as d:
++ t=Path(d)
++ for name in ['ssd','genhd']:
++  s=(repo/('elks/arch/i86/drivers/block/'+name+'.c')).read_text()
++  (t/(name+'-under-test.c')).write_text('\n'.join(x for x in s.splitlines() if not x.startswith('#include')))
++ target=t/'test'
++ subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-function','-Wno-unused-variable','-fsanitize=address,undefined','-I'+d,str(p/'test.c'),'-o',str(target)],check=True)
++ subprocess.run([str(target)],check=True)
+diff --git a/tests/ssd-partitions/test.c b/tests/ssd-partitions/test.c
+new file mode 100644
+index 00000000..a9b7cbaa
+--- /dev/null
++++ b/tests/ssd-partitions/test.c
+@@ -0,0 +1,150 @@
++#include <stdint.h>
++#include <assert.h>
++#include <stdio.h>
++#include <errno.h>
++#include <stddef.h>
++#include <stdlib.h>
++#include <string.h>
++#define TEST_RO 1
++typedef uint32_t sector_t;
++typedef uint32_t jiff_t;
++typedef unsigned long ramdesc_t;
++typedef unsigned kdev_t;
++struct inode { kdev_t i_rdev; int32_t i_size; };
++struct file { unsigned f_mode; };
++struct file_operations { void *seek; int (*read)(void); int (*write)(void); void *readdir,*select; int (*ioctl)(struct inode*,struct file*,unsigned,unsigned); int (*open)(struct inode*,struct file*); void (*release)(struct inode*,struct file*); };
++struct request { unsigned rq_dev; unsigned char rq_cmd; sector_t rq_sector; unsigned short rq_nr_sectors; char *rq_buffer; ramdesc_t rq_seg; };
++struct blk_dev_struct { void (*request_fn)(void); };
++static struct blk_dev_struct blk_dev[3];
++static struct request *request_head;
++#define READ 0
++#define WRITE 1
++#define SSD_MAJOR 2
++#define MKDEV(m,n) (((m)<<8)|(n))
++#define MINOR(d) ((d)&255)
++#define DEVICE_NAME "ssd"
++#define DEVICE_REQUEST do_ssd_request
++#define CURRENT request_head
++#define CHECK_REQUEST(r) ((void)(r))
++#define INITPROC
++#define debug_blk(...) ((void)0)
++#define printk(...) ((void)0)
++#define SD_FIXED_SECTOR_SIZE 512
++#define SSD_READ_ONLY 1
++#define SSD_MAY_SLEEP 2
++struct ssd_lifecycle { unsigned flags; int (*open)(unsigned mode); void (*release)(void); };
++static void do_ssd_request(void);
++static int hook_open(unsigned mode);
++static void hook_release(void);
++static int reads,writes,completed,last_ok,releases,open_mode,fail_read;
++static sector_t capacity=200;
++static sector_t last_lba;
++static struct inode inode={MKDEV(SSD_MAJOR,0),0};
++static struct file file={1};
++const struct ssd_lifecycle ssd_lifecycle={TEST_RO?SSD_READ_ONLY|SSD_MAY_SLEEP:0,TEST_RO?hook_open:NULL,TEST_RO?hook_release:NULL};
++static int block_read(void){return 0;}
++static int block_write(void){return 0;}
++static int register_blkdev(int major,const char *name,struct file_operations *fops){(void)major;(void)name;(void)fops;return 0;}
++static void fsync_dev(kdev_t d){(void)d;}
++static void invalidate_inodes(kdev_t d){(void)d;}
++static void invalidate_buffers(kdev_t d){(void)d;}
++static void end_request(int ok){completed++;last_ok=ok;request_head=NULL;}
++static sector_t ssddev_init(void){return capacity;}
++static int ssddev_read(sector_t l,char *b,ramdesc_t s){last_lba=l;(void)b;(void)s;reads++;return !fail_read;}
++static int ssddev_write(sector_t l,char *b,ramdesc_t s){(void)l;(void)b;(void)s;writes++;return 1;}
++static int ssddev_ioctl(struct inode *i,struct file*f,unsigned c,unsigned a){(void)i;(void)f;(void)c;(void)a;return -EINVAL;}
++#define CONFIG_SSD_PARTITIONS 1
++#define GENPROC
++#define NOPART ((sector_t)0xffffffffu)
++#define SETUP_PART_OFFSETLO 0
++#define SETUP_PART_OFFSETHI 0
++#define DOS_EXTENDED_PARTITION 5
++#define LINUX_EXTENDED_PARTITION 0x85
++#define TEST_SECTORS 200
++struct partition { unsigned char boot_ind,head,sector,cyl,sys_ind,end_head,end_sector,end_cyl; sector_t start_sect,nr_sects; } __attribute__((packed));
++struct hd_struct { sector_t start_sect,nr_sects; };
++struct drive_infot { unsigned short cylinders; int sectors,heads,sector_size,fdtype; };
++struct gendisk { int major; const char *major_name; int minor_shift,max_partitions,num_drives; struct hd_struct *part; int nr_hd; struct drive_infot *drive_info; };
++typedef unsigned long block_t;
++struct buffer_head { char *b_data; };
++static unsigned char media[TEST_SECTORS][512];
++static int read_failure, scan_reads;
++static struct buffer_head *bread(kdev_t,block_t);
++static void map_buffer(struct buffer_head *b) { (void)b; }
++static void unmap_brelse(struct buffer_head *b) { free(b); }
++int scan_partitions(struct gendisk *,unsigned int);
++#include "ssd-under-test.c"
++static struct buffer_head *bread(kdev_t dev,block_t blk)
++{
++ struct buffer_head *bh;sector_t base=ssd_part[MINOR(dev)].start_sect;
++ ++scan_reads;
++ if (read_failure || blk || base>=TEST_SECTORS) return NULL;
++ bh=malloc(sizeof(*bh));bh->b_data=(char*)media[base];return bh;
++}
++#include "genhd-under-test.c"
++static int hook_open(unsigned mode)
++{
++ assert(mode == file.f_mode);
++ assert(ssd_open(&inode,&file)==-EBUSY);
++ if(open_mode==1)return -EIO;
++ ssd_num_sects=open_mode==2?0:capacity;ssd_initialized=1;return 0;
++}
++static void hook_release(void)
++{
++ releases++;assert(ssd_open(&inode,&file)==-EBUSY);
++ ssd_initialized=0;ssd_num_sects=0;
++}
++static void request(unsigned cmd,uint32_t start,unsigned short n,int ok)
++{
++ static char buf[2048];struct request r={MKDEV(SSD_MAJOR,0),(unsigned char)cmd,start,n,buf,0};
++ request_head=&r;completed=0;do_ssd_request();assert(!request_head&&completed==1&&last_ok==ok);
++}
++
++static void entry(unsigned lba,unsigned slot,unsigned type,uint32_t start,uint32_t size)
++{
++ struct partition *p=(void*)(media[lba]+446+slot*16);
++ p->sys_ind=type;p->start_sect=start;p->nr_sects=size;
++ media[lba][510]=0x55;media[lba][511]=0xaa;
++}
++static void req(unsigned minor,sector_t start,unsigned short n,int ok)
++{
++ char buf[2048];struct request r={MKDEV(SSD_MAJOR,minor),READ,start,n,buf,0};
++ request_head=&r;completed=0;do_ssd_request();assert(!request_head&&completed==1&&last_ok==ok);
++}
++int main(void)
++{
++ struct inode part={MKDEV(SSD_MAJOR,1),0},bad={MKDEV(SSD_MAJOR,8),0};
++ struct drive_infot geometry={1,10,20,512,-1};
++ ssd_init();assert(ssd_open(&bad,&file)==-ENXIO);
++ entry(0,0,6,63,100);entry(0,1,6,0xfffffff0u,32);
++ /* Existing BIOS/ATA callers still initialize capacity from CHS. */
++ ssd_disk.drive_info=&geometry;init_partitions(&ssd_disk);
++ assert(ssd_part[0].nr_sects==200&&ssd_part[1].start_sect==63);
++ assert(ssd_open(&part,&file)==0&&part.i_size==51200);
++ assert(ssd_part[0].nr_sects==200&&ssd_part[1].start_sect==63);
++ req(1,0,2,1);assert(last_lba==64);
++ req(1,99,1,1);assert(last_lba==162);
++ req(1,99,2,0);req(1,100,1,0);req(8,0,1,0);req(2,0,1,0);
++ bad.i_rdev=MKDEV(SSD_MAJOR,2);assert(ssd_open(&bad,&file)==-ENXIO&&access_count==1);
++ assert(ssd_open(&inode,&file)==0&&inode.i_size==102400);
++ ssd_release(&part,&file);assert(access_count==1);
++ ssd_release(&inode,&file);assert(!access_count);
++ read_failure=1;assert(ssd_open(&part,&file)==-EIO&&!access_count&&!lifecycle_busy);
++ read_failure=0;memset(media,0,sizeof(media));assert(ssd_open(&part,&file)==-ENXIO&&!access_count);
++ assert(ssd_open(&inode,&file)==0);ssd_release(&inode,&file);
++ /* Existing parser handles an extended chain; cursor belongs to each scan. */
++ entry(0,0,5,20,160);entry(20,0,6,1,10);entry(20,1,5,40,100);
++ entry(60,0,6,1,10);
++ part.i_rdev=MKDEV(SSD_MAJOR,5);assert(ssd_open(&part,&file)==0);
++ assert(ssd_part[1].start_sect==NOPART&&ssd_part[5].start_sect==21&&ssd_part[6].start_sect==61);
++ req(5,0,1,1);assert(last_lba==21);req(6,0,1,1);assert(last_lba==61);
++ ssd_release(&part,&file);
++ /* Cyclic EBR without data must terminate; temporary node must not leak. */
++ memset(media,0,sizeof(media));entry(0,0,5,20,160);entry(20,0,5,0,160);
++ scan_reads=0;assert(ssd_open(&part,&file)==-ENXIO);assert(scan_reads<=9&&!access_count);
++ assert(ssd_part[5].start_sect==NOPART);
++ /* Out-of-device and overflow extents never reach the sector backend. */
++ memset(media,0,sizeof(media));entry(0,0,6,190,20);part.i_rdev=MKDEV(SSD_MAJOR,1);
++ assert(ssd_open(&part,&file)==-ENXIO);
++ puts("PASS actual SSD + genhd: primary/extended mapping, failed scans, reopen, invalid minors, bounds and cyclic EBR");
++}

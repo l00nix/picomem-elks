@@ -1,0 +1,157 @@
+diff --git a/elks/arch/i86/drivers/block/genhd.c b/elks/arch/i86/drivers/block/genhd.c
+index 6ab3666f..ef227fa3 100644
+--- a/elks/arch/i86/drivers/block/genhd.c
++++ b/elks/arch/i86/drivers/block/genhd.c
+@@ -33,7 +33,6 @@
+ #define START_SECT(p)   p->start_sect
+ 
+ int boot_partition;         /* MBR boot partition, if any*/
+-static unsigned int current_minor;
+ 
+ static void GENPROC print_minor_name(register struct gendisk *hd, unsigned int minor)
+ {
+@@ -117,21 +116,25 @@ static int GENPROC is_extended_partition(register struct partition *p)
+  * only for the actual data partitions.
+  */
+ 
+-static void GENPROC extended_partition(register struct gendisk *hd, kdev_t dev)
++static void GENPROC extended_partition(register struct gendisk *hd, kdev_t dev,
++                                   unsigned int *next_minor)
+ {
+     struct buffer_head *bh;
+     register struct partition *p;
+     struct hd_struct *hdp = &hd->part[MINOR(dev)];
+     sector_t first_sector, first_size, this_sector, this_size;
+     int i, mask = (1 << hd->minor_shift) - 1;
++    unsigned int links = 0, current_minor = *next_minor;
+ 
+     first_sector = hdp->start_sect;
+     first_size = hdp->nr_sects;
+     this_sector = first_sector;
+ 
+     while (1) {
+-        if (((current_minor & mask) == 0) || !(bh = bread(dev, (block_t) 0)))
+-            return;
++        if (++links > (unsigned int)hd->max_partitions || (current_minor & mask) == 0)
++            break;
++        if (!(bh = bread(dev, (block_t) 0)))
++            break;
+         /*
+          * This block is from a device that we're about to stomp on.
+          * So make sure nobody thinks this block is usable.
+@@ -199,10 +202,17 @@ static void GENPROC extended_partition(register struct gendisk *hd, kdev_t dev)
+         dev = MKDEV(hd->major, current_minor);
+         unmap_brelse(bh);
+     }
+-    return;
++    goto out;
+ 
+   done:
+     unmap_brelse(bh);
++  out:
++    /* A temporary EBR node is not a data partition. */
++    if (MINOR(dev) == current_minor && (current_minor & mask)) {
++        hd->part[current_minor].start_sect = NOPART;
++        hd->part[current_minor].nr_sects = 0;
++    }
++    *next_minor = current_minor;
+ }
+ 
+ static int GENPROC mbr_partition(struct gendisk *hd, kdev_t dev, sector_t first_sector)
+@@ -210,10 +220,10 @@ static int GENPROC mbr_partition(struct gendisk *hd, kdev_t dev, sector_t first_
+     register struct partition *p;
+     register struct hd_struct *hdp;
+     struct buffer_head *bh;
+-    unsigned int i, minor = current_minor;
++    unsigned int i, minor = MINOR(dev) + 1, current_minor = minor + 4;
+ 
+     if (!(bh = bread(dev, (block_t) 0)))
+-        return 0;
++        return -1;
+     map_buffer(bh);
+ 
+     /* In some cases we modify the geometry of the drive (below), so ensure
+@@ -240,7 +250,6 @@ out:
+         goto out;
+ 
+     /* current_minor is first "extra" minor (for extended partitions) */
+-    current_minor += 4;
+     p = (struct partition *) (bh->b_data + 0x1be);
+     for (i = 1; i <= 4; minor++, i++, p++) {
+         if (!NR_SECTS(p))
+@@ -260,7 +269,7 @@ out:
+             hdp->start_sect = first_sector + START_SECT(p);
+             hdp->nr_sects = NR_SECTS(p);
+ 
+-            extended_partition(hd, MKDEV(hd->major, minor));
++            extended_partition(hd, MKDEV(hd->major, minor), &current_minor);
+ 
+             /* then disable mbr partition number */
+             hdp->start_sect = NOPART;
+@@ -304,9 +313,10 @@ out:
+     return 1;
+ }
+ 
+-static void GENPROC check_partition(struct gendisk *hd, kdev_t dev)
++static int GENPROC check_partition(struct gendisk *hd, kdev_t dev)
+ {
+     sector_t first_sector = hd->part[MINOR(dev)].start_sect;
++    int ret;
+ 
+ #if UNUSED
+     /*
+@@ -321,10 +331,9 @@ static void GENPROC check_partition(struct gendisk *hd, kdev_t dev)
+ 
+     print_minor_name(hd, MINOR(dev));
+ 
+-    if (mbr_partition(hd, dev, first_sector))
+-        return;
+-
+-    printk(" no partitions\n");
++    ret = mbr_partition(hd, dev, first_sector);
++    if (!ret) printk(" no partitions\n");
++    return ret;
+ }
+ 
+ static void GENPROC clear_partition(struct gendisk *hd)
+@@ -350,13 +359,25 @@ static void GENPROC clear_partition(struct gendisk *hd)
+ 
+ }
+ 
++/* Scan a drive whose whole-device entry already contains its exact capacity.
++ * Return -1 on an unreadable MBR, 0 for no MBR, 1 for a parsed MBR. Partition
++ * offsets/counts remain subject to the caller's device-capacity checks. */
++int GENPROC scan_partitions(struct gendisk *hd, unsigned int drive)
++{
++    unsigned int first = drive << hd->minor_shift, i;
++
++    for (i = 1; i < (unsigned int)hd->max_partitions; ++i) {
++        hd->part[first + i].start_sect = NOPART;
++        hd->part[first + i].nr_sects = 0;
++    }
++    return check_partition(hd, MKDEV(hd->major, first));
++}
++
+ void GENPROC init_partitions(struct gendisk *hd)
+ {
+     clear_partition(hd);
+ 
+     for (int i = 0; i < hd->nr_hd; i++) {
+-        unsigned int first_minor = i << hd->minor_shift;
+-        current_minor = first_minor + 1;
+-        check_partition(hd, MKDEV(hd->major, first_minor));
++        scan_partitions(hd, i);
+     }
+ }
+diff --git a/elks/include/linuxmt/genhd.h b/elks/include/linuxmt/genhd.h
+index 2b2f90ab..340dfe35 100644
+--- a/elks/include/linuxmt/genhd.h
++++ b/elks/include/linuxmt/genhd.h
+@@ -103,6 +103,7 @@ extern unsigned char bios_drive_map[];  /* map drive to BIOS drivenum */
+ extern int boot_partition;              /* MBR boot partition, if any */
+ 
+ void GENPROC init_partitions(struct gendisk *dev);
++int GENPROC scan_partitions(struct gendisk *dev, unsigned int drive);
+ void GENPROC show_drive_info(struct drive_infot *drivep, const char *name, int drive,
+     int count, const char *eol);
+ 

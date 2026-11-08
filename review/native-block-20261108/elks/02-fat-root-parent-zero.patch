@@ -1,0 +1,15 @@
+diff --git a/elks/fs/msdos/namei.c b/elks/fs/msdos/namei.c
+index d9009401..c630b278 100644
+--- a/elks/fs/msdos/namei.c
++++ b/elks/fs/msdos/namei.c
+@@ -272,7 +272,9 @@ int msdos_mkdir(struct inode *dir,const const char *name,size_t len,mode_t mode)
+ 		goto mkdir_error;
+ 	unlock_creation();
+ 	dot->i_size = dir->i_size;
+-	dot->u.msdos_i.i_start = dir->u.msdos_i.i_start;
++	/* Use zero for a root-directory parent, including on FAT32. */
++	dot->u.msdos_i.i_start = dir->i_ino == MSDOS_ROOT_INO ?
++		0 : dir->u.msdos_i.i_start;
+ 	dot->i_dirt = 1;
+ 	inode->u.msdos_i.i_busy = 0;
+ 	iput(dot);

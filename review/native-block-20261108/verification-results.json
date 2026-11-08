@@ -1,0 +1,56 @@
+{
+  "elks": {
+    "fresh_index_replay": "PASS",
+    "matched_files": 52
+  },
+  "firmware": {
+    "fresh_index_replay": "PASS",
+    "matched_files": 7
+  },
+  "tinyusb-controller": {
+    "fresh_index_replay": "PASS",
+    "matched_files": 3
+  },
+  "tinyusb": {
+    "fresh_index_replay": "PASS",
+    "matched_files": 6
+  },
+  "tests": {
+    "block-write-errors": {
+      "exit_code": 0,
+      "log": "verification/block-write-errors.log"
+    },
+    "fat-fsinfo": {
+      "exit_code": 0,
+      "log": "verification/fat-fsinfo.log"
+    },
+    "fat-mirror": {
+      "exit_code": 0,
+      "log": "verification/fat-mirror.log"
+    },
+    "fat-names": {
+      "exit_code": 0,
+      "log": "verification/fat-names.log"
+    },
+    "fat32-access": {
+      "exit_code": 0,
+      "log": "verification/fat32-access.log"
+    },
+    "ssd-lifecycle": {
+      "exit_code": 0,
+      "log": "verification/ssd-lifecycle.log"
+    },
+    "ssd-partitions": {
+      "exit_code": 0,
+      "log": "verification/ssd-partitions.log"
+    },
+    "fat-scan": {
+      "exit_code": 0,
+      "log": "verification/fat-scan.log"
+    },
+    "transport": {
+      "exit_code": 0,
+      "log": "verification/transport.log"
+    }
+  }
+}

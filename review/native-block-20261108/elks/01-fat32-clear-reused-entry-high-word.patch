@@ -1,0 +1,12 @@
+diff --git a/elks/fs/msdos/namei.c b/elks/fs/msdos/namei.c
+index 6decbc74..d9009401 100644
+--- a/elks/fs/msdos/namei.c
++++ b/elks/fs/msdos/namei.c
+@@ -189,6 +189,7 @@ static int FATPROC msdos_create_entry(struct inode *dir,const char *name,int is_
+ 	memcpy(de->name,name,MSDOS_NAME);
+ 	de->attr = is_dir ? ATTR_DIR : ATTR_ARCH;
+ 	de->start = 0;
++	de->starthi = 0;
+ 	date_unix2dos(current_time(),&de->time,&de->date);
+ 	de->size = 0;
+ 	debug_fat("create_entry block write %lu\n", buffer_blocknr(bh));

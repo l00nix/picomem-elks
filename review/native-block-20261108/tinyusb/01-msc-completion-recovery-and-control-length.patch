@@ -1,0 +1,244 @@
+diff --git a/src/class/msc/msc_host.c b/src/class/msc/msc_host.c
+index eb69ae400..4ad1938e9 100644
+--- a/src/class/msc/msc_host.c
++++ b/src/class/msc/msc_host.c
+@@ -32,6 +32,9 @@
+ #include "host/usbh_pvt.h"
+ 
+ #include "msc_host.h"
++#ifdef PM_RAW_USB_CSW_RECOVERY
++#include "host/hcd.h"
++#endif
+ 
+ // Level where CFG_TUSB_DEBUG must be at least for this driver is logged
+ #ifndef CFG_TUH_MSC_LOG_LEVEL
+@@ -61,7 +64,15 @@ typedef struct {
+ 
+   // SCSI command data
+   uint8_t stage;
++#ifdef PM_RAW_USB_RO
++  bool raw_data_complete;
++#endif
+   void* buffer;
++#ifdef PM_RAW_USB_RW_LAB
++  xfer_result_t data_result;
++  uint32_t data_xferred;
++  uint8_t trace_stage_event, trace_ep, trace_count;
++#endif
+   tuh_msc_complete_cb_t complete_cb;
+   uintptr_t complete_arg;
+ 
+@@ -129,6 +140,43 @@ bool tuh_msc_ready(uint8_t dev_addr) {
+ //--------------------------------------------------------------------+
+ // PUBLIC API: SCSI COMMAND
+ //--------------------------------------------------------------------+
++#ifdef PM_RAW_USB_RW_LAB
++/* Same serialized USB task context. No endpoint action, recovery or retry. */
++uint32_t tuh_msc_raw_trace(uint8_t daddr, uint32_t tag) {
++  if (!daddr || daddr>CFG_TUH_DEVICE_MAX) return UINT32_MAX;
++  msch_interface_t* i=get_itf(daddr);
++  if (!i->configured || get_epbuf(daddr)->cbw.tag!=tag) return UINT32_MAX;
++  return (uint32_t)i->stage | (uint32_t)i->trace_stage_event<<8 |
++         (uint32_t)i->trace_ep<<16 | (uint32_t)i->trace_count<<24;
++}
++#endif
++
++#ifdef PM_RAW_USB_CSW_RECOVERY
++/* Only a completed, zero-byte CSW STALL on an associated cache query. */
++uint8_t tuh_msc_raw_stalled_csw_ep(uint8_t daddr, const msc_cbw_t *command) {
++  if (!daddr || daddr>CFG_TUH_DEVICE_MAX || !command) return 0;
++  msch_interface_t *i=get_itf(daddr);
++  msc_cbw_t *cbw=&get_epbuf(daddr)->cbw;
++  if (!i->configured || !i->mounted || i->stage!=MSC_STAGE_IDLE ||
++      !i->buffer || !i->complete_cb || memcmp(cbw,command,sizeof(*cbw)) ||
++      cbw->signature!=MSC_CBW_SIGNATURE || cbw->lun ||
++      cbw->dir!=TUSB_DIR_IN_MASK || cbw->total_bytes!=64 ||
++      (cbw->command[0]!=0x5a && cbw->command[0]!=0x1a) ||
++      i->data_result!=XFER_RESULT_SUCCESS || i->data_xferred>64 ||
++      i->trace_stage_event!=((MSC_STAGE_STATUS<<4)|XFER_RESULT_STALLED) ||
++      i->trace_ep!=i->ep_in || i->trace_count) return 0;
++  return i->ep_in;
++}
++/* Caller has completed CLEAR_FEATURE and still owns this command/deadline. */
++bool tuh_msc_raw_retry_csw(uint8_t daddr, const msc_cbw_t *command) {
++  uint8_t ep=tuh_msc_raw_stalled_csw_ep(daddr,command);
++  if (!ep || !hcd_edpt_clear_stall(usbh_get_rhport(daddr),daddr,ep)) return false;
++  msch_interface_t *i=get_itf(daddr);
++  i->stage=MSC_STAGE_STATUS;
++  return usbh_edpt_xfer(daddr,ep,(uint8_t*)&get_epbuf(daddr)->csw,sizeof(msc_csw_t));
++}
++#endif
++
+ static inline void cbw_init(msc_cbw_t* cbw, uint8_t lun) {
+   tu_memclr(cbw, sizeof(msc_cbw_t));
+   cbw->signature = MSC_CBW_SIGNATURE;
+@@ -150,6 +198,14 @@ bool tuh_msc_scsi_command(uint8_t daddr, msc_cbw_t const* cbw, void* data,
+   p_msc->complete_cb = complete_cb;
+   p_msc->complete_arg = arg;
+   p_msc->stage = MSC_STAGE_CMD;
++#ifdef PM_RAW_USB_RW_LAB
++  p_msc->data_result=XFER_RESULT_SUCCESS;
++  p_msc->data_xferred=0;
++  p_msc->trace_stage_event=p_msc->trace_ep=p_msc->trace_count=0xff;
++#endif
++#ifdef PM_RAW_USB_RO
++  p_msc->raw_data_complete = false;
++#endif
+ 
+   if (!usbh_edpt_xfer(daddr, p_msc->ep_out, (uint8_t*) &epbuf->cbw, sizeof(msc_cbw_t))) {
+     usbh_edpt_release(daddr, p_msc->ep_out);
+@@ -327,6 +383,12 @@ bool msch_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32
+   msc_cbw_t const * cbw = &epbuf->cbw;
+   msc_csw_t       * csw = &epbuf->csw;
+ 
++#ifdef PM_RAW_USB_RW_LAB
++  /* Observation only: retain the callback even if a later assertion fails. */
++  p_msc->trace_stage_event=(p_msc->stage<<4) | ((unsigned)event & 15);
++  p_msc->trace_ep=ep_addr;
++  p_msc->trace_count=xferred_bytes<255 ? xferred_bytes : 255;
++#endif
+   switch (p_msc->stage) {
+     case MSC_STAGE_CMD:
+       // Must be Command Block
+@@ -342,6 +404,19 @@ bool msch_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32
+       TU_ATTR_FALLTHROUGH; // fallthrough to status stage
+ 
+     case MSC_STAGE_DATA:
++#ifdef PM_RAW_USB_RW_LAB
++      /* No-data commands fall through here from CMD; they have no DATA bytes. */
++      if(p_msc->stage==MSC_STAGE_DATA) {
++        uint8_t ep_data=(cbw->dir & TUSB_DIR_IN_MASK)?p_msc->ep_in:p_msc->ep_out;
++        p_msc->data_result=ep_addr==ep_data?event:XFER_RESULT_FAILED;
++        p_msc->data_xferred=xferred_bytes;
++      }
++#endif
++#ifdef PM_RAW_USB_RO
++      p_msc->raw_data_complete = cbw->command[0] == SCSI_CMD_READ_10 &&
++          ep_addr == p_msc->ep_in && event == XFER_RESULT_SUCCESS &&
++          xferred_bytes == cbw->total_bytes;
++#endif
+       // Status stage
+       p_msc->stage = MSC_STAGE_STATUS;
+       TU_ASSERT(usbh_edpt_xfer(dev_addr, p_msc->ep_in, (uint8_t*) csw, (uint16_t) sizeof(msc_csw_t)));
+@@ -356,6 +431,17 @@ bool msch_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32
+             .cbw = cbw,
+             .csw = csw,
+             .scsi_data = p_msc->buffer,
++#ifdef PM_RAW_USB_RO
++            .raw_read_complete = p_msc->raw_data_complete &&
++                ep_addr == p_msc->ep_in && event == XFER_RESULT_SUCCESS &&
++                xferred_bytes == sizeof(msc_csw_t),
++#endif
++#ifdef PM_RAW_USB_RW_LAB
++            .data_result=p_msc->data_result,
++            .data_actual_len=p_msc->data_xferred,
++            .csw_result=ep_addr==p_msc->ep_in?event:XFER_RESULT_FAILED,
++            .csw_actual_len=xferred_bytes,
++#endif
+             .user_arg = p_msc->complete_arg
+         };
+         p_msc->complete_cb(dev_addr, &cb_data);
+diff --git a/src/class/msc/msc_host.h b/src/class/msc/msc_host.h
+index b5fd55547..035f06783 100644
+--- a/src/class/msc/msc_host.h
++++ b/src/class/msc/msc_host.h
+@@ -45,6 +45,13 @@ typedef struct {
+   msc_cbw_t const* cbw; // SCSI command
+   msc_csw_t const* csw; // SCSI status
+   void* scsi_data;      // SCSI Data
++#ifdef PM_RAW_USB_RW_LAB
++  xfer_result_t data_result, csw_result;
++  uint32_t data_actual_len, csw_actual_len;
++#endif
++#ifdef PM_RAW_USB_RO
++  bool raw_read_complete; /* exact successful DATA and CSW transport lengths */
++#endif
+   uintptr_t user_arg;   // user argument
+ }tuh_msc_complete_data_t;
+ 
+@@ -60,6 +67,16 @@ bool tuh_msc_mounted(uint8_t dev_addr);
+ 
+ // Check if the interface is currently ready or busy transferring data
+ bool tuh_msc_ready(uint8_t dev_addr);
++#ifdef PM_RAW_USB_RW_LAB
++/* Diagnostic only: low byte=current stage; then last stage/event, EP, count.
++ * Last stage/event is (stage<<4)|event. ff=no callback; count ff=255 or more.
++ * UINT32_MAX means no matching configured command. Never authorizes I/O. */
++uint32_t tuh_msc_raw_trace(uint8_t daddr, uint32_t tag);
++#ifdef PM_RAW_USB_CSW_RECOVERY
++uint8_t tuh_msc_raw_stalled_csw_ep(uint8_t daddr, const msc_cbw_t *command);
++bool tuh_msc_raw_retry_csw(uint8_t daddr, const msc_cbw_t *command);
++#endif
++#endif
+ 
+ // Get Max Lun
+ uint8_t tuh_msc_get_maxlun(uint8_t dev_addr);
+diff --git a/src/host/usbh.c b/src/host/usbh.c
+index 6bafde368..e641ab6bc 100644
+--- a/src/host/usbh.c
++++ b/src/host/usbh.c
+@@ -848,7 +848,13 @@ static bool usbh_control_xfer_cb (uint8_t daddr, uint8_t ep_addr, xfer_result_t
+               TU_LOG_USBH("[%u:%u] Control data:\r\n", rhport, daddr);
+               TU_LOG_MEM_USBH(ctrl_info->buffer, xferred_bytes, 2);
+             }
++#ifdef PM_RAW_USB_CSW_RECOVERY
++            /* No-DATA requests fall through from SETUP: its eight bytes
++             * are not payload bytes in the completed control transfer. */
++            ctrl_info->actual_len = request->wLength ? (uint16_t) xferred_bytes : 0;
++#else
+             ctrl_info->actual_len = (uint16_t) xferred_bytes;
++#endif
+ 
+             // ACK stage: toggle is always 1
+             _control_set_xfer_stage(CONTROL_STAGE_ACK);
+diff --git a/src/portable/raspberrypi/rp2040/hcd_rp2040.c b/src/portable/raspberrypi/rp2040/hcd_rp2040.c
+index cd8c905d5..c2d3a69c1 100644
+--- a/src/portable/raspberrypi/rp2040/hcd_rp2040.c
++++ b/src/portable/raspberrypi/rp2040/hcd_rp2040.c
+@@ -1,3 +1,6 @@
++#ifdef PM_RAW_USB_RP2_COMPARE
++#include "../../../../../../rawblock/rp2-upstream/hcd_rp2040.c"
++#else
+ /*
+  * The MIT License (MIT)
+  *
+@@ -651,3 +654,5 @@ bool hcd_edpt_clear_stall(uint8_t rhport, uint8_t dev_addr, uint8_t ep_addr) {
+ }
+ 
+ #endif
++
++#endif /* PM_RAW_USB_RP2_COMPARE */
+diff --git a/src/portable/raspberrypi/rp2040/rp2040_usb.c b/src/portable/raspberrypi/rp2040/rp2040_usb.c
+index 9d0bd762d..d62463937 100644
+--- a/src/portable/raspberrypi/rp2040/rp2040_usb.c
++++ b/src/portable/raspberrypi/rp2040/rp2040_usb.c
+@@ -1,3 +1,6 @@
++#ifdef PM_RAW_USB_RP2_COMPARE
++#include "../../../../../../rawblock/rp2-upstream/rp2040_usb.c"
++#else
+ /*
+  * The MIT License (MIT)
+  *
+@@ -380,3 +383,5 @@ static bool __tusb_irq_path_func(e15_is_critical_frame_period)(struct hw_endpoin
+ 
+ #endif // TUD_OPT_RP2040_USB_DEVICE_UFRAME_FIX
+ #endif
++
++#endif /* PM_RAW_USB_RP2_COMPARE */
+diff --git a/src/portable/raspberrypi/rp2040/rp2040_usb.h b/src/portable/raspberrypi/rp2040/rp2040_usb.h
+index d4d29a816..f49c15323 100644
+--- a/src/portable/raspberrypi/rp2040/rp2040_usb.h
++++ b/src/portable/raspberrypi/rp2040/rp2040_usb.h
+@@ -1,3 +1,6 @@
++#ifdef PM_RAW_USB_RP2_COMPARE
++#include "../../../../../../rawblock/rp2-upstream/rp2040_usb.h"
++#else
+ #ifndef RP2040_COMMON_H_
+ #define RP2040_COMMON_H_
+ 
+@@ -141,3 +144,5 @@ static inline uintptr_t hw_data_offset (uint8_t *buf)
+ extern const char *ep_dir_string[];
+ 
+ #endif
++
++#endif /* PM_RAW_USB_RP2_COMPARE */

@@ -1,3 +1,5 @@
+> **Historical picofs build kit.** The current experimental USB implementation uses ELKS's native SSD/block/FAT paths. See the [8 November source review](../review/native-block-20261108/README.md) for matching ELKS, PicoMEM and TinyUSB patches. The instructions and binaries below belong to the superseded file-service architecture.
+
 # Optional PicoMEM kernel extensions
 
 **Status, 2 November 2026:** the newer paired firmware/kernel candidate has
@@ -220,3 +222,4 @@ Long filenames remain a separate firmware-interface task.
 The [USB-write hardware results](../docs/HARDWARE-USB-RW-20261025.md) record
 passing native write tests and independent readback after copy, remount and
 normal reboot on the PPC512. USB is left mounted read/write; SD stays read-only.
+
