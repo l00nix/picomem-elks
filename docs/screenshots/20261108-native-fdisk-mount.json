@@ -1,0 +1,13 @@
+{
+  "source": "Unmodified live PPC512 B800 text video memory, read through ELKS /dev/kmem; rendered with previously captured PPC BIOS font",
+  "commands_on_console": "Existing user console: fdisk -l, mount -t msdos /dev/ssd1 /mnt/usb, mount",
+  "capture_actions": "Read mount table through telnet, dump 4000 bytes of video memory to internal /tmp, retrieve through FTP; no USB writes, remount, reboot, or console repaint",
+  "dimensions": [
+    640,
+    400
+  ],
+  "video_sha256": "22c6a121f2b7e509ca53193cb875055bca72a5ecb843e46b01e45b70fe1ab86c",
+  "font_sha256": "ddad441c6fd10808a4e94040609cd5471704eb59d18c5fcf6059c028fa8ccae6",
+  "image_sha256": "e98ac39a7e316dba7473f0b7f0a9c6c017c8fcca2a94525398f550866276c688",
+  "note": "Existing fdisk interpretation of the flat MINIX internal hda image prints bogus partition rows; preserved as actual output, not a USB partition error."
+}
