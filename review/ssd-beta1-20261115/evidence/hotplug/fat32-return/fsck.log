@@ -1,0 +1,7 @@
+** /Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-hotplug-20261115/fat32-return/fat32.img
+** Phase 1 - Preparing FAT
+** Phase 2 - Checking Directories
+** Phase 3 - Checking for Orphan Clusters
+Warning: Free space in FSInfo block is unset (should be 26950)
+Fix? no
+Warning: 19 files, 13475 KiB free (26950 clusters)

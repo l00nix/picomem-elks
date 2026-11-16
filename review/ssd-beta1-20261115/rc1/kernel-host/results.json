@@ -1,0 +1,48 @@
+{
+  "fat": "436 actual-source cases passed\n",
+  "raw": "80 raw block boundary cases passed\n",
+  "fsinfo": {
+    "passed": true,
+    "result": "PASS 31 FSInfo scenarios",
+    "actual_candidate_functions_extracted": true,
+    "sanitizers": [
+      "address",
+      "undefined"
+    ],
+    "source_sha256": "2791a4180d7508bc58b9a97703a9cb3da7968169366688752ce3a311ba84ed10"
+  },
+  "source_sha256": {
+    "block_dev.c": "a9298bf46212d524f2ea5697c827a78ee7cb5aaf008640fc71f8808f747d2272",
+    "buffer.c": "2f1b07084befd16c52c4c9eda917c80233ae95c8c4b63038f2a94444c864b491",
+    "devices.c": "6a8a37c62b229400323dbf4989ae458ce6c51117d7def34452d1dbfdd597a773",
+    "exec.c": "740f53117cc344d1ca1914ae39bd4fd7c8f9844ab421f606b138aaeb5e08c86f",
+    "exodecr.c": "a2c7af89af28a598ffe25b4716576b586ad9d234820e23e32564f596de22265c",
+    "fcntl.c": "2b5428ab4e9f4d03324015ae75ba4c1aeb5c816c7a41fd7af68caa00215ce041",
+    "file_table.c": "f84e14c491212158298a039891bc4d5f0ed1b094c928428e261b3724663392f4",
+    "inode.c": "3f2aa4f98b4ec7547c078a7f2ee85c0ab30d1a1b977ea26cc537e6bddfd2d4d7",
+    "ioctl.c": "cd85c9fa925a9a410e1b1a20cf9c0d9678b3233bb672a729ce85bfc10d673786",
+    "namei.c": "9daad329e20729de7888d0236b7be42163c8f0b2f104267a058b1823287e085c",
+    "open.c": "cd204c02db5ded8806897f00e05362756741a581e0c3314df764b0103ba97e13",
+    "pipe.c": "98f986163e8a5f07c94544ed017a5f0e9a3d542bb96d853481e33b3d5d050b3c",
+    "read_write.c": "614336e2c457782c21a2678511e7f29b4c68d2307f0648e565124178504fb994",
+    "readdir.c": "94d394cd865ba1a73c45f279b0f1606566dde03482e52569200bbd484844e6eb",
+    "select.c": "c878f68c53eb8972903e2cfe29b7e7423eb4a80e20f30712e8863dcdf62ea956",
+    "stat.c": "8f9abec0b7b20987074aa685f9683a3e4178d509d4ecf86fb2dd18e3292257dc",
+    "super.c": "41b895e7dc32f92f6af42d4a2834a03fefcfcccff3d41cbcd4e25d23399b6e0c",
+    "minix/bitmap.c": "d8228efe041f80997be79f27efc4bf7c0fde7063c97c9054fad94efcc36bc96b",
+    "minix/dir.c": "967b3140a0fbccff00b60a4dfb0c25ccc9b0721302bd32bb61eda58ea178a677",
+    "minix/file.c": "64e1b1e18e681eb34adaef9df513c35a0c05074f8eeec9d2788ea4a94b7634e3",
+    "minix/inode.c": "1742ed9c6376300d69b2e03775a0325b8f2c41ddc62ec16e71d012f80d0e62bb",
+    "minix/namei.c": "1ac046e2286cebeb1be05bbc3c8251cd9f50eb7ab699e0cf0da12cce9b6000f0",
+    "minix/symlink.c": "8266b7495d6fac3e1c0a340ed2fda900c8e35be280dfb29abe8f0191c5f63fd9",
+    "minix/truncate.c": "1a739b7fe94b7facc15ce79b3e3c4d79f0ef31671aab7e2ba86820312eee12fa",
+    "msdos/dir.c": "e12e0aae2294b66bba3a5a691741c0ffaacbf556c7f9c1dc159e5be1a692d549",
+    "msdos/fat.c": "82a623029e13f39af435c91b476eed09007184c2f38451703b818639f574f890",
+    "msdos/file.c": "147caed55579789196e550833d3bd0af32605144f7107173f39aa072055b1fe6",
+    "msdos/inode.c": "2791a4180d7508bc58b9a97703a9cb3da7968169366688752ce3a311ba84ed10",
+    "msdos/misc.c": "f79d5eea91b4c065c3cb793c211f21b72571ae8c7ed5be3874d509b384da8cc8",
+    "msdos/namei.c": "e6d57b986da9987221a18e91c063f6affc3adcf6615c0063bce2638b69386afb",
+    "romfs/romfs.c": "184be938db235ccd799e01aca5cde67a8562091a5d8c31612fb7e0fac361244f"
+  },
+  "host_model": "Actual functions; size_t u16 and unsigned long u32 adaptations for target widths, mocked storage; ASan/UBSan."
+}

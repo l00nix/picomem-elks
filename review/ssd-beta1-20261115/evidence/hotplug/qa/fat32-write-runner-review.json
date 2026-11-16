@@ -1,0 +1,21 @@
+{
+  "approved": true,
+  "source_sha256": "24c69e9f1b20a27c96c7043ec43692128a946a22575b985cfaf0f0b8fb7cd1d0",
+  "fat16_independent_closure_passed": true,
+  "direct_helper_sha256": "66c9a124b223176793d2524af9be45b18a7188ebd225e21f773c3c65cb8a7b9f",
+  "echo_and_completion_timeout_seconds": 300,
+  "offline_actual_control_flow_passed": true,
+  "command_groups": 55,
+  "commands": 63,
+  "capture_records": 23,
+  "max_command_length": 60,
+  "unique_labels": true,
+  "per_mutation_diagnostics": true,
+  "ftp_closed_before_unmount": true,
+  "scope": "One isolated hp1115 workload on currently attached PMBLUE after a fresh read-only FAT32 identity/file baseline; retain originals, one28-byte proof only after transient files removed; all eight small originals before/after; full34MiB filler deferred to independent48MiB image check.",
+  "limitations": [
+    "Mocked control flow checks sequencing, not device or filesystem behavior.",
+    "No automatic retry or cleanup after failure; preserve mounted/write state for diagnosis.",
+    "Write permission applies only to the bounded existing authorized test scope; no format, repair, or production-source changes."
+  ]
+}

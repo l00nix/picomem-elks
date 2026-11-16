@@ -1,0 +1,471 @@
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -22,6 +22,11 @@
+ #set(TINYUSB_PATH "${CMAKE_SOURCE_DIR}/../pico-sdk/lib/tinyusb")
+ 
+ cmake_minimum_required(VERSION 3.13)
++
++option(PM_USB_SSD "Read-only raw USB backend (excludes USB FatFs)" OFF)
++if(PM_USB_SSD)
++    add_compile_definitions(PM_USB_SSD=1)
++endif()
+ 
+ set(CMAKE_C_STANDARD 11)
+ set(CMAKE_CXX_STANDARD 17)
+--- a/src/USB_Host_Driver2/CMakeLists.txt
++++ b/src/USB_Host_Driver2/CMakeLists.txt
+@@ -31,7 +31,6 @@
+     ${CMAKE_CURRENT_LIST_DIR}/hid/devices/vendors/microsoft/ms_sidewinder_dualstrike.c
+     ${CMAKE_CURRENT_LIST_DIR}/hid/devices/vendors/microsoft/ms_sidewinder_commander.c
+     ${CMAKE_CURRENT_LIST_DIR}/xinput/oldxinput.c
+-    ${CMAKE_CURRENT_LIST_DIR}/../USB_Host_Driver/msc/fatfs_usb.c
+     ${CMAKE_CURRENT_LIST_DIR}/../USB_Host_Driver/usb.c    
+     )
+ 
+@@ -41,3 +40,9 @@
+ target_compile_definitions(tinyusb_config INTERFACE
+     CFG_TUSB_CONFIG_FILE="../../../USB_Host_Driver/tusb_config.h"
+ )
++
++if(PM_USB_SSD)
++    target_sources(USB_Host_Driver INTERFACE ${CMAKE_CURRENT_LIST_DIR}/../pm_usb_ssd.cpp)
++else()
++    target_sources(USB_Host_Driver INTERFACE ${CMAKE_CURRENT_LIST_DIR}/../USB_Host_Driver/msc/fatfs_usb.c)
++endif()
+--- a/src/isa_devices/dev_picomem_io.cpp
++++ b/src/isa_devices/dev_picomem_io.cpp
+@@ -28,6 +28,7 @@
+ #include "dev_picomem_io.h"
+ #include "bus_irq.h"
+ #include "isa_dma.h"
++#include "hardware/sync.h"
+ 
+ volatile uint8_t PM_TestRead=0;
+ uint8_t PM_CMDState=0;  //Command State Machine State (0 : Unlocked; 1 : Intermediate : 2: locked;)
+@@ -36,6 +37,7 @@
+ volatile uint16_t PM_TR_CNT_H=0;
+ bool PM_RE_ISREAD;
+ bool PM_TR_IS16B;
++static spin_lock_t * volatile pm_transfer_lock;
+ uint8_t * PM_TR_PTR;                 // Pointer to the table used by the IO Read / Write command
+ 
+ 
+@@ -64,39 +66,38 @@
+ // 8Bit IOW Ok
+ // dev_pmio_do_rw : Copy a buffer from PicoMEM to PC via I/O ports
+ // This is executed during a commad, to transfer data.
+-void dev_pmio_do_rw(uint8_t * buffer,uint16_t size,bool isread, bool do16bit)
+-{
+-
+-// Buffer pointer and size
+-
+-PM_INFO("Transfer %d : ",size);
+-
+-
+-// Transfer type
+-PM_RE_ISREAD=isread;
+-PM_TR_IS16B=do16bit;
+-
+-PM_TR_PTR=buffer;
+-PM_CmdDataL=(uint8_t) (size&0xFF);  // Tell the PC the transfer length
+-PM_CmdDataH=(uint8_t) (size>>8);
+-if (do16bit) 
+-   {
+-    PM_TR_CNT_L=size/2;
+-    PM_TR_CNT_H=PM_TR_CNT_L;
+-    PM_Status=(isread ? STAT_DATA_READ_W:STAT_DATA_WRITE_W);
+-   }
+- else
+-   {
+-    PM_TR_CNT_L=size;
+-    PM_Status=(isread ? STAT_DATA_READ:STAT_DATA_WRITE);   
+-   }
+-
+- do {
+-     if (PM_CmdReset) continue;
+-    } while ((PM_TR_CNT_L!=0)||(PM_TR_CNT_H!=0));
+-
+-PM_INFO("Transfer End\n");
+-
++bool dev_pmio_do_rw(uint8_t *buffer, uint16_t size, bool isread, bool do16bit)
++{
++    // Only the byte port is implemented. All callers run on the command core.
++    if (!size || do16bit) return false;
++    if (!pm_transfer_lock)
++        pm_transfer_lock = spin_lock_instance(spin_lock_claim_unused(true));
++    uint32_t irq = spin_lock_blocking(pm_transfer_lock);
++    PM_RE_ISREAD = isread;
++    PM_TR_IS16B = false;
++    PM_TR_PTR = buffer;
++    PM_CmdDataL = size & 0xff;
++    PM_CmdDataH = size >> 8;
++    PM_TR_CNT_H = 0;
++    PM_TR_CNT_L = size;
++    PM_Status = isread ? STAT_DATA_READ : STAT_DATA_WRITE;
++    spin_unlock(pm_transfer_lock, irq);
++
++    uint32_t deadline = time_us_32() + 2000000u;
++    for (;;) {
++        irq = spin_lock_blocking(pm_transfer_lock);
++        bool complete = PM_TR_CNT_L == 0;
++        bool failed = PM_CmdReset || (int32_t)(time_us_32() - deadline) >= 0;
++        if (complete || failed) {
++            PM_TR_CNT_L = PM_TR_CNT_H = 0;
++            PM_TR_PTR = NULL;
++            PM_Status = STAT_CMDINPROGRESS;
++            spin_unlock(pm_transfer_lock, irq);
++            return complete && !failed;
++        }
++        spin_unlock(pm_transfer_lock, irq);
++        tight_loop_contents();
++    }
+ }
+ 
+ bool dev_pmio_ior(uint32_t CTRL_AL8,uint8_t *Data )
+@@ -119,14 +120,16 @@
+                 // printf("t");
+                  return true;
+     case PORT_TR_L:
+-                 if ((PM_TR_CNT_L!=0)&&(PM_RE_ISREAD)) // counter of 
+-                   {  // Read from a table in memory, index PM_CmdDataH+PM_CmdDataL is auto increment
+-                    PM_TR_CNT_L--;
+-                    *Data=*PM_TR_PTR;
+-                    PM_TR_PTR++;
+-                    //printf("CR %d, %X",PM_TR_CNT_L,*Data);
+-                    return true;
+-                   }
++                 if (pm_transfer_lock) {
++                    uint32_t irq = spin_lock_blocking(pm_transfer_lock);
++                    bool active = PM_TR_CNT_L && PM_RE_ISREAD;
++                    if (active) {
++                        *Data = *PM_TR_PTR++;
++                        --PM_TR_CNT_L;
++                    }
++                    spin_unlock(pm_transfer_lock, irq);
++                    if (active) return true;
++                 }
+                  break;
+ 
+    } 
+@@ -175,14 +178,15 @@
+   //               gpio_put(PIN_PM_IRQ,1);  // * Send an IRQ, to Debug
+                  break;
+       case PORT_TR_L:
+-                 if ((PM_TR_CNT_L!=0)&&(!PM_RE_ISREAD)) // counter of 
+-                   {  // Read from a table in memory, index PM_CmdDataH+PM_CmdDataL is auto increment
+-                    PM_TR_CNT_L--;
+-                    *PM_TR_PTR=Data;
+-                    PM_TR_PTR++;
+-                    PM_INFO("CW %d, %X",PM_TR_CNT_L,Data);
+-                   }
+-                 break;  
++                 if (pm_transfer_lock) {
++                    uint32_t irq = spin_lock_blocking(pm_transfer_lock);
++                    if (PM_TR_CNT_L && !PM_RE_ISREAD) {
++                        *PM_TR_PTR++ = Data;
++                        --PM_TR_CNT_L;
++                    }
++                    spin_unlock(pm_transfer_lock, irq);
++                 }
++                 break;
+ #if DBG_PIN_AUDIO                     
+         case 5: //if (Data==8) DBG_ON_INT_SB();
+                 //if (Data==3) DBG_ON_INT_DMA();
+--- a/src/isa_devices/dev_picomem_io.h
++++ b/src/isa_devices/dev_picomem_io.h
+@@ -47,6 +47,6 @@
+ extern uint8_t dev_pmio_install();
+ extern void dev_pmio_remove(uint16_t BasePort);
+ extern void dev_pmio_update();
+-extern void dev_pmio_do_rw(uint8_t * buffer,uint16_t size,bool isread, bool do16bit);
++extern bool dev_pmio_do_rw(uint8_t * buffer,uint16_t size,bool isread, bool do16bit);
+ extern bool dev_pmio_ior(uint32_t CTRL_AL8,uint8_t *Data );
+ extern void dev_pmio_iow(uint32_t CTRL_AL8,uint8_t Data);
+\ No newline at end of file
+--- a/src/isa_iomem_m2_v15.pio
++++ b/src/isa_iomem_m2_v15.pio
+@@ -57,6 +57,7 @@
+ ; If the core send something else, perform a Read cycle, waiting for the Memory or IO Read pin to go Up.
+ 
+ .program isa_bus
++.define public DATA_READY_IRQ 4       ; Reserved internal flag; not routed to CPU IRQs
+ .side_set 2 opt                      ; sideset AS / AD Initial value : 0b01 (0/ADL/ADR)
+ ; 0b11 : Read Command Signals and A19-A12
+ ; 0b01 : Read A10-A0
+@@ -82,6 +83,7 @@
+ ; Perform an IO or Memory Read
+     mov pindirs, ~null              ; Set the Data bus to output
+     out pins, 8                     ; Wait for the Data, then write it to the Data bus
++    irq DATA_READY_IRQ               ; Data output has executed before READY can be released
+     set pins,0                      ; Disable IOCHRDY (If active)
+ ; X is one of these 2 instructions :
+ ;    wait 0 gpio 14  side 0b10      ; Wait for IOR lowering edge  *Ok
+--- a/src/pm_cmd.cpp
++++ b/src/pm_cmd.cpp
+@@ -513,6 +513,10 @@
+ // *************************************************************
+ // *****      PicoMEM Commands Run from the 2nd core       *****
+ // *************************************************************
++#if PM_USB_SSD && USE_USBHOST
++extern bool pm_usb_ssd_command(uint8_t operation);
++#endif
++
+ void PM_ExecCMD()
+ {
+ 
+@@ -521,6 +525,12 @@
+ 
+  switch(PM_Command)
+   {
++#if PM_USB_SSD && USE_USBHOST
++   case 0x8e:  // Experimental whole-device read-only sector service
++    PM_Status = (!PM_CmdDataH && pm_usb_ssd_command(PM_CmdDataL)) ?
++        STAT_READY : STAT_CMDERROR;
++    break;
++#endif
+    case CMD_Reset :         // CMD 0: Clean the Status or Enable/Disable the commands
+     PM_INFO("Reset\n");
+     PM_CmdReset=false;      // Disable the Reset (It is completed)
+--- a/src/pm_isa_rp2350_m2_v15.h
++++ b/src/pm_isa_rp2350_m2_v15.h
+@@ -12,6 +12,23 @@
+ 
+ #define DO_MEMR 2 
+ #define DO_IOR  1 
++
++#if PM_USB_SSD
++// A missing data-ready event cannot be recovered by releasing an unknown byte.
++// Keep READY asserted and require a full PPC/PicoMEM power cycle.
++__force_inline __attribute__((noreturn)) void pm_payload_ready_fault(void)
++{
++    __asm volatile ("cpsid i" ::: "memory");
++    for (;;) __wfi();
++}
++
++__force_inline void pm_payload_wait_ready(void)
++{
++    unsigned polls = 4096;
++    while (!pio_interrupt_get(isa_pio, isa_bus_DATA_READY_IRQ))
++        if (!--polls) pm_payload_ready_fault();
++}
++#endif
+ 
+ __force_inline void pm_do_ior(void)
+ {
+@@ -177,6 +194,9 @@
+ 
+   uint32_t ISA_IO_Addr;
+   uint32_t IO_Device;
++#if PM_USB_SSD
++  bool PM_PayloadRead = false;
++#endif
+ 
+   ISA_IO_Addr = pio_sm_get_blocking(isa_pio, isa_bus_sm) & 0x3FF; // No need for Mask (Only the low 8Bit are used)
+ 
+@@ -285,7 +305,19 @@
+        switch(IO_Device)
+         {
+         case DEV_PM :
++#if PM_USB_SSD
++           PM_PayloadRead = dev_pmio_ior(ISA_IO_Addr,&ISA_Data) &&
++               (ISA_IO_Addr & 7) == PORT_TR_L;
++           if (PM_PayloadRead) {
++               // Flag4 belongs to SM0; neither CPU IRQ line may consume it.
++               if ((isa_pio->inte0 | isa_pio->inte1) & (1u << pis_interrupt4))
++                   pm_payload_ready_fault();
++               // Clear before the read opcode, not after the byte is queued.
++               pio_interrupt_clear(isa_pio, isa_bus_DATA_READY_IRQ);
++           }
++#else
+            dev_pmio_ior(ISA_IO_Addr,&ISA_Data);
++#endif
+            pm_do_ior();
+           break; //DEV_PM    
+         case DEV_LTEMS :
+@@ -359,8 +391,18 @@
+ 
+ // ** Now Need to send back the value Read, or stop the IOCHRDY **
+ if (ISA_WasRead) {
+-    gpioc_hi_out_clr(1<<PIN_IORDY-32);
+-    pio_sm_put(isa_pio, isa_bus_sm, (uint32_t) ISA_Data);     // 3nd Write : Send the Data to the CPU (Read Cycle)
++#if PM_USB_SSD
++    // Release READY only after PIO has executed the data output instruction.
++    if (PM_PayloadRead) {
++        pio_sm_put(isa_pio, isa_bus_sm, (uint32_t) ISA_Data);
++        pm_payload_wait_ready();
++        gpioc_hi_out_clr(1<<PIN_IORDY-32);
++    } else
++#endif
++    {
++        gpioc_hi_out_clr(1<<PIN_IORDY-32);
++        pio_sm_put(isa_pio, isa_bus_sm, (uint32_t) ISA_Data);
++    }
+     ISA_Data = pio_sm_get_blocking(isa_pio, isa_bus_sm);      // Wait that the data is sent to wait for the next ALE  
+    }
+    else {
+--- /dev/null
++++ b/src/pm_usb_ssd.cpp
+@@ -0,0 +1,163 @@
++/* Whole-device USB bridge for an ELKS SSD subdriver.
++ * Experimental command 0x8e: 0 = geometry, 1 = read one sector, 2 = write and flush.
++ * Enabling this backend excludes the firmware's USB FatFs backend.
++ */
++#include "pico/stdlib.h"
++#include "tusb.h"
++#include "ff.h"
++#include "diskio.h"
++extern "C" {
++#include "USB_Host_Driver/usb.h"
++}
++#include "pm_gvars.h"
++#include "pm_defines.h"
++#include "dev_picomem_io.h"
++
++static uint8_t disk;
++static bool selected, fault, busy, good, write_ready, write_cache_enabled;
++static uint32_t sectors;
++static uint8_t data[516] __attribute__((aligned(4)));
++
++void tuh_msc_mount_cb(uint8_t addr)
++{
++    if (selected) return;
++    selected = true;
++    if (tuh_msc_get_block_size(addr, 0) != 512 ||
++        !(sectors = tuh_msc_get_block_count(addr, 0))) {
++        fault = true;
++        return;
++    }
++    disk = addr;
++    usb_set_status(addr, "USB SSD, %lu sectors", (unsigned long)sectors);
++}
++
++void tuh_msc_umount_cb(uint8_t addr)
++{
++    if (addr == disk) fault = true;  // This first backend does not support swaps.
++}
++
++static bool complete(uint8_t addr, const tuh_msc_complete_data_t *reply)
++{
++    good = addr == disk && reply->result == XFER_RESULT_SUCCESS &&
++        reply->actual_len == reply->user_arg &&
++        reply->csw->signature == MSC_CSW_SIGNATURE &&
++        reply->csw->tag == reply->cbw->tag &&
++        reply->csw->status == MSC_CSW_STATUS_PASSED &&
++        reply->csw->data_residue == 0;
++    busy = false;
++    return true;
++}
++
++/* A write shares one USB deadline across cache query, WRITE10 and any flush. */
++static bool wait_complete(uint32_t deadline)
++{
++    while (busy && !fault) {
++        tuh_task();
++        if ((int32_t)(time_us_32() - deadline) >= 0) return false;
++    }
++    return !fault && good;
++}
++
++static bool begin_transfer(uint32_t deadline)
++{
++    if (fault || !tuh_msc_ready(disk) ||
++        (int32_t)(time_us_32() - deadline) >= 0) return false;
++    busy = true;
++    good = false;
++    return true;
++}
++
++static bool sync_cache(uint32_t deadline)
++{
++    // IMMED=0, SYNC_NV=0, LBA/count=0: complete all cached writes to media.
++    msc_cbw_t cbw = {};
++    cbw.signature = MSC_CBW_SIGNATURE;
++    cbw.tag = 0x54555342;
++    cbw.cmd_len = 10;
++    cbw.command[0] = 0x35;       // SYNCHRONIZE CACHE(10), no DATA stage.
++    return begin_transfer(deadline) &&
++        tuh_msc_scsi_command(disk, &cbw, NULL, complete, 0) &&
++        wait_complete(deadline);
++}
++
++static bool read_sector(uint32_t lba)
++{
++    uint32_t deadline = time_us_32() + 2000000u;
++    return lba < sectors && begin_transfer(deadline) &&
++        tuh_msc_read10(disk, 0, data + 4, lba, 1, complete, 512) &&
++        wait_complete(deadline);
++}
++
++/* Require an explicit standard caching page; unknown cache policy denies writes. */
++static bool prepare_write(uint32_t deadline)
++{
++    if (write_ready) return true;
++    msc_cbw_t cbw = {};
++    cbw.signature = MSC_CBW_SIGNATURE;
++    cbw.tag = 0x54555342;
++    cbw.total_bytes = 24;
++    cbw.dir = 0x80;
++    cbw.cmd_len = 6;
++    cbw.command[0] = 0x1a;       // MODE SENSE(6), current caching page, DBD=1.
++    cbw.command[1] = 8;
++    cbw.command[2] = 8;
++    cbw.command[4] = 24;
++    uint8_t *mode = data + 4;    // Query before receiving the host's write data.
++    if (!begin_transfer(deadline) ||
++        !tuh_msc_scsi_command(disk, &cbw, mode, complete, 24) ||
++        !wait_complete(deadline)) return false;
++    if (mode[0] != 23 || mode[1] != 0 || (mode[2] & 0x80) ||
++        mode[3] != 0 || (mode[4] & 0x7f) != 8 || mode[5] != 18)
++        return false;
++    bool enabled = (mode[6] & 4) != 0;
++    if (enabled && !sync_cache(deadline)) return false;
++    write_cache_enabled = enabled;
++    write_ready = true;
++    return true;
++}
++
++static bool write_sector(uint32_t lba, uint32_t deadline)
++{
++    if (lba >= sectors) return false;
++    return begin_transfer(deadline) &&
++        tuh_msc_write10(disk, 0, data + 4, lba, 1, complete, 512) &&
++        wait_complete(deadline) &&
++        (!write_cache_enabled || sync_cache(deadline));
++}
++
++bool pm_usb_ssd_command(uint8_t operation)
++{
++    // All commands run on the USB task core. After any failure this static
++    // buffer remains reserved, even if a timed-out DMA completes much later.
++    if (fault || !disk || !tuh_msc_mounted(disk)) return false;
++    if (operation == 0) {
++        data[0] = 'P'; data[1] = 'M';
++        for (unsigned i = 0; i < 4; ++i) data[2+i] = sectors >> (8*i);
++        data[6] = 0; data[7] = 2;  // 512-byte sectors, little endian.
++        if (dev_pmio_do_rw(data, 8, true, false)) return true;
++    } else if (operation == 1 || operation == 2) {
++        uint32_t deadline = time_us_32() + 2000000u;
++        if (operation == 2 && (!prepare_write(deadline) ||
++            (int32_t)(time_us_32() - deadline) >= 0)) goto failed;
++        if (dev_pmio_do_rw(data, operation == 1 ? 4 : 516, false, false)) {
++            uint32_t lba = (uint32_t)data[0] | (uint32_t)data[1] << 8 |
++                (uint32_t)data[2] << 16 | (uint32_t)data[3] << 24;
++            if (operation == 2 ? write_sector(lba, deadline) :
++                read_sector(lba) && dev_pmio_do_rw(data + 4, 512, true, false))
++                return true;
++        }
++    }
++failed:
++    fault = true;
++    return false;
++}
++
++// Keep internal SD FatFs service intact, but never expose this raw-owned USB
++// medium to BIOS disk images, PMDFS or other firmware filesystem consumers.
++extern "C" {
++DSTATUS usb_disk_status() { return STA_NODISK; }
++DSTATUS usb_disk_initialize() { return STA_NODISK; }
++DRESULT usb_disk_read(BYTE *, LBA_t, UINT) { return RES_NOTRDY; }
++DRESULT usb_disk_write(const BYTE *, LBA_t, UINT) { return RES_NOTRDY; }
++DRESULT usb_disk_ioctl(BYTE, void *) { return RES_NOTRDY; }
++}

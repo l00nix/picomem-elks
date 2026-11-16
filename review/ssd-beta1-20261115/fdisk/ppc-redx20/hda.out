@@ -1,0 +1,7 @@
+                           START              END          SECTOR
+Device           #:ID   Cyl Head Sect    Cyl Head Sect  Start   Size
+
+/dev/hda1        1:00     0    0    0      0    0    0      0      0
+/dev/hda2        2:00     0    0    0      0    0    0      0      0
+/dev/hda3        3:00     0    0    0      0    0    0      0      0
+/dev/hda4        4:00     0    0    0      0    0    0 1056997120 1281689616

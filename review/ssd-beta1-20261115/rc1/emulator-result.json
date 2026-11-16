@@ -1,0 +1,159 @@
+{
+  "complete": true,
+  "cases": {
+    "ro32_knownbackup": {
+      "passed": true,
+      "mode": "ro",
+      "checks": 9,
+      "before_sha256": "d93cb248edae8bd2d6946447b1ca5e8f1d23ad05faa519c02e352e8d40f29daf",
+      "after_sha256": "d93cb248edae8bd2d6946447b1ca5e8f1d23ad05faa519c02e352e8d40f29daf",
+      "fsck_exit": 0
+    },
+    "rw32_knownbackup": {
+      "passed": true,
+      "mode": "rw",
+      "checks": 30,
+      "before_sha256": "d93cb248edae8bd2d6946447b1ca5e8f1d23ad05faa519c02e352e8d40f29daf",
+      "after_sha256": "ccb47f28dbf49b3fb58d8a23b07c4a7f0c3df9b3e3f5d2a1343df27b9d727322",
+      "fsck_exit": 0
+    },
+    "remount32_knownbackup": {
+      "passed": true,
+      "mode": "remount",
+      "checks": 29,
+      "before_sha256": "d93cb248edae8bd2d6946447b1ca5e8f1d23ad05faa519c02e352e8d40f29daf",
+      "after_sha256": "5659cfcf427af5f50991c27049996a833fd34f3b599281fb0bb0ac04b6aa4ab5",
+      "fsck_exit": 0
+    },
+    "rw32_unknown": {
+      "passed": true,
+      "mode": "rw",
+      "checks": 30,
+      "before_sha256": "e810ffdf1e5449480d31ffc51fdef4b2f9ac6d83782a91336159ebcbdad5674b",
+      "after_sha256": "8214a539525ac26b4933f7ac3894d625022ec30166ef215cdaed9580525fa70f",
+      "fsck_exit": 0
+    },
+    "rw32_windows": {
+      "passed": true,
+      "mode": "rw",
+      "checks": 30,
+      "before_sha256": "e8aa24d936ffee1e073ddb3a4306df8037e29a052f3aad941fa70a3289fcc2bf",
+      "after_sha256": "0c0831bddecc9ffba8d45ad02a6bf5d38cfbaa8cf4470bb58de0851bb9dc42b3",
+      "fsck_exit": 0
+    },
+    "ro16": {
+      "passed": true,
+      "mode": "ro",
+      "checks": 9,
+      "before_sha256": "30d13f1a73c257d7b0a5b30cdce8e7776dcb60192b255abde8c7d49fafbcb499",
+      "after_sha256": "30d13f1a73c257d7b0a5b30cdce8e7776dcb60192b255abde8c7d49fafbcb499",
+      "fsck_exit": 0
+    },
+    "rw16": {
+      "passed": true,
+      "mode": "rw",
+      "checks": 30,
+      "before_sha256": "30d13f1a73c257d7b0a5b30cdce8e7776dcb60192b255abde8c7d49fafbcb499",
+      "after_sha256": "ec04db44fc690172918b2f41099efeee2942c3b9c6bbe4de2cead4c40a564a93",
+      "fsck_exit": 0
+    },
+    "reject32_fsinfo_bounds": {
+      "passed": true,
+      "mode": "reject",
+      "checks": 12,
+      "before_sha256": "05d98e0531ed9f1ecdc6e843ec4b00982afcfd791e03bc9db0eb4e1d96990bcb",
+      "after_sha256": "05d98e0531ed9f1ecdc6e843ec4b00982afcfd791e03bc9db0eb4e1d96990bcb",
+      "fsck_exit": null
+    },
+    "geometry_activefat": {
+      "passed": true,
+      "mode": "geometry",
+      "checks": 6,
+      "before_sha256": "14b8478da14783ac92f1d79cbddf4a8df5747e7897b694f11fa449f393570433",
+      "after_sha256": "14b8478da14783ac92f1d79cbddf4a8df5747e7897b694f11fa449f393570433",
+      "fsck_exit": null
+    },
+    "geometry_sector_size": {
+      "passed": true,
+      "mode": "geometry",
+      "checks": 6,
+      "before_sha256": "25594ebde1d9c9ca88932213d92741234f9c07e04eec3bf6fdd435fba959e544",
+      "after_sha256": "25594ebde1d9c9ca88932213d92741234f9c07e04eec3bf6fdd435fba959e544",
+      "fsck_exit": null
+    },
+    "geometry_fat_length": {
+      "passed": true,
+      "mode": "geometry",
+      "checks": 6,
+      "before_sha256": "240ba958114d11454ef22152b81af819d482cced63e32fe3a3c91af8a7dbf072",
+      "after_sha256": "240ba958114d11454ef22152b81af819d482cced63e32fe3a3c91af8a7dbf072",
+      "fsck_exit": null
+    },
+    "geometry_data_start": {
+      "passed": true,
+      "mode": "geometry",
+      "checks": 6,
+      "before_sha256": "23f5067626ee03ef40af65732438651f1da162e68827fb9818eefcf595784d19",
+      "after_sha256": "23f5067626ee03ef40af65732438651f1da162e68827fb9818eefcf595784d19",
+      "fsck_exit": null
+    },
+    "geometry_cluster_power": {
+      "passed": true,
+      "mode": "geometry",
+      "checks": 6,
+      "before_sha256": "6d3ca99e2dc4b53d1669a20592276f69596b98488ed60cfd67bd3126f6d50b56",
+      "after_sha256": "6d3ca99e2dc4b53d1669a20592276f69596b98488ed60cfd67bd3126f6d50b56",
+      "fsck_exit": null
+    },
+    "geometry_root_cluster": {
+      "passed": true,
+      "mode": "geometry",
+      "checks": 6,
+      "before_sha256": "fe087973f16b58998a92e9c8eea04f2b63376381f07a6292d42560b1f346ee56",
+      "after_sha256": "fe087973f16b58998a92e9c8eea04f2b63376381f07a6292d42560b1f346ee56",
+      "fsck_exit": null
+    },
+    "geometry_zero_cluster": {
+      "passed": true,
+      "mode": "geometry",
+      "checks": 6,
+      "before_sha256": "9d60b0aa15068fa650cfc9ce2ec78e3b553fec0ab6c90387e23303e0166291ab",
+      "after_sha256": "9d60b0aa15068fa650cfc9ce2ec78e3b553fec0ab6c90387e23303e0166291ab",
+      "fsck_exit": null
+    },
+    "geometry_version": {
+      "passed": true,
+      "mode": "geometry",
+      "checks": 6,
+      "before_sha256": "dfdda23fdde98be40060b1d1b91f74789a07a1da55f0f2878224bf7b244925fa",
+      "after_sha256": "dfdda23fdde98be40060b1d1b91f74789a07a1da55f0f2878224bf7b244925fa",
+      "fsck_exit": null
+    },
+    "geometry_zero_data": {
+      "passed": true,
+      "mode": "geometry",
+      "checks": 6,
+      "before_sha256": "eaf8ac02b2bfaf3434143f58b991ca9fbb0c61f9f80bf4a38765033e8118c3dc",
+      "after_sha256": "eaf8ac02b2bfaf3434143f58b991ca9fbb0c61f9f80bf4a38765033e8118c3dc",
+      "fsck_exit": null
+    },
+    "reserved_nibble": {
+      "passed": true,
+      "mode": "rw",
+      "checks": 30,
+      "before_sha256": "40fc6b0b2b963215d5948000d647b8ac0b7fc9ec684f3afd3d1ae327fc2db4dc",
+      "after_sha256": "bf605e8196fef19ce474cd36313de009f7459d7236b098617ebfb56aaae431db",
+      "fsck_exit": 0
+    },
+    "raw_boundary": {
+      "passed": true,
+      "mode": "raw",
+      "checks": 14,
+      "before_sha256": "966c419ea38b97b12684e4bb89c61ce81e8cd2ad93660421a6980797ece46bb6",
+      "after_sha256": "564a947e7498a9b3534b68757dc6574081f256028c133003769ae5437cdce8c6",
+      "fsck_exit": null
+    }
+  },
+  "total_checks": 277,
+  "physical_media_accessed": false
+}

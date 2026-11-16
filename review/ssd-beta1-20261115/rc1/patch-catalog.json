@@ -1,0 +1,101 @@
+[
+  {
+    "path": "patches/elks-usb.patch",
+    "component": "elks",
+    "sha256": "0f58f01e67266ca94d965fefc4ea19e6db9b81f1f4ceb83515807179169821c9",
+    "per_file_numstat": "4\t0\telks/arch/i86/drivers/block/Makefile\n1\t0\telks/arch/i86/drivers/block/config.in\n1\t1\telks/arch/i86/drivers/block/ll_rw_blk.c\n170\t0\telks/arch/i86/drivers/block/ssd-picomem.c\n"
+  },
+  {
+    "path": "patches/elks-display-separate.patch",
+    "component": "elks",
+    "sha256": "3283703aee574ab1e53b14a2a43f5b2d4dfd5ed2f387ef3f7f5fe647fffd4bae",
+    "per_file_numstat": "3\t0\telks/arch/i86/drivers/char/Makefile\n3\t0\telks/arch/i86/drivers/char/config.in\n7\t0\telks/arch/i86/drivers/char/kbd-scancode.c\n103\t0\telks/arch/i86/drivers/char/ppc-core.h\n60\t0\telks/arch/i86/drivers/char/ppc-display.c\n26\t0\telks/arch/i86/drivers/char/ppc-hw.h\n9\t0\telks/arch/i86/kernel/irq.c\n"
+  },
+  {
+    "path": "patches/picomem-usb.patch",
+    "component": "picomem",
+    "sha256": "5f7b1dfd94165d4f1f784d6012b948c0e60ab4ce3f7e4cec765b6edc73c74f7e",
+    "per_file_numstat": "5\t0\tsrc/CMakeLists.txt\n6\t1\tsrc/USB_Host_Driver2/CMakeLists.txt\n53\t49\tsrc/isa_devices/dev_picomem_io.cpp\n1\t1\tsrc/isa_devices/dev_picomem_io.h\n2\t0\tsrc/isa_iomem_m2_v15.pio\n10\t0\tsrc/pm_cmd.cpp\n44\t2\tsrc/pm_isa_rp2350_m2_v15.h\n163\t0\tsrc/pm_usb_ssd.cpp\n"
+  },
+  {
+    "path": "patches/tinyusb-msc.patch",
+    "component": "tinyusb",
+    "sha256": "910634990d3bf45442d5071476f53edc2e125e21a8b705afc9547a98dd11a3ae",
+    "per_file_numstat": "55\t31\tsrc/class/msc/msc_host.c\n2\t0\tsrc/class/msc/msc_host.h\n"
+  },
+  {
+    "path": "patches/xinput-build-adapter.patch",
+    "component": "xinput",
+    "sha256": "5933370c02e667b863946799fa3e8bcb1f6a1a01aee702bf80d511c095167f02",
+    "per_file_numstat": "1\t1\tCMakeLists.txt\n5\t1\txinput_host.c\n"
+  },
+  {
+    "path": "patches/write-option-label.patch",
+    "component": "picomem",
+    "sha256": "d5a826d9c0c6e7a7b0bf31006951f9a68b877ac8238fad0305e6c0e72560c467",
+    "description": "Nonfunctional wording correction after frozen tested snapshot",
+    "per_file_numstat": "1\t1\tsrc/CMakeLists.txt\n"
+  },
+  {
+    "path": "patches/cache-completion-comment.patch",
+    "component": "elks",
+    "sha256": "2225af7820c5df75760ae9eac8d5a7d82bdaf64c44641c6555a06c573f9b0c99",
+    "description": "Nonfunctional wording correction after frozen tested snapshot",
+    "per_file_numstat": "1\t1\telks/arch/i86/drivers/block/ssd-picomem.c\n"
+  },
+  {
+    "path": "patches/01-fat-mirrors.patch",
+    "component": "elks",
+    "sha256": "95be6eea1ade349f51d26302d7bdf7b4be9d34b5495c749e9ddfdf64fd643408",
+    "per_file_numstat": "13\t37\telks/fs/msdos/fat.c\n"
+  },
+  {
+    "path": "patches/02-fat32-entry-high-cluster.patch",
+    "component": "elks",
+    "sha256": "5981ed37664b4a2a222153d1597d336cf12c678f72f6c8e6bb06cdfc0146ae2e",
+    "per_file_numstat": "1\t0\telks/fs/msdos/namei.c\n"
+  },
+  {
+    "path": "patches/03-fat32-root-parent.patch",
+    "component": "elks",
+    "sha256": "c1df0023b51b73b1427a1dd98cbd14bbb1195c9ff6c396d6ee52e49988b1d7c8",
+    "per_file_numstat": "2\t1\telks/fs/msdos/namei.c\n"
+  },
+  {
+    "path": "patches/04-fat32-fsinfo-invalidate.patch",
+    "component": "elks",
+    "sha256": "d7b6cc2e9630195a6add302ca771caa2cb51818a3cc6684a89e5512c25af789c",
+    "per_file_numstat": "70\t1\telks/fs/msdos/inode.c\n"
+  },
+  {
+    "path": "patches/firmware-header-cache.patch",
+    "component": "picomem",
+    "sha256": "5bb54972312129dd35f16afa095a6b908d78e130ad3b1296898bf2fb4f608a64",
+    "per_file_numstat": "26\t2\tsrc/pm_usb_ssd.cpp\n"
+  },
+  {
+    "path": "patches/05-raw-offset-bound.patch",
+    "component": "elks",
+    "sha256": "13fb84fa862cfbaddffea244ea0a25f56499f6a14046af0fcf12bee8b2573a74",
+    "per_file_numstat": "10\t0\telks/fs/block_dev.c\n"
+  },
+  {
+    "path": "patches/06-fat-geometry-bound.patch",
+    "component": "elks",
+    "sha256": "a847a2e8733abb7729332dbdda09a8c3a396738ec56725bd99c9040f07ba3142",
+    "per_file_numstat": "34\t0\telks/fs/msdos/inode.c\n"
+  },
+  {
+    "path": "patches/07-fat32-reserved-bits.patch",
+    "component": "elks",
+    "sha256": "23396f2058c140601c39af087d85b89ef9213a454b6502f80e4c21ced6b3a221",
+    "per_file_numstat": "5\t3\telks/fs/msdos/fat.c\n"
+  },
+  {
+    "path": "patches/08-command-comment.patch",
+    "component": "picomem",
+    "sha256": "0b9e3364fb2921b9272abef070cdacefc9dc9551a3401226a46dfaef1af4810f",
+    "description": "Comment only: flushing is conditional on the established cache policy.",
+    "per_file_numstat": "1\t1\tsrc/pm_usb_ssd.cpp\n"
+  }
+]

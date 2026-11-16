@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "source_sha256": "ae342c88d715bbd855a79f5ef7c8918fc8a9532b3dda294fcd1459d4890dc55d",
+  "cases": [
+    {
+      "case": "healthy",
+      "passed": true,
+      "command_transmissions": 1
+    },
+    {
+      "case": "echo_socket_error",
+      "passed": true,
+      "command_transmissions": 1
+    },
+    {
+      "case": "completion_socket_error",
+      "passed": true,
+      "command_transmissions": 1
+    },
+    {
+      "case": "nonzero",
+      "passed": true,
+      "command_transmissions": 1
+    },
+    {
+      "case": "missing_marker",
+      "passed": true,
+      "command_transmissions": 1
+    }
+  ],
+  "no_network_access": true
+}

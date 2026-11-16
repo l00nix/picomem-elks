@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "eight_small_files_exact": true,
+  "boot_sector_distinguishes_medium": true,
+  "bytes_verified": 82252,
+  "local_comparisons": 7,
+  "command_groups": 12,
+  "zero_exit_markers": 22,
+  "read_only_mount_succeeded": true,
+  "final_root_only": true,
+  "clean_unmount_no_recorded_storage_or_invalidation_errors": true,
+  "user_reported_different_device_swap_without_reboot": true,
+  "qualified": "One REDX20-to-PMBLUE orderly swap without reboot, FAT32 identity plus small-file RO verification/release.",
+  "not_yet_qualified": [
+    "Full34MiB filler reread in this gate",
+    "Writes on this hotplug pair",
+    "Surprise removal recovery",
+    "Full physical capacity addressing"
+  ],
+  "hardware_access_by_qa": false
+}

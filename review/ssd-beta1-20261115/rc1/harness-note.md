@@ -1,0 +1,5 @@
+The first FSInfo rejection attempt correctly refused RW remount and the shell refused output redirection. ELKS ash did not execute the following status marker after a failed redirection, so the harness timed out. The entire disposable image is unchanged. The corrected test uses an external cp command to observe exit status. This is retained separately and is not counted as a passed emulator case.
+
+The first raw-boundary emulator attempt stopped after reading the eight-byte marker: cat emitted no newline, so the status marker was concatenated and the harness timed out. No disk bytes changed. Added an explicit echo after this display-only command and the one-byte display; replay only the incomplete raw case.
+
+The second raw attempt proved exact-boundary read/write rejection. Its supposed crossing read used 2 * 33554431 = 67108862, which reads the final two valid bytes and correctly succeeds. Corrected the crossing offset to 3 * 22369621 = 67108863 (last valid byte), with a three-byte request. The failed expectation and unchanged image are preserved; no source correction was needed.

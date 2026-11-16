@@ -1,0 +1,10 @@
+--- a/elks/fs/msdos/namei.c
++++ b/elks/fs/msdos/namei.c
+@@ -189,6 +189,7 @@
+ 	memcpy(de->name,name,MSDOS_NAME);
+ 	de->attr = is_dir ? ATTR_DIR : ATTR_ARCH;
+ 	de->start = 0;
++	de->starthi = 0;
+ 	date_unix2dos(current_time(),&de->time,&de->date);
+ 	de->size = 0;
+ 	debug_fat("create_entry block write %lu\n", buffer_blocknr(bh));

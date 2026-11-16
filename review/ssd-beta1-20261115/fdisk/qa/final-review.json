@@ -1,0 +1,24 @@
+{
+  "approved_for_deployment": true,
+  "source_sha256": "32a1464de21a4145cba82d5d22ec786b6a5d879eb65b396f9d27d104132a929d",
+  "patch_sha256": "85c0e02ec5a004068fcfe37f0d6186b45d8f2fa188dda8185b59c4ca7eb77962",
+  "native_binary": {
+    "bytes": 7264,
+    "sha256": "ad094766643cca4d1ed674f7283b62a4b4ef556cda4b41a516be493fab98ff43"
+  },
+  "native_size_increase_bytes": 80,
+  "host_stock_output_comparisons": 23,
+  "native_emulator_checks": 31,
+  "candidate_and_stock_binary_extracted_from_both_regular_root_images_exact": true,
+  "native_missing_USB_default_equals_stock": true,
+  "native_explicit_five_fixtures_equal_stock": true,
+  "native_default_present_fixture_equals_stock_hda_plus_stock_ssd": true,
+  "secondary_FAT32_image_unchanged": true,
+  "scope": "Replace expanded9456-byte utility with reviewed7264-byte optional-probe-only utility; preserve old copies, verify readback and compare live output to stock before replacement. No kernel/firmware/reboot change.",
+  "limits": [
+    "Emulator-present /dev/ssd was an ordinary fixture file, not USB hardware.",
+    "No classifiers, format changes, new path guards or unrelated fixes retained.",
+    "Stock behavior and backend ENODATA ambiguity intentionally retained per user scope."
+  ],
+  "no_hardware_access_by_qa": true
+}

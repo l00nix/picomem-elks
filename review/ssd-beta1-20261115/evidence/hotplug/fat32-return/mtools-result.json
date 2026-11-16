@@ -1,0 +1,143 @@
+{
+  "passed": true,
+  "files": {
+    "hello.txt": {
+      "expected": {
+        "bytes": 53,
+        "sha256": "f157c38dca528ff3fb5743f0313fbe6e0d8eacf943bad8c7e434a329e875a14e"
+      },
+      "actual": {
+        "bytes": 53,
+        "sha256": "f157c38dca528ff3fb5743f0313fbe6e0d8eacf943bad8c7e434a329e875a14e"
+      },
+      "matched": true
+    },
+    "nested/note.txt": {
+      "expected": {
+        "bytes": 60,
+        "sha256": "381c2c3988fbf63e160825f316683d27b89de0a423f3b48b075514ba80a3d576"
+      },
+      "actual": {
+        "bytes": 60,
+        "sha256": "381c2c3988fbf63e160825f316683d27b89de0a423f3b48b075514ba80a3d576"
+      },
+      "matched": true
+    },
+    "nested/data.bin": {
+      "expected": {
+        "bytes": 40997,
+        "sha256": "57faa3e8deb03b8b53836b9b04eeb94f5fc203abb9da3716ce6c025408ed21c0"
+      },
+      "actual": {
+        "bytes": 40997,
+        "sha256": "57faa3e8deb03b8b53836b9b04eeb94f5fc203abb9da3716ce6c025408ed21c0"
+      },
+      "matched": true
+    },
+    "empty": {
+      "expected": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "actual": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "matched": true
+    },
+    "filler.bin": {
+      "expected": {
+        "bytes": 35651584,
+        "sha256": "23dfbc08258fa16e92089de9eeedd0d199590c6983c0deebeca11b3baffab7b2"
+      },
+      "actual": {
+        "bytes": 35651584,
+        "sha256": "23dfbc08258fa16e92089de9eeedd0d199590c6983c0deebeca11b3baffab7b2"
+      },
+      "matched": true
+    },
+    "test/copy.bin": {
+      "expected": {
+        "bytes": 40997,
+        "sha256": "57faa3e8deb03b8b53836b9b04eeb94f5fc203abb9da3716ce6c025408ed21c0"
+      },
+      "actual": {
+        "bytes": 40997,
+        "sha256": "57faa3e8deb03b8b53836b9b04eeb94f5fc203abb9da3716ce6c025408ed21c0"
+      },
+      "matched": true
+    },
+    "wintest.txt": {
+      "expected": {
+        "bytes": 96,
+        "sha256": "4efd6ef59a25565e7494ccf2329ea3c4dccf2dd8e49380c154fe57c767d8e67b"
+      },
+      "actual": {
+        "bytes": 96,
+        "sha256": "4efd6ef59a25565e7494ccf2329ea3c4dccf2dd8e49380c154fe57c767d8e67b"
+      },
+      "matched": true
+    },
+    "fsi1114/proof.txt": {
+      "expected": {
+        "bytes": 25,
+        "sha256": "3c12a56d7f6478ccc522057e3fdcaaaa8ea0d02fe9ed9bda0cadcbfaa17ba401"
+      },
+      "actual": {
+        "bytes": 25,
+        "sha256": "3c12a56d7f6478ccc522057e3fdcaaaa8ea0d02fe9ed9bda0cadcbfaa17ba401"
+      },
+      "matched": true
+    },
+    "b1rc1/proof.txt": {
+      "expected": {
+        "bytes": 24,
+        "sha256": "0fc011ca7df228f91a5fe817992f32ef6c53a1d470f29a2f42df6d33b9a1c083"
+      },
+      "actual": {
+        "bytes": 24,
+        "sha256": "0fc011ca7df228f91a5fe817992f32ef6c53a1d470f29a2f42df6d33b9a1c083"
+      },
+      "matched": true
+    },
+    "hp1115/proof.txt": {
+      "expected": {
+        "bytes": 28,
+        "sha256": "ce1fd6ef84234c8b7ca0215e56cab1b3453289db3281d37cf71ab7514d39054e"
+      },
+      "actual": {
+        "bytes": 28,
+        "sha256": "ce1fd6ef84234c8b7ca0215e56cab1b3453289db3281d37cf71ab7514d39054e"
+      },
+      "matched": true
+    },
+    "system volume information/wpsettings.dat": {
+      "expected": {
+        "bytes": 12,
+        "sha256": "77e61cc251e8888487c5258630bf80d40ac85667b93554721715ac231b5e9fa9"
+      },
+      "actual": {
+        "bytes": 12,
+        "sha256": "77e61cc251e8888487c5258630bf80d40ac85667b93554721715ac231b5e9fa9"
+      },
+      "matched": true
+    },
+    "system volume information/indexervolumeguid": {
+      "expected": {
+        "bytes": 76,
+        "sha256": "5f08a4653113446e7ca67e05425e38324888db9f15b02ac8c666fc4dd8609945"
+      },
+      "actual": {
+        "bytes": 76,
+        "sha256": "5f08a4653113446e7ca67e05425e38324888db9f15b02ac8c666fc4dd8609945"
+      },
+      "matched": true
+    }
+  },
+  "file_count": 12,
+  "test_reference_files": 10,
+  "windows_metadata_files": 2,
+  "full_34mib_filler_verified": true,
+  "input_unchanged": true,
+  "image_sha256": "46cbdfd3e3953172414bcf276800ffdfdf5bdad2713fd25a66b5b2ca72f9d569"
+}

@@ -1,0 +1,176 @@
+{
+  "format": 1,
+  "components": {
+    "picomem": {
+      "url": "https://github.com/FreddyVRetro/ISA-PicoMEM.git",
+      "commit": "be7b2e6031ae93bb75733c363489aa9171a7205c",
+      "destination": "firmware"
+    },
+    "elks": {
+      "url": "https://github.com/ghaerr/elks.git",
+      "commit": "a872443c7303d4572b7af27c55f8fc3f3dfe8175",
+      "destination": "elks"
+    },
+    "tinyusb": {
+      "url": "https://github.com/hathach/tinyusb.git",
+      "commit": "331c263400dd5ccf77264cab1fa6bbd9f374b44e",
+      "destination": "firmware/src/lib/tinyusb"
+    },
+    "xinput": {
+      "url": "https://github.com/Ryzee119/tusb_xinput.git",
+      "commit": "ae4f3a9fd7c57a6c8c36fdba7f7b1abc9b6a1a56",
+      "destination": "firmware/src/lib/tusb_xinput"
+    },
+    "psram": {
+      "url": "https://github.com/polpo/rp2040-psram",
+      "commit": "7786c93ec8d02dbb4f94a2e99645b25fb4abc2db",
+      "destination": "firmware/src/lib/rp2040-psram"
+    },
+    "sdk": {
+      "url": "https://github.com/raspberrypi/pico-sdk.git",
+      "commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+      "destination": "sdk"
+    },
+    "picotool": {
+      "url": "https://github.com/raspberrypi/picotool.git",
+      "commit": "a7eb3988f0645239185fadb4e25d8279478c2dbb",
+      "destination": "picotool"
+    },
+    "sdk-btstack": {
+      "url": "https://github.com/bluekitchen/btstack.git",
+      "commit": "501e6d2b86e6c92bfb9c390bcf55709938e25ac1",
+      "destination": "sdk/lib/btstack"
+    },
+    "sdk-cyw43-driver": {
+      "url": "https://github.com/georgerobotics/cyw43-driver.git",
+      "commit": "dd7568229f3bf7a37737b9e1ef250c26efe75b23",
+      "destination": "sdk/lib/cyw43-driver"
+    },
+    "sdk-lwip": {
+      "url": "https://github.com/lwip-tcpip/lwip.git",
+      "commit": "77dcd25a72509eb83f72b033d219b1d40cd8eb95",
+      "destination": "sdk/lib/lwip"
+    },
+    "sdk-mbedtls": {
+      "url": "https://github.com/Mbed-TLS/mbedtls.git",
+      "commit": "107ea89daaefb9867ea9121002fbbdf926780e98",
+      "destination": "sdk/lib/mbedtls"
+    }
+  },
+  "case_mapping": [
+    {
+      "source": "src/USB_Host_driver/usb.c",
+      "destination": "src/USB_Host_Driver/usb.c",
+      "git_blob": "3d11f0edec673357ff94afe57123f35ad42bc159",
+      "sha256": "96f3ca0be88727e13158b013e78920f4b3358a822ef9d9aa28281329baf5bcf3"
+    },
+    {
+      "source": "src/USB_Host_driver/usb.h",
+      "destination": "src/USB_Host_Driver/usb.h",
+      "git_blob": "f9ac5d02784fb5288044442db29471d88d82a9c9",
+      "sha256": "3ee468067bbfbdf2889db4ed48b228bb7cdc299e22b1bc461423c2d5cb854185"
+    },
+    {
+      "source": "src/USB_Host_driver/hid_dev.h",
+      "destination": "src/USB_Host_Driver/hid_dev.h",
+      "git_blob": "a20ff3f56a488ce6e2d9b3d08b8152ee6e38b8d6",
+      "sha256": "bfccc4f05ceecf7f58d690df1e140288007c416b3cd3537b3b0785fe8581c12f"
+    },
+    {
+      "source": "src/USB_Host_driver/tusb_config.h",
+      "destination": "src/USB_Host_Driver/tusb_config.h",
+      "git_blob": "1d6508daa024c8c115827278878908b1437723d3",
+      "sha256": "55f1dfd516b069c7a05d572febbf4fea0554115aaff4df88a7e3fcf8b2dace73"
+    }
+  ],
+  "patches": [
+    {
+      "path": "patches/elks-usb.patch",
+      "component": "elks",
+      "sha256": "0f58f01e67266ca94d965fefc4ea19e6db9b81f1f4ceb83515807179169821c9"
+    },
+    {
+      "path": "patches/elks-display-separate.patch",
+      "component": "elks",
+      "sha256": "3283703aee574ab1e53b14a2a43f5b2d4dfd5ed2f387ef3f7f5fe647fffd4bae"
+    },
+    {
+      "path": "patches/picomem-usb.patch",
+      "component": "picomem",
+      "sha256": "5f7b1dfd94165d4f1f784d6012b948c0e60ab4ce3f7e4cec765b6edc73c74f7e"
+    },
+    {
+      "path": "patches/tinyusb-msc.patch",
+      "component": "tinyusb",
+      "sha256": "910634990d3bf45442d5071476f53edc2e125e21a8b705afc9547a98dd11a3ae"
+    },
+    {
+      "path": "patches/xinput-build-adapter.patch",
+      "component": "xinput",
+      "sha256": "5933370c02e667b863946799fa3e8bcb1f6a1a01aee702bf80d511c095167f02"
+    },
+    {
+      "path": "patches/write-option-label.patch",
+      "component": "picomem",
+      "sha256": "d5a826d9c0c6e7a7b0bf31006951f9a68b877ac8238fad0305e6c0e72560c467",
+      "description": "Nonfunctional wording correction after frozen tested snapshot"
+    },
+    {
+      "path": "patches/cache-completion-comment.patch",
+      "component": "elks",
+      "sha256": "2225af7820c5df75760ae9eac8d5a7d82bdaf64c44641c6555a06c573f9b0c99",
+      "description": "Nonfunctional wording correction after frozen tested snapshot"
+    },
+    {
+      "path": "patches/01-fat-mirrors.patch",
+      "component": "elks",
+      "sha256": "95be6eea1ade349f51d26302d7bdf7b4be9d34b5495c749e9ddfdf64fd643408"
+    },
+    {
+      "path": "patches/02-fat32-entry-high-cluster.patch",
+      "component": "elks",
+      "sha256": "5981ed37664b4a2a222153d1597d336cf12c678f72f6c8e6bb06cdfc0146ae2e"
+    },
+    {
+      "path": "patches/03-fat32-root-parent.patch",
+      "component": "elks",
+      "sha256": "c1df0023b51b73b1427a1dd98cbd14bbb1195c9ff6c396d6ee52e49988b1d7c8"
+    },
+    {
+      "path": "patches/04-fat32-fsinfo-invalidate.patch",
+      "component": "elks",
+      "sha256": "d7b6cc2e9630195a6add302ca771caa2cb51818a3cc6684a89e5512c25af789c"
+    },
+    {
+      "path": "patches/firmware-header-cache.patch",
+      "component": "picomem",
+      "sha256": "5bb54972312129dd35f16afa095a6b908d78e130ad3b1296898bf2fb4f608a64"
+    },
+    {
+      "path": "patches/05-raw-offset-bound.patch",
+      "component": "elks",
+      "sha256": "13fb84fa862cfbaddffea244ea0a25f56499f6a14046af0fcf12bee8b2573a74"
+    },
+    {
+      "path": "patches/06-fat-geometry-bound.patch",
+      "component": "elks",
+      "sha256": "a847a2e8733abb7729332dbdda09a8c3a396738ec56725bd99c9040f07ba3142"
+    },
+    {
+      "path": "patches/07-fat32-reserved-bits.patch",
+      "component": "elks",
+      "sha256": "23396f2058c140601c39af087d85b89ef9213a454b6502f80e4c21ced6b3a221"
+    },
+    {
+      "path": "patches/08-command-comment.patch",
+      "component": "picomem",
+      "sha256": "0b9e3364fb2921b9272abef070cdacefc9dc9551a3401226a46dfaef1af4810f",
+      "description": "Comment only: flushing is conditional on the established cache policy."
+    }
+  ],
+  "omitted_inactive_gitlinks": [
+    "firmware/WonderMCA (PICOMEM_20 selected)",
+    "sdk/lib/tinyusb (PICO_TINYUSB_PATH overrides it)",
+    "sdk/lib/mbedtls/framework (not present in tested build)"
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "command": "uname -a",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk-old -l > /tmp/old",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk -l > /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "cmp /tmp/old /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk -l /dev/ssd",
+      "expected_exit": 1,
+      "passed": true
+    },
+    {
+      "command": "fdisk-old -l /tmp/minix > /tmp/old",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk -l /tmp/minix > /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "cmp /tmp/old /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk-old -l /tmp/fat16 > /tmp/old",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk -l /tmp/fat16 > /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "cmp /tmp/old /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk-old -l /tmp/fat32 > /tmp/old",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk -l /tmp/fat32 > /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "cmp /tmp/old /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk-old -l /tmp/mbr > /tmp/old",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk -l /tmp/mbr > /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "cmp /tmp/old /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk-old -l /tmp/unknown > /tmp/old",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk -l /tmp/unknown > /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "cmp /tmp/old /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "mv /dev/ssd /dev/ssd.bak",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "cp /tmp/fat16 /dev/ssd",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk-old -l /dev/hda > /tmp/old",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk-old -l /dev/ssd >> /tmp/old",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk -l > /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "cmp /tmp/old /tmp/new",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "cmp /tmp/fat16 /dev/ssd",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "rm /dev/ssd",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "mv /dev/ssd.bak /dev/ssd",
+      "expected_exit": 0,
+      "passed": true
+    },
+    {
+      "command": "fdisk -l /dev/ssd",
+      "expected_exit": 1,
+      "passed": true
+    },
+    {
+      "command": "sync",
+      "expected_exit": 0,
+      "passed": true
+    }
+  ],
+  "hardware_usb_test": false,
+  "secondary_image_unchanged": true,
+  "present_ssd_test_uses_regular_fixture_only": true
+}

@@ -1,0 +1,97 @@
+{
+  "complete": true,
+  "usb_writes_attempted": false,
+  "usb_unmounted": true,
+  "commands": [
+    {
+      "label": "version",
+      "commands": [
+        "uname -a"
+      ]
+    },
+    {
+      "label": "initial-mounts",
+      "commands": [
+        "mount"
+      ]
+    },
+    {
+      "label": "initial-dmesg",
+      "commands": [
+        "dmesg"
+      ]
+    },
+    {
+      "label": "stage-directory",
+      "commands": [
+        "test ! -d /root/pmhot15/dftim15",
+        "mkdir /root/pmhot15/dftim15"
+      ]
+    },
+    {
+      "label": "mount-readonly",
+      "commands": [
+        "mount -t msdos -o ro /dev/ssd /mnt/fat"
+      ]
+    },
+    {
+      "label": "mounted",
+      "commands": [
+        "mount"
+      ]
+    },
+    {
+      "label": "mounted-dmesg",
+      "commands": [
+        "dmesg"
+      ]
+    },
+    {
+      "label": "after-dmesg",
+      "commands": [
+        "dmesg"
+      ]
+    },
+    {
+      "label": "unmount",
+      "commands": [
+        "cd /",
+        "umount /mnt/fat"
+      ]
+    },
+    {
+      "label": "final-mounts",
+      "commands": [
+        "mount"
+      ]
+    },
+    {
+      "label": "final-dmesg",
+      "commands": [
+        "dmesg"
+      ]
+    }
+  ],
+  "utc": "2026-11-15T17:40:05.860146+00:00",
+  "df_invocations": 1,
+  "references": {
+    "hello.txt": {
+      "bytes": 53,
+      "sha256": "f157c38dca528ff3fb5743f0313fbe6e0d8eacf943bad8c7e434a329e875a14e"
+    },
+    "nested/data.bin": {
+      "bytes": 40997,
+      "sha256": "57faa3e8deb03b8b53836b9b04eeb94f5fc203abb9da3716ce6c025408ed21c0"
+    },
+    "hp1115/proof.txt": {
+      "bytes": 28,
+      "sha256": "ce1fd6ef84234c8b7ca0215e56cab1b3453289db3281d37cf71ab7514d39054e"
+    }
+  },
+  "capture_directory": "/var/folders/_y/y_nlxrl949b4lbpwygsysmxw0000gn/T/pm-df-capture-y6r928nq",
+  "tcp_local_port": 61545,
+  "echo_seconds": 0.6164615830057301,
+  "remote_exit": 0,
+  "remote_completion_seconds": 183.68126450001728,
+  "local_completion_verified": true
+}

@@ -1,0 +1,70 @@
+ Volume in drive : is PMFAT32    
+ Volume Serial Number is 1411-F032
+Directory for ::/
+
+nested       <DIR>     2026-11-14   7:32 
+hello    txt        53 2026-11-14   7:32 
+empty                0 2026-11-14   7:32 
+filler   bin  35651584 2026-11-14   7:32 
+test         <DIR>     1980-01-01   0:08 
+WINTEST  TXT        96 2026-11-14   9:01 
+FSI1114      <DIR>     1980-01-01   0:03 
+B1RC1        <DIR>     1980-01-01   0:11 
+HP1115       <DIR>     1980-01-01   1:54 
+        9 files          35 651 733 bytes
+
+Directory for ::/nested
+
+.            <DIR>     2026-11-14   7:32 
+..           <DIR>     2026-11-14   7:32 
+note     txt        60 2026-11-14   7:32 
+data     bin     40997 2026-11-14   7:32 
+        4 files              41 057 bytes
+
+Directory for ::/test
+
+.            <DIR>     1980-01-01   0:10 
+..           <DIR>     1980-01-01   0:10 
+SUB          <DIR>     1980-01-01   0:22 
+COPY     BIN     40997 1980-01-01   0:23 
+        4 files              40 997 bytes
+
+Directory for ::/test/SUB
+
+.            <DIR>     1980-01-01   0:22 
+..           <DIR>     1980-01-01   0:22 
+        2 files                   0 bytes
+
+Directory for ::/System Volume Information
+
+.            <DIR>     2026-11-14   8:54 
+..           <DIR>     2026-11-14   8:54 
+WPSETT~1 DAT        12 2026-11-14   8:54  WPSettings.dat
+INDEXE~1            76 2026-11-14   8:54  IndexerVolumeGuid
+        4 files                  88 bytes
+
+Directory for ::/FSI1114
+
+.            <DIR>     1980-01-01   0:05 
+..           <DIR>     1980-01-01   0:05 
+PROOF    TXT        25 1980-01-01   0:06 
+        3 files                  25 bytes
+
+Directory for ::/B1RC1
+
+.            <DIR>     1980-01-01   0:10 
+..           <DIR>     1980-01-01   0:10 
+PROOF    TXT        24 1980-01-01   0:11 
+        3 files                  24 bytes
+
+Directory for ::/HP1115
+
+.            <DIR>     1980-01-01   1:32 
+..           <DIR>     1980-01-01   1:32 
+PROOF    TXT        28 1980-01-01   1:55 
+        3 files                  28 bytes
+
+Total files listed:
+       32 files          35 733 952 bytes
+                         13 798 400 bytes free
+

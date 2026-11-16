@@ -1,0 +1,40 @@
+{
+  "source_date_epoch": "1794571200",
+  "source": "/Volumes/PMBeta1Build/source",
+  "case_sensitive": true,
+  "tools": {
+    "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 15.3.Rel2 (Build arm-15.181)) 15.3.1 20260627",
+    "cmake": "cmake version 4.4.4",
+    "make": "GNU Make 3.81"
+  },
+  "builds": {
+    "off": {
+      "picomem.bin": {
+        "bytes": 4797376,
+        "sha256": "f1b1376433e26a5e1e16b066578055a29052edbf2eced4cabb3019314de75567"
+      },
+      "picomem.uf2": {
+        "bytes": 9595392,
+        "sha256": "2b9e2f7c6f630208ff791dda17ddd649af260dca1f6e2a1f74650ef2b891b624"
+      },
+      "picomem.elf": {
+        "bytes": 8142744,
+        "sha256": "351dc3fc447846cf3e21f7e535190d3bfa2969876362613d366ed8e68cc6d75f"
+      }
+    },
+    "on": {
+      "picomem.bin": {
+        "bytes": 4797088,
+        "sha256": "951083146ca8c856bebfe47c11654afc4e50ee3f183881e1911a9d59173c6487"
+      },
+      "picomem.uf2": {
+        "bytes": 9594880,
+        "sha256": "1a1834b2fd12f0b27904d80558cc2da215966a19185c2be244ffe6be99410ba4"
+      },
+      "picomem.elf": {
+        "bytes": 8098912,
+        "sha256": "454bbfff8a92a485046f5d4a9c69fabc85b7b74e14bdf0cc7d35e7b04668cb72"
+      }
+    }
+  }
+}

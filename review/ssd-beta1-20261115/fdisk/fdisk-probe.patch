@@ -1,0 +1,54 @@
+--- a/elkscmd/disk_utils/fdisk.c
++++ b/elkscmd/disk_utils/fdisk.c
+@@ -79,7 +79,7 @@
+ void list_types();
+ void set_boot();
+ void set_type();
+-void list_partition(char *dev);
++void list_partition(char *dev, int optional);
+ 
+ #define sects_per_cyl ((unsigned long)(geometry.heads * geometry.sectors))
+ 
+@@ -139,7 +139,7 @@
+ void list_part(void)
+ {
+     if (*dev != 0)
+-        list_partition(NULL);
++        list_partition(NULL, 0);
+ }
+ 
+ void add_part(void)
+@@ -350,7 +350,7 @@
+         printf("%c   %s\n", tmp->cmd, tmp->help);
+ }
+ 
+-void list_partition(char *devname)
++void list_partition(char *devname, int optional)
+ {
+     int i, fd = -1;
+     int bad_mbr = 0;
+@@ -358,6 +358,9 @@
+ 
+     if (devname!=NULL) {
+         if ((fd=open(devname,O_RDONLY))==-1) {
++            if (optional && (errno == ENOENT || errno == ENODEV ||
++                             errno == ENODATA || errno == ENXIO))
++                return;
+             printf("Error opening %s\n",devname);
+             exit(1);
+         }
+@@ -431,9 +434,11 @@
+ 
+ 
+     if (mode == MODE_LIST) {
+-        if (*dev == 0)
+-            strcpy(dev,DEFAULT_DEV);
+-        list_partition(dev);
++        if (*dev == 0) {
++            list_partition(DEFAULT_DEV, 0);
++            list_partition("/dev/ssd", 1);
++        } else
++            list_partition(dev, 0);
+         return 0;
+     }
+ 

@@ -11,24 +11,56 @@ My work builds on the published interfaces and examples from
 [jdredd87’s PicoMEM tools](https://github.com/jdredd87/CH375USBTools/tree/main/PicoMEM).
 I implemented the ELKS utilities separately in C using those projects as references.
 
-## Native block-device review — 8 November 2026
+## Native USB block-device review — Beta 1 candidate
 
-The USB storage implementation has been reworked around **ELKS's existing SSD
-block driver, partition scanner, native FAT filesystem and normal mount/unmount
-path**. PicoMEM now provides raw USB sectors rather than firmware-level file
-operations. The experimental source snapshot includes the matching PicoMEM
-firmware changes and separately identified TinyUSB/controller changes.
+The latest experimental implementation uses a PicoMEM subdriver behind ELKS's
+existing SSD block driver. Native ELKS MINIX/FAT code and the normal buffer
+cache, `mount`, `sync` and `umount` handle files. PicoMEM transfers sectors
+through its existing command/data ports.
 
-**[Review the current architecture, source patches and test status](review/native-block-20261108/README.md).**
-The scope is one directly connected MBR-partitioned FAT16/FAT32 USB device with
-512-byte sectors. Full native long-filename support is deferred pending
-architectural feedback. An intermittent read mismatch and a fault retained
-across warm reboot remain unresolved; this is not a release candidate.
+**[Current source, patch separation, test evidence and limits](review/ssd-beta1-20261115/README.md).**
+This supersedes the [8 November partition-aware snapshot](review/native-block-20261108/README.md).
+The current candidate exposes one directly attached USB device with 512-byte
+sectors as **`/dev/ssd`**. It currently supports FAT volumes whose boot sector is at device LBA 0
+(superfloppy layout), and sector-zero MINIX filesystems;
+it does not map MBR partitions to `/dev/ssd1`. This is an implementation
+limitation: an arbitrary FAT-formatted USB stick must not be assumed compatible.
+Reuse of existing ELKS code for MBR support is a separate maintainer-review question. The paired kernel and firmware
+are required; the older downloads below do not provide this implementation.
 
-The utility documentation and downloads below remain available. **The old
-`picofs`/`pmmount` instructions and earlier nine-media/DOS results describe
-the superseded file-service architecture, not the new native block snapshot.**
-Do not mix those kernels, firmware or qualification results.
+Native MINIX, FAT16 and FAT32 writes have been exercised on test fixtures.
+Orderly USB removal/reinsertion and drive changes work after successful
+unmount and closing raw-device handles. Removal while mounted and recovery
+from uncertain transfers are outside this support: faults require a full
+power cycle. Internal SD image boot remains on the existing BIOS path; this
+candidate adds no native access to the SD card's outer filesystem.
+
+The review separates the SSD backend, orderly-hotplug extension, native FAT
+corrections, raw-device bounds check, optional `fdisk` probe, and unrelated
+Amstrad display shortcut. PicoMEM firmware and a pinned TinyUSB MSC completion
+patch are separate dependencies. Long-filename creation/rename work remains
+deferred.
+
+Current hotplug evidence covers REDX20's 8 MiB flat FAT16 fixture and PMBLUE's
+48 MiB flat FAT32 fixture, including independent file, FAT-table, allocation
+and guard checks. Earlier MINIX and Windows–ELKS checks are identified by
+their tested revisions in the review packet. These fixture sizes are not the
+physical drive capacities.
+
+**This is an experimental review candidate, not an upstream-approved release.**
+One FAT32 run lost its network response; a separately recorded continuation
+and independent media checks passed, but the interruption remains unexplained.
+A read-only `df` took 179 seconds on PMBLUE. General responsiveness, broader
+media compatibility and power-loss behavior remain limitations.
+
+The optional `fdisk -l` change only probes `/dev/ssd` after the existing `/dev/hda` listing.
+Its stock table renderer is unchanged: on a flat filesystem it may print empty
+or meaningless partition rows. Those rows do not establish usable partitions.
+
+The utility documentation below remains available. **Earlier `picofs`/`pmmount`
+instructions, nine-media/DOS results and the 8 November source snapshot describe
+superseded implementations.** Do not mix their binaries or qualification results
+with this candidate.
 
 ## Commands and Usage
 
@@ -39,10 +71,10 @@ Do not mix those kernels, firmware or qualification results.
 | `pmstat` | Passive summary by default; `--usb` queries cached USB inventory and `--disks` queries firmware disk/image geometry metadata. |
 | `pmmem` | Queries the card's active memory types and compares them with the configured map. `--probe` checks just the BIOS block first. No RAM write probes or remapping. |
 | `pmmount` (earlier picofs builds) | Mounts PicoMEM USB or SD read-only; `--rw usb` explicitly enables experimental USB writes; `-u` unmounts. Requires the optional PicoMEM kernel. |
-| `mount` (updated ELKS utility) | Lists mounted filesystems, including PicoMEM USB/SD mountpoints and their `ro`/`rw` status. Supplied with the kernel build. |
+| `mount` (earlier picofs builds) | Lists mounted filesystems, including PicoMEM USB/SD mountpoints and their `ro`/`rw` status. Supplied with the kernel build. |
 
 `pmconfig`, `pmdump`, `pmstat` and `pmmem` select modes of one executable.
-`pmmount` and the updated `mount` are separate kernel-build utilities.
+`pmmount` and the updated `mount` are separate utilities for the earlier picofs kernel builds; the current SSD candidate uses normal ELKS mount commands.
 `pmcfg` remains a compatible name
 for the configuration mode. I adopted `pmconfig` as the clearer primary name;
 all command names fit eight characters.
@@ -50,7 +82,7 @@ all command names fit eight characters.
 ### Earlier picofs USB and SD mounts
 
 This section documents the earlier file-service builds. For the current native
-block-device design, use the [review snapshot](review/native-block-20261108/README.md).
+block-device design, use the [review snapshot](review/ssd-beta1-20261115/README.md).
 
 I have tested **USB read/write and SD read-only mounts on the PPC512** using
 the optional `picofs` kernel filesystem. Ordinary ELKS commands such as `ls`,
@@ -342,4 +374,5 @@ AI coding assistance. Source references are recorded in
 [DESIGN.md](docs/DESIGN.md) and [PORTING.md](docs/PORTING.md).
 
 Licensed under **GPL-2.0-or-later**; see [COPYING](COPYING).
+
 

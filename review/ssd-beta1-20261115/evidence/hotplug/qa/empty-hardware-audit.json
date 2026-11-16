@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "commands_verified": 9,
+  "empty_mount_attempts": 2,
+  "explicit_ENODATA_each": true,
+  "installed_kernel_sha256": "ae68c867c964ba0a895a5be7bc2d12a43e698551f11a8a67dbf9ac95919a2b52",
+  "new_runtime_version_matches": true,
+  "user_reported_full_cold_start_without_usb": true,
+  "root_only_after_each": true,
+  "no_recorded_ssd_errors": true,
+  "capture_exact_to_result": true,
+  "late_insertion_still_pending": true,
+  "sticky_fault_cleared_not_inferred": true,
+  "hardware_access_by_qa": false,
+  "next_gate": "One direct late insertion while ELKS remains running, then bounded RO file verification and clean release; do not reboot or expand to writes yet."
+}

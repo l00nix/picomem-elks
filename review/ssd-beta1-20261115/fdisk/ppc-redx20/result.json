@@ -1,0 +1,37 @@
+{
+  "complete": false,
+  "utc": "2026-11-16T01:38:26.225000+00:00",
+  "user_confirmation": "REDX20 is now connected; it was absent earlier",
+  "usb_writes": false,
+  "rebooted": false,
+  "commands": [
+    {
+      "label": "before",
+      "commands": [
+        "mount"
+      ]
+    },
+    {
+      "label": "capture",
+      "commands": [
+        "test ! -d /root/fdprobe15/rx",
+        "mkdir /root/fdprobe15/rx",
+        "chmod 755 /root/fdprobe15/fdisk.old",
+        "/root/fdprobe15/fdisk.old -l /dev/hda > /root/fdprobe15/rx/hda",
+        "/root/fdprobe15/fdisk.old -l /dev/ssd > /root/fdprobe15/rx/ssd",
+        "fdisk -l > /root/fdprobe15/rx/default",
+        "fdisk -l /dev/ssd > /root/fdprobe15/rx/explicit"
+      ]
+    },
+    {
+      "label": "after",
+      "commands": [
+        "mount",
+        "dmesg"
+      ]
+    }
+  ],
+  "default_matches_two_stock_tables": true,
+  "explicit_usb_matches_stock": true,
+  "failure": "AssertionError()"
+}

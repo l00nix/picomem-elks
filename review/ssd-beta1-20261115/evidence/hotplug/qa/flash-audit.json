@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "approved_interim_internal_sd_boot_no_usb": true,
+  "backup_flash_bytes": 16777216,
+  "backup_sha256": "32c0f95412306e75d403d41358f62c8346a95c7f8e25b4f2a8116623533c1892",
+  "prior_arm_bytes_exact": 4797184,
+  "new_uf2_sha256": "ab48031e32ecdc944f4a4f85876d62a8eb04eecd52da88d353e11e407000cf0d",
+  "new_arm_payload_matches_built_bin": true,
+  "saved_verification_logs_passed": true,
+  "saved_board_identity_matches": true,
+  "kernel_install_pending": true,
+  "kernel_installed": false,
+  "shutdown_sent": false,
+  "usb_tests_authorized": false,
+  "required_next_steps": [
+    "Disconnect USB-C and leave all USB storage disconnected for interim internal SD boot.",
+    "Verify old RC1 kernel/root-only operation, install staged matching kernel with full readback under existing authorization gates.",
+    "Obtain/retain explicit shutdown authorization; full PPC/PicoMEM OFF/ON with USB-C disconnected before USB tests.",
+    "Verify matching new kernel and cold-start state before bounded hotplug qualification."
+  ],
+  "limits": [
+    "Saved-file audit only; no new hardware command issued.",
+    "Flash verification qualifies transferred bytes, not real hotplug behavior."
+  ]
+}

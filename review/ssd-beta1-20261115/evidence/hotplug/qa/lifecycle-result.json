@@ -1,0 +1,36 @@
+{
+  "source": "/Volumes/PMBeta1Build/hotplug/kernel/elks/arch/i86/drivers/block/ssd.c",
+  "source_sha256": "7555470dc81eb37d6c935475e00ec33a4f5e6640138cc629a9fb1d5034ad4c3f",
+  "actual_functions": [
+    "ssd_open",
+    "ssd_release",
+    "do_ssd_request"
+  ],
+  "variants": [
+    {
+      "configuration": "pm1-xms0",
+      "result": "PASS 48 checks",
+      "passed": true
+    },
+    {
+      "configuration": "pm1-xms1",
+      "result": "PASS 48 checks",
+      "passed": true
+    },
+    {
+      "configuration": "pm0-xms0",
+      "result": "PASS 7 checks",
+      "passed": true
+    },
+    {
+      "configuration": "pm0-xms1",
+      "result": "PASS 7 checks",
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "Mocked sync/cache/subdriver policy: verifies call order and lifecycle guard, not actual ELKS cache quiescence or USB transport.",
+    "Native 16-bit code generation and actual firmware protocol require separate tests.",
+    "Post-release mock assumes normal invalidation leaves no referenced dirty buffers; faulted sessions remain quarantined."
+  ]
+}

@@ -1,0 +1,185 @@
+--- a/src/class/msc/msc_host.c
++++ b/src/class/msc/msc_host.c
+@@ -48,6 +48,7 @@
+   MSC_STAGE_CMD,
+   MSC_STAGE_DATA,
+   MSC_STAGE_STATUS,
++  MSC_STAGE_FAILED,
+ };
+ 
+ typedef struct {
+@@ -61,6 +62,7 @@
+ 
+   // SCSI command data
+   uint8_t stage;
++  uint32_t actual_len;
+   void* buffer;
+   tuh_msc_complete_cb_t complete_cb;
+   uintptr_t complete_arg;
+@@ -123,7 +125,7 @@
+ 
+ bool tuh_msc_ready(uint8_t dev_addr) {
+   msch_interface_t* p_msc = get_itf(dev_addr);
+-  return p_msc->mounted && !usbh_edpt_busy(dev_addr, p_msc->ep_in) && !usbh_edpt_busy(dev_addr, p_msc->ep_out);
++  return p_msc->mounted && p_msc->stage == MSC_STAGE_IDLE && !usbh_edpt_busy(dev_addr, p_msc->ep_in) && !usbh_edpt_busy(dev_addr, p_msc->ep_out);
+ }
+ 
+ //--------------------------------------------------------------------+
+@@ -139,13 +141,16 @@
+ bool tuh_msc_scsi_command(uint8_t daddr, msc_cbw_t const* cbw, void* data,
+                           tuh_msc_complete_cb_t complete_cb, uintptr_t arg) {
+   msch_interface_t* p_msc = get_itf(daddr);
+-  TU_VERIFY(p_msc->configured);
++  TU_VERIFY(p_msc->configured && p_msc->stage == MSC_STAGE_IDLE);
+ 
+   // claim endpoint
+   TU_VERIFY(usbh_edpt_claim(daddr, p_msc->ep_out));
+   msch_epbuf_t* epbuf = get_epbuf(daddr);
+ 
+   epbuf->cbw = *cbw;
++  tu_memclr(&epbuf->csw, sizeof(epbuf->csw));
++  epbuf->csw.status = MSC_CSW_STATUS_PHASE_ERROR;
++  p_msc->actual_len = 0;
+   p_msc->buffer = data;
+   p_msc->complete_cb = complete_cb;
+   p_msc->complete_arg = arg;
+@@ -153,6 +158,7 @@
+ 
+   if (!usbh_edpt_xfer(daddr, p_msc->ep_out, (uint8_t*) &epbuf->cbw, sizeof(msc_cbw_t))) {
+     usbh_edpt_release(daddr, p_msc->ep_out);
++    p_msc->stage = MSC_STAGE_IDLE;
+     return false;
+   }
+ 
+@@ -321,52 +327,65 @@
+   tu_memclr(p_msc, sizeof(msch_interface_t));
+ }
+ 
++static void complete_command(uint8_t dev_addr, xfer_result_t result) {
++  msch_interface_t* p_msc = get_itf(dev_addr);
++  msch_epbuf_t* epbuf = get_epbuf(dev_addr);
++  // Transport failure needs recovery before another command can be submitted.
++  p_msc->stage = result == XFER_RESULT_SUCCESS ? MSC_STAGE_IDLE : MSC_STAGE_FAILED;
++  if (result != XFER_RESULT_SUCCESS) {
++    epbuf->csw.status = MSC_CSW_STATUS_PHASE_ERROR;
++  }
++  if (p_msc->complete_cb) {
++    tuh_msc_complete_data_t const cb_data = {
++      .cbw = &epbuf->cbw, .csw = &epbuf->csw,
++      .scsi_data = p_msc->buffer, .user_arg = p_msc->complete_arg,
++      .result = result, .actual_len = p_msc->actual_len
++    };
++    p_msc->complete_cb(dev_addr, &cb_data);
++  }
++}
++
+ bool msch_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes) {
+   msch_interface_t* p_msc = get_itf(dev_addr);
+   msch_epbuf_t* epbuf = get_epbuf(dev_addr);
+-  msc_cbw_t const * cbw = &epbuf->cbw;
+-  msc_csw_t       * csw = &epbuf->csw;
++  msc_cbw_t const* cbw = &epbuf->cbw;
++  msc_csw_t* csw = &epbuf->csw;
++  uint8_t const ep_data = (cbw->dir & TUSB_DIR_IN_MASK) ? p_msc->ep_in : p_msc->ep_out;
+ 
+   switch (p_msc->stage) {
+     case MSC_STAGE_CMD:
+-      // Must be Command Block
+-      TU_ASSERT(ep_addr == p_msc->ep_out && event == XFER_RESULT_SUCCESS && xferred_bytes == sizeof(msc_cbw_t));
++      if (ep_addr != p_msc->ep_out || event != XFER_RESULT_SUCCESS ||
++          xferred_bytes != sizeof(msc_cbw_t)) break;
+       if (cbw->total_bytes && p_msc->buffer) {
+-        // Data stage if any
+         p_msc->stage = MSC_STAGE_DATA;
+-        uint8_t const ep_data = (cbw->dir & TUSB_DIR_IN_MASK) ? p_msc->ep_in : p_msc->ep_out;
+-        TU_ASSERT(usbh_edpt_xfer(dev_addr, ep_data, p_msc->buffer, (uint16_t) cbw->total_bytes));
++        if (usbh_edpt_xfer(dev_addr, ep_data, p_msc->buffer, (uint16_t) cbw->total_bytes)) return true;
+         break;
+       }
+-
+-      TU_ATTR_FALLTHROUGH; // fallthrough to status stage
++      goto status;
+ 
+     case MSC_STAGE_DATA:
+-      // Status stage
++      p_msc->actual_len = xferred_bytes;
++      if (ep_addr != ep_data || event != XFER_RESULT_SUCCESS ||
++          xferred_bytes > cbw->total_bytes) break;
++      // Short successful replies are valid for some SCSI commands. Let the
++      // caller check its required DATA length independently of the CSW.
++    status:
+       p_msc->stage = MSC_STAGE_STATUS;
+-      TU_ASSERT(usbh_edpt_xfer(dev_addr, p_msc->ep_in, (uint8_t*) csw, (uint16_t) sizeof(msc_csw_t)));
++      if (usbh_edpt_xfer(dev_addr, p_msc->ep_in, (uint8_t*) csw, sizeof(*csw))) return true;
+       break;
+ 
+     case MSC_STAGE_STATUS:
+-      // SCSI op is complete
+-      p_msc->stage = MSC_STAGE_IDLE;
+-
+-      if (p_msc->complete_cb) {
+-        tuh_msc_complete_data_t const cb_data = {
+-            .cbw = cbw,
+-            .csw = csw,
+-            .scsi_data = p_msc->buffer,
+-            .user_arg = p_msc->complete_arg
+-        };
+-        p_msc->complete_cb(dev_addr, &cb_data);
+-      }
+-      break;
+-
+-      // unknown state
++      if (ep_addr != p_msc->ep_in || event != XFER_RESULT_SUCCESS ||
++          xferred_bytes != sizeof(*csw) || csw->signature != MSC_CSW_SIGNATURE ||
++          csw->tag != cbw->tag || csw->data_residue > cbw->total_bytes ||
++          csw->status >= MSC_CSW_STATUS_PHASE_ERROR) break;
++      complete_command(dev_addr, XFER_RESULT_SUCCESS);
++      return true;
++
+     default:
+-      break;
+-  }
+-
++      return false;
++  }
++  complete_command(dev_addr, event == XFER_RESULT_SUCCESS ? XFER_RESULT_FAILED : event);
+   return true;
+ }
+ 
+@@ -463,6 +482,7 @@
+ }
+ 
+ static bool config_test_unit_ready_complete(uint8_t dev_addr, tuh_msc_complete_data_t const* cb_data) {
++  TU_VERIFY(cb_data->result == XFER_RESULT_SUCCESS);
+   msc_cbw_t const* cbw = cb_data->cbw;
+   msc_csw_t const* csw = cb_data->csw;
+   uint8_t* enum_buf = usbh_get_enum_buf();
+@@ -484,6 +504,7 @@
+ }
+ 
+ static bool config_request_sense_complete(uint8_t dev_addr, tuh_msc_complete_data_t const* cb_data) {
++  TU_VERIFY(cb_data->result == XFER_RESULT_SUCCESS);
+   msc_cbw_t const* cbw = cb_data->cbw;
+   msc_csw_t const* csw = cb_data->csw;
+ 
+@@ -493,6 +514,9 @@
+ }
+ 
+ static bool config_read_capacity_complete(uint8_t dev_addr, tuh_msc_complete_data_t const* cb_data) {
++  TU_VERIFY(cb_data->result == XFER_RESULT_SUCCESS &&
++            cb_data->actual_len == sizeof(scsi_read_capacity10_resp_t) &&
++            cb_data->csw->data_residue == 0);
+   msc_cbw_t const* cbw = cb_data->cbw;
+   msc_csw_t const* csw = cb_data->csw;
+   TU_ASSERT(csw->status == 0);
+--- a/src/class/msc/msc_host.h
++++ b/src/class/msc/msc_host.h
+@@ -46,6 +46,8 @@
+   msc_csw_t const* csw; // SCSI status
+   void* scsi_data;      // SCSI Data
+   uintptr_t user_arg;   // user argument
++  xfer_result_t result; // USB transport result, separate from SCSI status
++  uint32_t actual_len;  // bytes received/sent in the DATA stage
+ }tuh_msc_complete_data_t;
+ 
+ typedef bool (*tuh_msc_complete_cb_t)(uint8_t dev_addr, tuh_msc_complete_data_t const* cb_data);

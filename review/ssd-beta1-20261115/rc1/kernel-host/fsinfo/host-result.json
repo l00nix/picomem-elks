@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "result": "PASS 31 FSInfo scenarios",
+  "actual_candidate_functions_extracted": true,
+  "sanitizers": [
+    "address",
+    "undefined"
+  ],
+  "source_sha256": "2791a4180d7508bc58b9a97703a9cb3da7968169366688752ce3a311ba84ed10"
+}

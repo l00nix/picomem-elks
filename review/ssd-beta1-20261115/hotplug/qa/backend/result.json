@@ -1,0 +1,54 @@
+{
+  "complete": true,
+  "passed": true,
+  "created_utc": "2026-11-16T02:14:54.710190+00:00",
+  "source_sha256": {
+    "/Volumes/PMBeta1Build/publication-check/elks/elks/arch/i86/drivers/block/ssd-picomem.c": "a3b8abc6a910d0482ab204b6fb63f3d8baa0fbf45d6aead2667dd74df607a1b6",
+    "/Volumes/PMBeta1Build/publication-check/elks/elks/arch/i86/drivers/block/ssd.h": "2fceff463221e479db984a9e60d4c819257615689e4a61ccadd5943d3f13c5a2",
+    "/Volumes/PMBeta1Build/publication-check/firmware/src/isa_devices/dev_picomem_io.cpp": "4d7ce5aa4dcc60442d9e9907332903617e0d95ec68451029ee54571952d9d20a",
+    "/Volumes/PMBeta1Build/publication-check/firmware/src/pm_cmd.cpp": "95c293334fd38ef900e1599588183cdb68fb07f46a6227efe001d16a2950bf8e",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-publication-20261115/site/review/ssd-beta1-20261115/rc1/qa/backend/acceptance.c": "6e3f2e9e3ac31eb1b2e2b9822767574f906a33eae8e3a89557ebdbab3e058b66",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-publication-20261115/site/review/ssd-beta1-20261115/rc1/qa/backend/include/mock.h": "6651f519630259e03487e67b1bc490af4cdd920193aadf6d182d33739616807a",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-publication-20261115/site/review/ssd-beta1-20261115/hotplug/qa/backend/acceptance.c": "5e8e7c1c37ea55128606acd71fab18fbad7349832ec5f1015423b9a52d043e72",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-publication-20261115/site/review/ssd-beta1-20261115/hotplug/qa/backend/include/mock.h": "6ad0a95e780f204a3309d9c14057446bf34992e983aa387bff049c8061f2b633",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-publication-20261115/site/review/ssd-beta1-20261115/hotplug/qa/backend/run.py": "6b3d4ebf9114ebb2371118364c671ffae9546ef3ee05f372111795a1f5fd3dfb"
+  },
+  "input_unchanged": true,
+  "compiler_command": [
+    "clang",
+    "-DPM_BACKEND_SOURCE=\"/Volumes/PMBeta1Build/publication-check/elks/elks/arch/i86/drivers/block/ssd-picomem.c\"",
+    "-std=c11",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Wno-unused-parameter",
+    "-fsanitize=address,undefined",
+    "-fno-sanitize-recover=all",
+    "-O1",
+    "-g",
+    "-I/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-publication-20261115/site/review/ssd-beta1-20261115/hotplug/qa/backend/include",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-publication-20261115/site/review/ssd-beta1-20261115/hotplug/qa/backend/acceptance.c",
+    "-o",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-publication-20261115/site/review/ssd-beta1-20261115/hotplug/qa/backend/acceptance"
+  ],
+  "compile_exit": 0,
+  "run_exit": 0,
+  "case_count": 181,
+  "summary": "SUMMARY 181 checks passed",
+  "hardware_accessed": false,
+  "production_source_modified": false,
+  "provenance": "Adapted RC1 actual-source143-case backend harness in new qa directory. Includes candidate source directly unchanged. Updated geometry operation0 to claim operation4; zero capacity now tested as retryable valid no-media response; added status-only release operation3.",
+  "coverage": [
+    "Exact read/write success, stage/count errors, finite polling and IRQ restoration retained for both entry IRQ states",
+    "Operation4 complete validated no-media returns0 without hard fault, repeated retries, later insertion and new capacity",
+    "Operation3 status-only release, finite delayed READY success and subsequent claim/read/write with changed capacity",
+    "Release pending/wrong stage/absent/error latch, own completed error clear only, failed clear bounded",
+    "Init/read/write/release permanent no-I/O reuse after fault even when late READY and good geometry appear",
+    "Out-of-range zero port/copy operations and unchanged read caller on all failures"
+  ],
+  "limitations": [
+    "Port/IRQ/copy models only; not electrical timing or USB insertion/removal qualification.",
+    "Generic ssd_open/release media ownership/capacity/cache lifecycle and firmware state machine tested by separate auditors. Static integration check: dev_picomem_io.cpp:158-159 sets CMDINPROGRESS when command accepted; pm_cmd.cpp:529-531 publishes final status after service returns, so status-only release does not retain old READY.",
+    "Host unsigned widths differ from16-bit ELKS; sector_t is uint32_t."
+  ]
+}

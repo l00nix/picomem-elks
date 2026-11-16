@@ -1,0 +1,27 @@
+{
+  "review_complete": true,
+  "root_cause_proven": false,
+  "network_starvation_mechanism_supported_by_source": true,
+  "original_errno60_preserved": true,
+  "original_mkdir_exit_known": false,
+  "prior_mkdir_group_interval_seconds": 127.745959,
+  "fixture_first_free_cluster": 69808,
+  "predicted_fat_entry_accesses": 69807,
+  "distinct_fat_1k_blocks": 273,
+  "actual_hardware_scan_trace": false,
+  "source_sha256": {
+    "elks/fs/msdos/misc.c": "f79d5eea91b4c065c3cb793c211f21b72571ae8c7ed5be3874d509b384da8cc8",
+    "elks/fs/msdos/fat.c": "82a623029e13f39af435c91b476eed09007184c2f38451703b818639f574f890",
+    "elks/fs/msdos/inode.c": "2791a4180d7508bc58b9a97703a9cb3da7968169366688752ce3a311ba84ed10",
+    "elks/fs/buffer.c": "2f1b07084befd16c52c4c9eda917c80233ae95c8c4b63038f2a94444c864b491",
+    "elks/arch/i86/kernel/irqtab.S": "992576c3edb916e7321ec203ccdb5f807eb9b119a7096f116212cb47b3a97f17",
+    "elks/arch/i86/drivers/block/ssd.c": "7555470dc81eb37d6c935475e00ec33a4f5e6640138cc629a9fb1d5034ad4c3f",
+    "elks/arch/i86/drivers/block/ssd-picomem.c": "a3b8abc6a910d0482ab204b6fb63f3d8baa0fbf45d6aead2667dd74df607a1b6",
+    "elks/net/ipv4/af_inet.c": "71ba61a83f1fd326a62f3369d65d1890e72f795417cf0a94b8b18ccb65d326ec",
+    "elkscmd/ktcp/ktcp.c": "80be94888f2157588838afe5cb97a20cb0bb0284c0441ce64b933406c0060249"
+  },
+  "next_diagnostic": "One separately authorized first-allocation operation with local completion/exit recording and passive timestamped capture of its TCP flow; no production changes.",
+  "offline_option": "Disposable existing QEMU FAT/BIOS fixture plus userspace heartbeat; cannot qualify PicoMEM timing/network behavior.",
+  "no_hardware_access": true,
+  "no_production_mutations": true
+}

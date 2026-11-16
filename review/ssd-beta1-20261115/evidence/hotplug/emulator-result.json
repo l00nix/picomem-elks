@@ -1,0 +1,31 @@
+{
+  "complete": true,
+  "cases": {
+    "rw32_knownbackup": {
+      "passed": true,
+      "mode": "rw",
+      "checks": 32,
+      "before_sha256": "d93cb248edae8bd2d6946447b1ca5e8f1d23ad05faa519c02e352e8d40f29daf",
+      "after_sha256": "1af0db14b51da0c9f73e01fcdcfcd9c8a487e1a0b8476aa79552578f3758413b",
+      "fsck_exit": 0
+    },
+    "remount32_knownbackup": {
+      "passed": true,
+      "mode": "remount",
+      "checks": 31,
+      "before_sha256": "d93cb248edae8bd2d6946447b1ca5e8f1d23ad05faa519c02e352e8d40f29daf",
+      "after_sha256": "cbf322502571db579eebf9e44085bd24aaf2f5a40bf1400dcaf7763dbd680153",
+      "fsck_exit": 0
+    },
+    "rw16": {
+      "passed": true,
+      "mode": "rw",
+      "checks": 32,
+      "before_sha256": "30d13f1a73c257d7b0a5b30cdce8e7776dcb60192b255abde8c7d49fafbcb499",
+      "after_sha256": "4e410abb7f8bf0dac550e6de23e1f5a05f952ad6c5288dfdd42705d43f823a60",
+      "fsck_exit": 0
+    }
+  },
+  "total_checks": 95,
+  "physical_media_accessed": false
+}

@@ -1,0 +1,223 @@
+{
+  "review": "independent-offline-RC-audit",
+  "created_utc": "2026-11-15T12:17:25.757953+00:00",
+  "approved_offline_rc": true,
+  "approved_staging_only": true,
+  "approved_install_flash_publish": false,
+  "checks": {
+    "reconstruction pins and patch series match lock": true,
+    "all16 patch file hashes": true,
+    "final source reconstruction record matches package": true,
+    "kernel source manifest hash": true,
+    "kernel source manifest full content": true,
+    "frozen kernel binary": true,
+    "firmware reconstructed source equals build source": true,
+    "sdk reconstructed source equals build source": true,
+    "picotool reconstructed source equals build source": true,
+    "elks reconstructed source equals build source": true,
+    "comment-only BIN UF2 ELF unchanged": true,
+    "firmware off artifact hashes": true,
+    "firmware on artifact hashes": true,
+    "firmware host qualification": true,
+    "firmware qualified cache source matches final": true,
+    "kernel actual source host results": true,
+    "kernel host hashes match frozen source": true,
+    "independent geometry actual source qualification": true,
+    "independent backend actual source qualification": true,
+    "emulator root frozen kernel identity": true,
+    "emulator complete19cases277checks": true,
+    "ro32_knownbackup saved result and image hashes": true,
+    "ro32_knownbackup byte exact": true,
+    "rw32_knownbackup saved result and image hashes": true,
+    "rw32_knownbackup fsck recorded success": true,
+    "remount32_knownbackup saved result and image hashes": true,
+    "remount32_knownbackup fsck recorded success": true,
+    "rw32_unknown saved result and image hashes": true,
+    "rw32_unknown fsck recorded success": true,
+    "rw32_windows saved result and image hashes": true,
+    "rw32_windows fsck recorded success": true,
+    "ro16 saved result and image hashes": true,
+    "ro16 byte exact": true,
+    "rw16 saved result and image hashes": true,
+    "rw16 fsck recorded success": true,
+    "reject32_fsinfo_bounds saved result and image hashes": true,
+    "reject32_fsinfo_bounds byte exact": true,
+    "geometry_activefat saved result and image hashes": true,
+    "geometry_activefat byte exact": true,
+    "geometry_sector_size saved result and image hashes": true,
+    "geometry_sector_size byte exact": true,
+    "geometry_fat_length saved result and image hashes": true,
+    "geometry_fat_length byte exact": true,
+    "geometry_data_start saved result and image hashes": true,
+    "geometry_data_start byte exact": true,
+    "geometry_cluster_power saved result and image hashes": true,
+    "geometry_cluster_power byte exact": true,
+    "geometry_root_cluster saved result and image hashes": true,
+    "geometry_root_cluster byte exact": true,
+    "geometry_zero_cluster saved result and image hashes": true,
+    "geometry_zero_cluster byte exact": true,
+    "geometry_version saved result and image hashes": true,
+    "geometry_version byte exact": true,
+    "geometry_zero_data saved result and image hashes": true,
+    "geometry_zero_data byte exact": true,
+    "reserved_nibble saved result and image hashes": true,
+    "reserved_nibble fsck recorded success": true,
+    "reserved high nibble preserved all copies": true,
+    "raw_boundary saved result and image hashes": true,
+    "raw_boundary only last legal byte changed": true,
+    "rejected-shell-harness-attempt preserved": true,
+    "raw-marker-harness-attempt preserved": true,
+    "raw-crossing-harness-attempt preserved": true
+  },
+  "blockers": [],
+  "source_comparison": {
+    "firmware": {
+      "files": 3058,
+      "changed": []
+    },
+    "sdk": {
+      "files": 6954,
+      "changed": []
+    },
+    "picotool": {
+      "files": 122,
+      "changed": []
+    },
+    "elks": {
+      "files": 3295,
+      "changed": []
+    }
+  },
+  "kernel_manifest_missing": [],
+  "kernel_manifest_wrong": [],
+  "artifacts": {
+    "kernel": {
+      "image_bytes": 117680,
+      "image_sha256": "f19bbdbe1e71dc89e038e51a972dc64f63da5bb81dcf6ba0b678bf4b28a67e7a",
+      "base": "a872443c7303d4572b7af27c55f8fc3f3dfe8175",
+      "clean_source_reconstructed": true,
+      "source_manifest_sha256": "d519fcf893b1573a715382dbaa201010f1d3361e82464f442cf0e9893b65f047",
+      "display_shortcut_retained": true,
+      "installed": false,
+      "remote": "/run/user/1000/pm-beta1-20261115"
+    },
+    "firmware": {
+      "off": {
+        "picomem.bin": {
+          "bytes": 4797376,
+          "sha256": "f1b1376433e26a5e1e16b066578055a29052edbf2eced4cabb3019314de75567"
+        },
+        "picomem.uf2": {
+          "bytes": 9595392,
+          "sha256": "2b9e2f7c6f630208ff791dda17ddd649af260dca1f6e2a1f74650ef2b891b624"
+        },
+        "picomem.elf": {
+          "bytes": 8142744,
+          "sha256": "351dc3fc447846cf3e21f7e535190d3bfa2969876362613d366ed8e68cc6d75f"
+        }
+      },
+      "on": {
+        "picomem.bin": {
+          "bytes": 4797088,
+          "sha256": "951083146ca8c856bebfe47c11654afc4e50ee3f183881e1911a9d59173c6487"
+        },
+        "picomem.uf2": {
+          "bytes": 9594880,
+          "sha256": "1a1834b2fd12f0b27904d80558cc2da215966a19185c2be244ffe6be99410ba4"
+        },
+        "picomem.elf": {
+          "bytes": 8098912,
+          "sha256": "454bbfff8a92a485046f5d4a9c69fabc85b7b74e14bdf0cc7d35e7b04668cb72"
+        }
+      }
+    }
+  },
+  "documentation_review": {
+    "passed": true,
+    "notes": [
+      "Docs distinguish experimental RC from tested predecessor hardware and from upstream approval.",
+      "No partition/hotplug/hub/multidevice/LFN expansion; ssd.c unchanged intent retained.",
+      "Known buffered-error and assumed-write-through/power-loss limitations explicit.",
+      "Current kernel and newly built ON firmware still require supervised PPC FAT32/FAT16 plus independent full-image gates.",
+      "Original harness interruptions are retained and not counted as passing tests.",
+      "Reconstruction uses pinned Git objects; external IA16 toolchain and platform reproducibility limitations explicit."
+    ]
+  },
+  "limits": [
+    "This audit validates saved hashes/results and reviewed source, not real USB/electrical behavior.",
+    "Host models and BIOS-disk emulator are not hardware qualification.",
+    "Writable emulator images have recorded fsck success and selected shell checks; this audit does not claim exhaustive per-file/allocation parser certification of every emulator image."
+  ],
+  "evidence_sha256": {
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/README.md": "71fbb0651fb4fe930422debca1405b8ef34df9c2762e1c9c0295630d9634dabd",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/FAILURE-PATHS.md": "ccf91d39d39af5fc7ba8e6284cab1a9226df578bfe4255ee025fb57fe5be6711",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/BUILD.md": "22398c5b42795e39525180b499e91e4a6cbdff4084b40a03f395dbe7b30e77f2",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/HARDWARE-GATE.md": "3761deb05accb387ba299ba1c3e2552b80fda550f7d684166e392e49d73232d2",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/dependencies.lock.json": "c161aa8c72a9e3079b412a91218bd426df445185b06692f4286a32826097c4b2",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/reconstruction.json": "ad85c5a6a6288b1f3589c40e7379710671fb341e58ee284ea990ab49124f1d8e",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/final-source-verification.json": "a6ec3f5378f3806476efa3716da0707577b116ada7926a7056fa3e0a27f4a529",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/kernel/source-manifest.json": "d519fcf893b1573a715382dbaa201010f1d3361e82464f442cf0e9893b65f047",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/kernel/build-result.json": "4344513af61f6f58f7749277ee10dcad6365d8b6d627031af515397a01b1ca18",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/build-results.json": "a108acb9c8f8988f9735b9410bef8c96144565bb35301df1ee486adafc0c0349",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/pre-comment-build-results.json": "a108acb9c8f8988f9735b9410bef8c96144565bb35301df1ee486adafc0c0349",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/qualification.json": "840dd5258a4e47e9a43dadbf953214dc018960c301a54221cd0f6f112d0b2231",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/kernel-host/results.json": "489e3ac527e37be817c2796c6f28b840f6a70e4db033fc55d764a0728ea1c538",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/emulator-result.json": "e7d7c8a385fa8b9a3832819baf5bbaa21236e1e5207fcdafdc04b37368fb43b6",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/emulator-root/result.json": "7aa3afa7ef83d9ce3393464ae6deda63bc5e2cb9af6f5bdab68947c078d0d809",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/harness-note.md": "4969ad693c40066aef63104351b5b676cbaf2f600ed7aa6a9a7ae16f7839b323",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/qa/geometry-host-result.json": "f025947760aa919e25d3b5da8fd4d2af57c42cbc6ac58f4a551f8f96bdbedc6f",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/qa/backend/result.json": "46a92fadfb68386dc7f017ef8bc9a13c6959ec54c78978213746602f4237f593",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/qa/guard-source-review.json": "6d5d17c88e24e70d69bdd4acb0fe8adb7100f8d6620117847858eeb69eff63a7",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/qa/audit-rc.py": "67edc17a6552313eebadbafd6a278382a1ed2e3881c22970994625d927d0e3cd"
+  },
+  "candidate_packet": {
+    "approved": true,
+    "checks": {
+      "README.md matches reviewed root packet": true,
+      "FAILURE-PATHS.md matches reviewed root packet": true,
+      "BUILD.md matches reviewed root packet": true,
+      "HARDWARE-GATE.md matches reviewed root packet": true,
+      "dependencies.lock.json matches reviewed root packet": true,
+      "reconstruction.json matches reviewed root packet": true,
+      "qualification.json matches reviewed root packet": true,
+      "build-results.json matches reviewed root packet": true,
+      "emulator-result.json matches reviewed root packet": true,
+      "kernel/source-manifest.json matches reviewed root packet": true,
+      "kernel/build-result.json matches reviewed root packet": true,
+      "prepare.py matches reviewed root packet": true,
+      "build.py matches reviewed root packet": true,
+      "qualify.py matches reviewed root packet": true,
+      "all candidate patches hash match": true,
+      "candidate frozen kernel": true,
+      "candidate ON bin": true,
+      "candidate ON uf2": true,
+      "portable qa/geometry-host-result.json": true,
+      "portable qa/backend/result.json": true,
+      "portable FAT raw FSInfo": true,
+      "generic ssd.c byte-exact upstream": true,
+      "firmware service delta only header comment": true,
+      "candidate emulator evidence exact": true
+    },
+    "notes": [
+      "Portable tests accept reconstructed source path and passed on final-source/elks.",
+      "Archived evidence paths are historical records, not mutable build dependencies.",
+      "Final archive/container manifest may be generated after this audit; rehash after packaging."
+    ],
+    "artifact_sha256": {
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/artifacts/picomem-beta1-rc1.uf2": "1a1834b2fd12f0b27904d80558cc2da215966a19185c2be244ffe6be99410ba4",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/artifacts/picomem-beta1-rc1.bin": "951083146ca8c856bebfe47c11654afc4e50ee3f183881e1911a9d59173c6487",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/artifacts/elks-beta1-rc1-Image": "f19bbdbe1e71dc89e038e51a972dc64f63da5bb81dcf6ba0b678bf4b28a67e7a"
+    },
+    "portable_test_sha256": {
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/verify-kernel.py": "deef777da96f08709900586b112cde2fe66cf38210fbded1fc5790c7c241ef4a",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/kernel-tests.py": "0f5436f51972912a6b6239e416e9b783bbbbd696b9084443b59141d676230afc",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/test-geometry.py": "284e96b207fd96b674c12d0df7ac289fb0154c2d5a79a527dea3d96e3c34c5a8",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/run.py": "c73c9863c24b4b61781b5cee28fa2e828370c980ec3a212bf5bc46f2c3379823",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/acceptance.c": "6e3f2e9e3ac31eb1b2e2b9822767574f906a33eae8e3a89557ebdbab3e058b66",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/include/mock.h": "6651f519630259e03487e67b1bc490af4cdd920193aadf6d182d33739616807a",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/geometry-host-result.json": "517c1a0d10e482641a1ce3c2511a18d39ba846d21c4d64fa8b2713dada1c1ffc",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/result.json": "6b61ecfdfa0e6e451b7cf75ba3bb9c708f05310ace5d9ee645f5e28cf65989ad",
+      "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/kernel-host/results.json": "5fb1ef55190bfc5657cadc6fe1b5564b45d246fccf1de4b0b9efa0fc2c27c816"
+    }
+  }
+}

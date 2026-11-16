@@ -1,0 +1,9 @@
+--- a/src/pm_usb_ssd.cpp
++++ b/src/pm_usb_ssd.cpp
+@@ -1,5 +1,5 @@
+ /* Whole-device USB bridge for an ELKS SSD subdriver.
+- * Experimental command 0x8e: 0 = geometry, 1 = read one sector, 2 = write and flush.
++ * Experimental command 0x8e: 0 = geometry, 1 = read one sector, 2 = write one sector.
+  * Enabling this backend excludes the firmware's USB FatFs backend.
+  */
+ #include "pico/stdlib.h"

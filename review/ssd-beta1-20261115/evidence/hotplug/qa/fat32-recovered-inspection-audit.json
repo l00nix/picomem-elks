@@ -1,0 +1,17 @@
+{
+  "saved_inspection_passed": true,
+  "log_sha256": "4d2c64f6d0ab7574b860c6ab3d2a8594cb742fae47d62e7ed5a954c4f3db927b",
+  "no_mkdir_process_in_ps": true,
+  "mounted_usb_confirmed": true,
+  "empty_directory_entries_exact": true,
+  "recorded_storage_errors": false,
+  "approved_checkpoint_scope": [
+    "sync and storage diagnostics",
+    "eight original small-file exact checks",
+    "empty hp1115 directory confirmation"
+  ],
+  "continuation_requires_checkpoint_pass": true,
+  "original_mkdir_exit_status_unknown": true,
+  "original_failed_workload_not_overridden": true,
+  "no_hardware_access_by_qa": true
+}

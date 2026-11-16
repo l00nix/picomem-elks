@@ -1,0 +1,27 @@
+{
+  "approved_procedure": true,
+  "scripts_sha256": {
+    "install.py": "253a788d14c32f7390e62ee7f464e8ad8a24ebd1f3891e9091aabf27182a742c",
+    "shutdown.py": "4367548d634d937116ea60456132bd80be560966fd92888cfee1f07997604a8f",
+    "flash.py": "7fa618ca8bc7f0f5b3ae6f7524794261e5bc4429cb456a371d7e6fdb32222842",
+    "direct.py": "8e1a25792f6d68af1f59a198dd0104130e9a489354792917e67af5c5829e9448"
+  },
+  "staging_saved_evidence_consistent": true,
+  "local_recovery_exact_rc1": true,
+  "candidate_and_previous_firmware_hashes_verified": true,
+  "archive_sha256": "5927270e4f6483aaa422e3718e2402b55976569e053b426358e90e42b9d315bd",
+  "archive_files_verified": 38,
+  "procedure_checks": [
+    "Install requires explicit install approval, fresh result path, full current/staged/recovery comparisons, copy+sync success and full installed readback.",
+    "Shutdown requires separate explicit install-and-shutdown approval, expected installed hash, no earlier attempt, root-only mount and successful sync; attempt recorded before send.",
+    "Physical halt is not inferred from telnet loss; BOOT-mode user confirmation is a separate gate.",
+    "Flash requires recorded verified kernel installation and prior shutdown gates, user BOOT confirmation, expected chip/BOOTSEL/16MiB, exact previous firmware verification, fresh full-flash save -a -v, then exact candidate load -v.",
+    "Partial install/flash attempts remain recorded and block automatic retry."
+  ],
+  "limitations": [
+    "Approval is for the prepared procedure, not permission to install/shut down/flash. User readiness/authorization still required.",
+    "State kernel_installed must be set only after complete=true and exact installed readback in kernel-install-result.json.",
+    "Any unexpected disconnect/failure must stop for evidence review; do not automatically rerun or infer halt.",
+    "Native clean-hotplug behavior remains unqualified until the planned bounded hardware tests."
+  ]
+}

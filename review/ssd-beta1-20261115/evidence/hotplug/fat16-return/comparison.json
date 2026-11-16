@@ -1,0 +1,13 @@
+{
+  "complete": true,
+  "device_writes_requested": false,
+  "helper_sha256": "d306c059af1e85f4759d43a33ecbffa2ebca006542deb193fb44a815a5c371c7",
+  "captured_bytes": 252182528,
+  "remote_exit": 0,
+  "capture_sha256": "b812813ccf0b949db611db2bcb072dee71ca36288ed560c9eb7c49588fe0db5e",
+  "expected_sha256": "db8b9b220e984dd038f49430740424a8adf010bd8384952c28273d561138e4ec",
+  "tail_bytes_equal": true,
+  "remote_sha256": "b812813ccf0b949db611db2bcb072dee71ca36288ed560c9eb7c49588fe0db5e",
+  "unchanged_tail_matches": true,
+  "guard_matches": true
+}

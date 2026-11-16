@@ -1,0 +1,122 @@
+{
+  "passed": true,
+  "count": 23,
+  "checks": [
+    {
+      "name": "absent-2",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "absent-19",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "absent-96",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "absent-6",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "present-fat16",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "present-fat32",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "present-mbr",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "present-unknown",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "explicit-minix",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "explicit-fat16",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "explicit-fat32",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "explicit-mbr",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "explicit-unknown",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "explicit-short",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "explicit-error-2",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "explicit-error-96",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "explicit-error-5",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "optional-error-USB_OPEN_ERROR-5",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "optional-error-USB_OPEN_ERROR-13",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "optional-error-USB_READ_ERROR-1",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "optional-error-USB_SHORT_READ-1",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "primary-error",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "interactive-p-q-unchanged",
+      "passed": true
+    }
+  ],
+  "fixtures_unchanged": true,
+  "hardware_accessed": false
+}

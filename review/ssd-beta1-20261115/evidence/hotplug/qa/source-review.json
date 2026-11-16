@@ -1,0 +1,48 @@
+{
+  "source_review": "No blocking defect found for orderly clean release/swap only. Not hardware authorization or release qualification.",
+  "sources": {
+    "/Volumes/PMBeta1Build/hotplug/kernel/elks/arch/i86/drivers/block/ssd.c": "7555470dc81eb37d6c935475e00ec33a4f5e6640138cc629a9fb1d5034ad4c3f",
+    "/Volumes/PMBeta1Build/hotplug/kernel/elks/arch/i86/drivers/block/ssd.h": "2fceff463221e479db984a9e60d4c819257615689e4a61ccadd5943d3f13c5a2",
+    "/Volumes/PMBeta1Build/hotplug/kernel/elks/arch/i86/drivers/block/ssd-picomem.c": "a3b8abc6a910d0482ab204b6fb63f3d8baa0fbf45d6aead2667dd74df607a1b6",
+    "/Volumes/PMBeta1Build/hotplug/source/firmware/src/pm_usb_ssd.cpp": "1c488b60d8fd076748ee34565ccd94293440b6683dd924aa1fac0cda68776363"
+  },
+  "lifecycle_host_checks": 110,
+  "configurations": 4,
+  "sanitizers": [
+    "ASan",
+    "UBSan"
+  ],
+  "verified_by_source_review": [
+    "PicoMEM first-open binding and explicit no-media rejection also under CONFIG_FS_XMS; no boot USB binding.",
+    "Closing guard spans native sync, inode and buffer invalidation, and firmware release.",
+    "Non-PicoMEM init/open/release behavior preserved by conditional hooks.",
+    "Firmware rejects legacy geometry and unbound read/write; only clean release enables normal detach selection reset.",
+    "No-media and unsupported-sector-size media remain removable without poisoning the session.",
+    "Sticky kernel/firmware faults are not cleared by detach, release, late completion, or new mount callback.",
+    "PIO command admission sets INPROGRESS synchronously before completion polling.",
+    "Release requires mounted/ready USB, no busy transfer, and no fault; buffer ownership serialized by command core."
+  ],
+  "remaining_validation": [
+    "Actual cache quiescence across native unmount, raw descriptors, subsequent sys_umount fsync, and replacement mount needs native/emulator evidence; host harness mocks cache invalidation.",
+    "Production firmware lifecycle/fault-injection tests and native code-generation/build checks are separate parent-owned gates.",
+    "No surprise-removal recovery or durable completion guarantee for assumed write-through devices.",
+    "The void native release/fsync interfaces can leave umount returning success on storage error; failure log and permanent no-rebind fence remain necessary."
+  ],
+  "firmware_harness_review": {
+    "source_sha256": "1c488b60d8fd076748ee34565ccd94293440b6683dd924aa1fac0cda68776363",
+    "cases": 576,
+    "passed": true,
+    "added_cases": [
+      {
+        "case": "QA_disconnect_during_512_output",
+        "pass": true
+      },
+      {
+        "case": "QA_disconnect_during_first_claim_output",
+        "pass": true
+      }
+    ],
+    "base_cases": 574,
+    "scope": "Actual bridge source, USB/PIO mocked; adds precise output-phase disconnect injections to parent harness."
+  }
+}

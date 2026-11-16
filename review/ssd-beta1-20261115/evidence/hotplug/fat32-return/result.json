@@ -1,0 +1,29 @@
+{
+  "bytes": 50348032,
+  "sha256": "4e2011977ba0e75574f9e32cabec55aeab290f7b9b60adea718d3293136a717b",
+  "device_writes_requested": false,
+  "after_lsblk": [
+    {
+      "path": "/dev/sda",
+      "type": "disk",
+      "size": 16043212800,
+      "log-sec": 512,
+      "tran": "usb",
+      "mountpoints": [
+        null
+      ],
+      "children": [
+        {
+          "path": "/dev/sda1",
+          "type": "part",
+          "size": 50331648,
+          "log-sec": 512,
+          "tran": null,
+          "mountpoints": [
+            null
+          ]
+        }
+      ]
+    }
+  ]
+}

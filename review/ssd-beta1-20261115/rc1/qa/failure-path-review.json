@@ -1,0 +1,182 @@
+{
+  "review": "independent-source-failure-path-review",
+  "created_utc": "2026-11-15T12:04:00.305455+00:00",
+  "scope": "Tested snapshots, native generic SSD/raw path, and current transport; no hardware/network/publication or production source edits performed.",
+  "approved_beta1_as_inspected": false,
+  "decision": "Four small correctness/containment fixes and their qualification are required. This audit does not approve the in-progress replacement patches or release artifacts.",
+  "findings": [
+    {
+      "id": "raw-offset-wrap",
+      "classification": "blocker-before-Beta1",
+      "evidence": [
+        "work/pm-minimal-restart-20261108/elks/elks/fs/block_dev.c:37",
+        "work/pm-minimal-restart-20261108/elks/elks/fs/block_dev.c:84",
+        "work/pm-minimal-restart-20261108/elks/elks/include/linuxmt/types.h:28",
+        "work/pm-minimal-restart-20261108/elks/elks/arch/i86/drivers/block/ssd.c:76"
+      ],
+      "finding": "Raw block offsets narrow to 16-bit block_t before I/O. Offset 67108864 becomes block zero. SSD sector bounds see an already-wrapped valid LBA.",
+      "minimal_action": "Guard the wide position before every narrowing in both loops. Preserve partial transfer semantics; reject out-of-range offset rather than widen the block layer. Existing advertised-size typo need not be changed to contain aliasing.",
+      "tests": [
+        "64MiB exact read/write rejection without any block request",
+        "one-byte transfer just below limit",
+        "transfer crossing limit returns only pre-boundary bytes",
+        "negative seek rejection",
+        "normal raw and filesystem control"
+      ]
+    },
+    {
+      "id": "active-fat",
+      "classification": "blocker-before-Beta1",
+      "evidence": [
+        "work/pm-fat-mirror-20261114/fat.c:25",
+        "work/pm-fat-mirror-20261114/fat.c:107",
+        "work/pm-fat32-fsinfo-20261114/inode.c:222"
+      ],
+      "finding": "FAT32 ExtFlags ignored: reads use copy0 and mutations update every copy even when mirroring is disabled and another FAT is active.",
+      "minimal_action": "Reject unsupported nonmirrored FAT32 volumes before either RO or RW mount; no active-FAT implementation needed.",
+      "tests": [
+        "ExtFlags0x80/0x81 reject RO and RW byte-exact",
+        "mirrored two-copy FAT32 remains accepted"
+      ]
+    },
+    {
+      "id": "geometry",
+      "classification": "blocker-before-Beta1",
+      "evidence": [
+        "work/pm-fat32-fsinfo-20261114/inode.c:219",
+        "work/pm-fat32-fsinfo-20261114/inode.c:224",
+        "work/pm-fat32-fsinfo-20261114/inode.c:233",
+        "work/pm-minimal-restart-20261108/elks/elks/include/linuxmt/msdos_fs_sb.h:8",
+        "work/pm-minimal-restart-20261108/elks/elks/fs/msdos/misc.c:89"
+      ],
+      "finding": "BPB bytes/sector ignored; FAT32 length and metadata offsets truncate into 16-bit superblock fields. Malformed totals can underflow. Zero data clusters lead to allocator modulo-zero.",
+      "minimal_action": "Validate BPB sector-size match, nonzero reserved/fats/FAT length, legal power-of-two cluster size, representable metadata positions and positive data clusters before assignments or FSInfo writes. Bound length before multiplying. Refuse unsupported FAT32 version and invalid root cluster against both data and FAT capacity.",
+      "tests": [
+        "512-byte valid FAT12/16/32 controls",
+        "mismatched BPB bytes/sector byte-exact rejection",
+        "length>65535 and multiplication-overflow fixtures",
+        "metadata>=total and metadata>65535",
+        "zero clusters",
+        "root beyond FAT capacity",
+        "nonzero FAT32 version"
+      ]
+    },
+    {
+      "id": "fat32-reserved-nibble",
+      "classification": "blocker-before-Beta1",
+      "evidence": [
+        "work/pm-fat-mirror-20261114/fat.c:62",
+        "work/pm-fat-mirror-20261114/fat.c:82"
+      ],
+      "finding": "FAT32 entry reads include reserved top four bits; writes replace them. Nonzero high bits can be mistaken for EOF or become negative cluster_t.",
+      "minimal_action": "Mask read values to 28 bits and preserve each FAT copy's high nibble when writing its low28 value. Keep this separately reviewable.",
+      "tests": [
+        "nonzero high nibble allocated chain reads correctly",
+        "free low28 entry recognized despite high nibble",
+        "allocation/link/free preserve each copy high nibble",
+        "EOF low28 recognized with any high nibble",
+        "FAT12/16 unchanged"
+      ]
+    },
+    {
+      "id": "buffered-error-reporting",
+      "classification": "documented-inherited-limitation; blocker-to-general-durability-claim",
+      "evidence": [
+        "work/pm-minimal-restart-20261108/elks/elks/fs/buffer.c:628",
+        "work/pm-minimal-restart-20261108/elks/elks/fs/buffer.c:646",
+        "work/pm-minimal-restart-20261108/elks/elks/arch/i86/drivers/block/ll_rw_blk.c:173",
+        "work/pm-minimal-restart-20261108/elks/elks/arch/i86/drivers/block/blk.h:126",
+        "work/pm-minimal-restart-20261108/elks/elks/fs/msdos/misc.c:85",
+        "work/pm-minimal-restart-20261108/elks/elks/fs/msdos/misc.c:96",
+        "work/pm-minimal-restart-20261108/elks/elks/fs/msdos/misc.c:123",
+        "work/pm-minimal-restart-20261108/elks/elks/fs/msdos/file.c:160"
+      ],
+      "finding": "Device failures mark buffers not-up-to-date and print errors, but native fsync_dev is void and sys_sync returns success. FAT read failure shares the free-entry return0; some FAT updates/truncate errors are ignored. Shell command success is not a durable commit certificate.",
+      "minimal_action": "For constrained experimental Beta1 document the limitation, abort qualification on any error log, and require saved full-image verification. Do not claim reliable userspace propagation or power-loss safety. A complete general fix crosses VFS/buffer/FAT contracts and should not be smuggled into consolidation.",
+      "tests": [
+        "existing backend transport-fault tests must confirm fault latch and no subsequent physical writes",
+        "FSInfo write-failure host cases must refuse RW",
+        "do not reinterpret sync exit0 alone as persistence evidence"
+      ]
+    },
+    {
+      "id": "fsinfo",
+      "classification": "no-new-blocker-in-reviewed-implementation",
+      "evidence": [
+        "work/pm-fat32-fsinfo-20261114/inode.c:103",
+        "work/pm-fat32-fsinfo-20261114/inode.c:127",
+        "work/pm-fat32-fsinfo-20261114/inode.c:159",
+        "work/pm-fat32-fsinfo-20261114/inode.c:288"
+      ],
+      "finding": "Known hints in valid structures are synchronously invalidated before RW success. Bounds and alias guards precede writes; read/write errors refuse RW. Invalid signatures and absent FSInfo are skipped, unknown hints are retained, RO/FAT12/16 untouched. Earlier-primary success followed by backup failure may leave primary unknown while RW is refused; advisory-only change is acceptable.",
+      "minimal_action": "Retain existing small implementation and explicit signature/absence policy. No counter subsystem.",
+      "tests": [
+        "retain prior31-case host and8-case emulator evidence",
+        "rerun impacted mount controls after geometry guard"
+      ]
+    },
+    {
+      "id": "missing-removal-transport",
+      "classification": "documented-scope-no-new-blocker",
+      "evidence": [
+        "work/pm-minimal-write-20261112/ssd-picomem.c:27",
+        "work/pm-minimal-write-20261112/ssd-picomem.c:98",
+        "work/pm-minimal-write-20261112/ssd-picomem.c:111",
+        "work/pm-minimal-write-20261112/ssd-picomem.c:129",
+        "work/pm-minimal-header-cache-20261113/firmware/src/pm_usb_ssd.cpp:22",
+        "work/pm-minimal-header-cache-20261113/firmware/src/pm_usb_ssd.cpp:35",
+        "work/pm-minimal-header-cache-20261113/firmware/src/pm_usb_ssd.cpp:67",
+        "work/pm-minimal-header-cache-20261113/firmware/src/pm_usb_ssd.cpp:175",
+        "work/pm-minimal-header-cache-20261113/firmware/src/lib/tinyusb/src/class/msc/msc_host.c:331",
+        "work/pm-minimal-restart-20261108/elks/elks/arch/i86/drivers/block/ssd.c:72"
+      ],
+      "finding": "One boot-attached512-byte LUN0 device only. Missing/unsupported device gives no usable capacity. Backend guards every sector and latches uncertainty; removal faults firmware permanently; static transfer storage is never reused after failure. Transport validates endpoint, result, exact CBW/CSW size, tag/signature/status, and caller-required data size. No automatic retry/recovery/hotplug.",
+      "minimal_action": "Keep explicit cold-reboot recovery, one-device/no-swap scope. No new recovery state machine.",
+      "tests": [
+        "retain existing transport/handshake fault qualification",
+        "hardware missing/removal tests are optional separate destructive-risk gates, not silently executed"
+      ]
+    },
+    {
+      "id": "cache-policy",
+      "classification": "documented-durability-limitation",
+      "evidence": [
+        "work/pm-minimal-header-cache-20261113/firmware/src/pm_usb_ssd.cpp:53",
+        "work/pm-minimal-header-cache-20261113/firmware/src/pm_usb_ssd.cpp:125",
+        "work/pm-minimal-header-cache-20261113/firmware/src/pm_usb_ssd.cpp:143",
+        "work/pm-minimal-write-20261112/ssd-picomem.c:156"
+      ],
+      "finding": "Validated four-byte MODE SENSE header is compatibility-assumed write-through, not evidence of disabled cache. Known enabled cache is flushed; unknown header-only case is not. Old backend comment claiming a device flush every time overstates behavior.",
+      "minimal_action": "Retain tested compatibility behavior and correct only stale label/comment in separate packaging delta. Explicitly exclude power-loss durability claims."
+    }
+  ],
+  "source_sha256": {
+    "work/pm-minimal-write-20261112/ssd-picomem.c": "4b493f9d4f2981f8c8bafa0c94306e05a27db5eb87c2c18a721669d9dd6ac422",
+    "work/pm-fat-mirror-20261114/fat.c": "aaa54ddeb37efc94880e03e4b974546dd765046187c8e927c5a3b2cc2294687d",
+    "work/pm-fat32-next-20261114/namei.c": "e6d57b986da9987221a18e91c063f6affc3adcf6615c0063bce2638b69386afb",
+    "work/pm-fat32-fsinfo-20261114/inode.c": "f94c4c713b14b6e3f14a40028bf146dd84b6e02fc74012ea6df74810144c8b32",
+    "work/pm-minimal-header-cache-20261113/firmware/src/pm_usb_ssd.cpp": "3a52c704de11f5b31784b8d39967a771aec42a88897357ae033f68ce351a8c03",
+    "work/pm-minimal-header-cache-20261113/firmware/src/lib/tinyusb/src/class/msc/msc_host.c": "776b8f03cac97f43f44fbb0994b61a916ac0c34de61b681de098ae25df8bd10f",
+    "work/pm-minimal-header-cache-20261113/firmware/src/isa_devices/dev_picomem_io.cpp": "4d7ce5aa4dcc60442d9e9907332903617e0d95ec68451029ee54571952d9d20a",
+    "work/pm-minimal-header-cache-20261113/firmware/src/pm_cmd.cpp": "95c293334fd38ef900e1599588183cdb68fb07f46a6227efe001d16a2950bf8e",
+    "work/pm-minimal-restart-20261108/elks/elks/fs/block_dev.c": "597e48e53e41eb5befcf3e72c8a985aaf1ffbbebc30a71a2bc249bda4cea7558",
+    "work/pm-minimal-restart-20261108/elks/elks/fs/buffer.c": "2f1b07084befd16c52c4c9eda917c80233ae95c8c4b63038f2a94444c864b491",
+    "work/pm-minimal-restart-20261108/elks/elks/fs/msdos/misc.c": "f79d5eea91b4c065c3cb793c211f21b72571ae8c7ed5be3874d509b384da8cc8",
+    "work/pm-minimal-restart-20261108/elks/elks/fs/msdos/file.c": "147caed55579789196e550833d3bd0af32605144f7107173f39aa072055b1fe6",
+    "work/pm-minimal-restart-20261108/elks/elks/arch/i86/drivers/block/ssd.c": "2e4039dce110680f2c1b4f98af885ab98d611c3ba46f7f5285b2704412864661",
+    "work/pm-minimal-restart-20261108/elks/elks/arch/i86/drivers/block/blk.h": "d85e2c4f05d918941837eeb721bd361a74ac6df43e7b175b486ce431c6460ac7",
+    "work/pm-minimal-restart-20261108/elks/elks/arch/i86/drivers/block/ll_rw_blk.c": "75ffa062acfc849885d70ec24a955a5322f177608dafa5257c8365c3e30477de",
+    "work/pm-minimal-restart-20261108/elks/elks/include/linuxmt/types.h": "9b48f27e63e22edcb333d050a80ec4791bcd92f72ba897efa982a66e0b6369ac",
+    "work/pm-minimal-restart-20261108/elks/elks/include/linuxmt/msdos_fs_sb.h": "c5a8d2dbec8c14f9e2c599da99bc1d91055e28a2fd99ac746dbd1912c4593086",
+    "work/pm-minimal-restart-20261108/BASELINE-AND-SCOPE.md": "475e07037e4fb82b1ef57bd80f4efd59d262ecafdadb4673c2617b7b4801bc6d"
+  },
+  "scope_constraints": [
+    "No partitions, LFN work, hotplug, multi-device, optimization, or new error-accounting subsystem.",
+    "Prior dependency-provenance repair is resolved; do not describe it as still outstanding.",
+    "Prior successful media gates remain evidence only for their exact tested source/image hashes. New guards require fresh qualification."
+  ],
+  "in_progress_patch_review": {
+    "05-raw-offset-bound.patch": "Static approach looks minimal; pending tests/build.",
+    "06-fat-geometry-bound.patch": "At inspection contained duplicated static and made read_super nonstatic; also computed unbounded multiplication before check, omitted FAT-capacity root bound and zero-cluster guard. Parent notified; final revision not approved here."
+  }
+}

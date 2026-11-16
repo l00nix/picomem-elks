@@ -1,0 +1,134 @@
+--- a/elks/arch/i86/drivers/block/ssd-picomem.c
++++ b/elks/arch/i86/drivers/block/ssd-picomem.c
+@@ -1,4 +1,4 @@
+-/* PicoMEM USB SSD subdriver. One boot-attached 512-byte device.
++/* PicoMEM USB SSD subdriver. One open-session 512-byte device.
+  * Whole-device access through /dev/ssd; use native ELKS filesystems and mount.
+  * Requires the experimental PicoMEM 0x8e sector service, not stock firmware.
+  */
+@@ -75,6 +75,8 @@
+     sector_t count = 0;
+     int issued = 0;
+ 
++    if (failed)
++        return 0;
+     save_flags(flags);
+     clr_irq();
+     previous = inb(PM_PORT + 3);
+@@ -84,7 +86,7 @@
+             goto done;
+         previous = next;
+     }
+-    issued = command(0);
++    issued = command(4);        /* claim current medium; zero capacity if absent */
+     if (!issued || !transfer(PM_READ, sizeof(info)))
+         goto done;
+     for (i = 0; i < sizeof(info); ++i)
+@@ -94,13 +96,36 @@
+         goto done;
+     count = (sector_t)info[2] | (sector_t)info[3] << 8 |
+         (sector_t)info[4] << 16 | (sector_t)info[5] << 24;
+-done:
+-    failed = !count;
+     ssd_initialized = count != 0;
+-    if (failed)
+-        clear_error(issued);
+     restore_flags(flags);
+     return count;
++done:
++    failed = 1;
++    ssd_initialized = 0;
++    clear_error(issued);
++    restore_flags(flags);
++    return 0;
++}
++
++void ssddev_release(void)
++{
++    unsigned flags;
++    int issued;
++
++    if (failed) {
++        printk("ssd: USB not released; power cycle required\n");
++        return;
++    }
++    save_flags(flags);
++    clr_irq();
++    issued = command(3);
++    if (!issued || !wait_status(0)) {
++        failed = 1;
++        clear_error(issued);
++    }
++    restore_flags(flags);
++    if (failed)
++        printk("ssd: USB not released; power cycle required\n");
+ }
+ 
+ int ssddev_read(sector_t start, char *buf, ramdesc_t seg)
+--- a/elks/arch/i86/drivers/block/ssd.c
++++ b/elks/arch/i86/drivers/block/ssd.c
+@@ -30,6 +30,9 @@
+ sector_t ssd_num_sects;         /* max # sectors on SSD device */
+ char ssd_initialized;
+ static int access_count;
++#ifdef CONFIG_BLK_DEV_SSD_PICOMEM
++static char closing;
++#endif
+ 
+ static int ssd_open(struct inode *, struct file *);
+ static void ssd_release(struct inode *, struct file *);
+@@ -57,7 +60,7 @@
+         printk("ssd: no XMS\n");
+     else printk("ssd: %uK avail\n",
+         SETUP_XMS_KBYTES - (xms_alloc_ptr - KBYTES(XMS_START_ADDR)));
+-#else
++#elif !defined(CONFIG_BLK_DEV_SSD_PICOMEM)
+     ssd_num_sects = ssddev_init();
+     if (ssd_num_sects)
+         printk("ssd: %ldK disk\n", ssd_num_sects/2UL);
+@@ -68,6 +71,14 @@
+ static int ssd_open(struct inode *inode, struct file *filp)
+ {
+     debug_blk("SSD: open\n");
++#ifdef CONFIG_BLK_DEV_SSD_PICOMEM
++    if (closing)
++        return -EBUSY;
++    if (!access_count)
++        ssd_num_sects = ssddev_init();
++    if (!ssd_num_sects)
++        return -ENODATA;
++#endif
+ #ifndef CONFIG_FS_XMS
+     if (!ssd_num_sects)
+         return -ENODATA;
+@@ -87,9 +98,18 @@
+ 
+     debug_blk("SSD: release\n");
+     if (--access_count == 0) {
++#ifdef CONFIG_BLK_DEV_SSD_PICOMEM
++        closing = 1;            /* fsync/invalidation may yield */
++#endif
+         fsync_dev(dev);
+         invalidate_inodes(dev);
+         invalidate_buffers(dev);
++#ifdef CONFIG_BLK_DEV_SSD_PICOMEM
++        ssddev_release();       /* never releases a failed exchange */
++        ssd_num_sects = 0;
++        ssd_initialized = 0;
++        closing = 0;
++#endif
+     }
+ }
+ 
+--- a/elks/arch/i86/drivers/block/ssd.h
++++ b/elks/arch/i86/drivers/block/ssd.h
+@@ -5,6 +5,9 @@
+ #define SD_FIXED_SECTOR_SIZE 512
+ 
+ sector_t ssddev_init(void);
++#ifdef CONFIG_BLK_DEV_SSD_PICOMEM
++void ssddev_release(void);
++#endif
+ int ssddev_ioctl(struct inode *inode, struct file *file,
+             unsigned int cmd, unsigned int arg);
+ int ssddev_write(sector_t start, char *buf, ramdesc_t seg);

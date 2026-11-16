@@ -1,0 +1,21 @@
+{
+  "approved": true,
+  "source_sha256": "ca76021a059b13f1df2d6c7dbf996686225e8168100922e3f2f3ae5aab4afd96",
+  "reverse_gate_independent_audit_passed": true,
+  "offline_actual_control_flow_passed": true,
+  "command_groups": 45,
+  "commands": 51,
+  "capture_records": 14,
+  "max_command_length": 60,
+  "unique_labels": true,
+  "per_mutation_diagnostics": true,
+  "ftp_closed_before_unmount": true,
+  "scope": "One isolated hp1115 workload on currently attached REDX20 after clean reverse-swap baseline; retain originals, one28-byte proof only after transient files removed; full independent media check pending.",
+  "limitations": [
+    "Mocked control flow checks sequencing, not device or filesystem behavior.",
+    "No automatic retry or cleanup after failure; preserve mounted/write state for diagnosis.",
+    "Write permission applies only to the bounded existing authorized test scope; no format, repair, or production-source changes."
+  ],
+  "proof_literal_bytes": 28,
+  "wording_correction": "Original narrative said27 bytes; the executable uses len(proof) and exact bytes correctly. Literal is28 bytes including LF."
+}

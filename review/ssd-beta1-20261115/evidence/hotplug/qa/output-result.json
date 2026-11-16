@@ -1,0 +1,17 @@
+{
+  "source_sha256": "1c488b60d8fd076748ee34565ccd94293440b6683dd924aa1fac0cda68776363",
+  "cases": 576,
+  "passed": true,
+  "added_cases": [
+    {
+      "case": "QA_disconnect_during_512_output",
+      "pass": true
+    },
+    {
+      "case": "QA_disconnect_during_first_claim_output",
+      "pass": true
+    }
+  ],
+  "base_cases": 574,
+  "scope": "Actual bridge source, USB/PIO mocked; adds precise output-phase disconnect injections to parent harness."
+}

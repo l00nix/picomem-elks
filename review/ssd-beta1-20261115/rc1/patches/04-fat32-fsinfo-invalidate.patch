@@ -1,0 +1,94 @@
+--- a/elks/fs/msdos/inode.c
++++ b/elks/fs/msdos/inode.c
+@@ -99,6 +99,70 @@
+ 	return;
+ }
+ 
++/* FSInfo is advisory. Do not leave known hints stale after native FAT writes. */
++static int msdos_clear_fsinfo(struct super_block *s, unsigned short sector)
++{
++	struct buffer_head *bh;
++	void *data;
++	__u32 *info;
++	int error = 0;
++
++	if (!(bh = msdos_sread(s, sector, &data)))
++		return -EIO;
++	info = (__u32 *)data;
++	if (info[0] == 0x41615252UL && info[121] == 0x61417272UL &&
++	    info[127] == 0xaa550000UL &&
++	    (info[122] != 0xffffffffUL || info[123] != 0xffffffffUL)) {
++		info[122] = info[123] = 0xffffffffUL;
++		mark_buffer_dirty(bh);
++		ll_rw_blk(WRITE, bh);
++		wait_on_buffer(bh);
++		if (!EBH(bh)->b_uptodate)
++			error = -EIO;
++	}
++	unmap_brelse(bh);
++	return error;
++}
++
++static int msdos_prepare_rw(struct super_block *s)
++{
++	struct buffer_head *bh;
++	struct msdos_boot_sector *b;
++	void *data;
++	unsigned short info, backup, reserved;
++	int error;
++
++	if (MSDOS_SB(s)->fat_bits != 32)
++		return 0;
++	if (!(bh = msdos_sread(s, 0, &data)))
++		return -EIO;
++	b = (struct msdos_boot_sector *)data;
++	info = b->info_sector;
++	backup = b->backup_boot;
++	reserved = b->reserved;
++	unmap_brelse(bh);
++	if (!info || info == 0xffff)
++		return 0;
++	if (info >= reserved)
++		return -EINVAL;
++	if (backup && backup != 0xffff) {
++		/* Keep both FSInfo copies inside the reserved area, off boot sectors. */
++		if (backup >= reserved || backup == info || info >= reserved - backup)
++			return -EINVAL;
++	} else
++		backup = 0;
++	if ((error = msdos_clear_fsinfo(s, info)))
++		return error;
++	return backup ? msdos_clear_fsinfo(s, backup + info) : 0;
++}
++
++static int msdos_remount(struct super_block *s, int *flags, char *data)
++{
++	if ((*flags & MS_RDONLY) || !(s->s_flags & MS_RDONLY))
++		return 0;
++	return msdos_prepare_rw(s);
++}
++
+ static void print_formatted(unsigned long n)
+ {
+ 	char kbytes_or_mbytes = 'k';
+@@ -221,6 +285,11 @@
+ 
+ 	/*s->s_magic = MSDOS_SUPER_MAGIC;*/
+ 
++	if (!(s->s_flags & MS_RDONLY) && msdos_prepare_rw(s)) {
++		printk("FAT: can't invalidate FSInfo\n");
++		return NULL;
++	}
++
+ 	/* set up enough so that it can read an inode */
+ 	s->s_op = &msdos_sops;
+ 	if (!(s->s_mounted = iget(s,(ino_t)MSDOS_ROOT_INO))) {
+@@ -407,7 +476,7 @@
+ 	msdos_put_inode,
+ 	msdos_put_super,
+ 	NULL,		/* write_super*/
+-	NULL,		/* remount*/
++	msdos_remount,
+ 	msdos_statfs
+ };
+ 

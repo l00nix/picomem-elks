@@ -1,0 +1,20 @@
+{
+  "baseline_archive_sha256": "c2cfb14f24840168230922109987b9ff2b0439849d7fffc39dca66a795898d6c",
+  "kernel_changed_files": [
+    "elks/arch/i86/drivers/block/ssd-picomem.c",
+    "elks/arch/i86/drivers/block/ssd.c",
+    "elks/arch/i86/drivers/block/ssd.h"
+  ],
+  "patches": {
+    "elks": {
+      "sha256": "5d507c8c0a53eab48c61819a163dcfca149d7bc280aadc02fb25ea4e6e47a7d4",
+      "numstat": "31\t6\telks/arch/i86/drivers/block/ssd-picomem.c\n21\t1\telks/arch/i86/drivers/block/ssd.c\n3\t0\telks/arch/i86/drivers/block/ssd.h\n"
+    },
+    "picomem": {
+      "sha256": "b7dcf1fd1816ea3d6422432a6f7e0d4f9bd83f52125b2f8b75ed76184260c66c",
+      "numstat": "29\t12\tsrc/pm_usb_ssd.cpp\n"
+    }
+  },
+  "additional_tinyusb_changes": false,
+  "disabled_firmware_bin_uf2_unchanged": true
+}

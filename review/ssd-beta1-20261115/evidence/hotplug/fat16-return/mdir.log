@@ -1,0 +1,54 @@
+ Volume in drive : is PMFAT16    
+ Volume Serial Number is 1311-F016
+Directory for ::/
+
+nested       <DIR>     2026-11-14   4:32 
+hello    txt        53 2026-11-14   4:32 
+empty                0 2026-11-14   4:32 
+PMF1114      <DIR>     1980-01-01   0:04 
+WINTEST  TXT        92 2026-11-14   7:17 
+B1RC1        <DIR>     1980-01-01   0:04 
+HP1115       <DIR>     1980-01-01   0:42 
+        7 files                 145 bytes
+
+Directory for ::/nested
+
+.            <DIR>     2026-11-14   4:32 
+..           <DIR>     2026-11-14   4:32 
+note     txt        60 2026-11-14   4:32 
+data     bin     40997 2026-11-14   4:32 
+        4 files              41 057 bytes
+
+Directory for ::/PMF1114
+
+.            <DIR>     1980-01-01   0:04 
+..           <DIR>     1980-01-01   0:04 
+DATA     BIN      2049 1980-01-01   0:04 
+        3 files               2 049 bytes
+
+Directory for ::/System Volume Information
+
+.            <DIR>     2026-11-14   7:07 
+..           <DIR>     2026-11-14   7:07 
+WPSETT~1 DAT        12 2026-11-14   7:07  WPSettings.dat
+INDEXE~1            76 2026-11-14   7:07  IndexerVolumeGuid
+        4 files                  88 bytes
+
+Directory for ::/B1RC1
+
+.            <DIR>     1980-01-01   0:03 
+..           <DIR>     1980-01-01   0:03 
+PROOF    TXT        24 1980-01-01   0:04 
+        3 files                  24 bytes
+
+Directory for ::/HP1115
+
+.            <DIR>     1980-01-01   0:41 
+..           <DIR>     1980-01-01   0:41 
+PROOF    TXT        28 1980-01-01   0:42 
+        3 files                  28 bytes
+
+Total files listed:
+       24 files              43 391 bytes
+                          8 268 288 bytes free
+

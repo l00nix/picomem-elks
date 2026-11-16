@@ -1,0 +1,7 @@
+                           START              END          SECTOR
+Device           #:ID   Cyl Head Sect    Cyl Head Sect  Start   Size
+
+/dev/ssd1        1:00     0    0    0      0    0    0      0      0
+/dev/ssd2        2:00     0    0    0      0    0    0      0      0
+/dev/ssd3        3:00     0    0    0      0    0    0      0      0
+/dev/ssd4        4:00     0    0    0      0    0    0      0      0

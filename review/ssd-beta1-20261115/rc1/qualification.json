@@ -1,0 +1,39 @@
+{
+  "handshake-0": "PASS 96 handshake/scope cases PM_USB_SSD=0; model does not simulate electrical timing\n",
+  "handshake-1": "PASS 106 handshake/scope cases PM_USB_SSD=1; model does not simulate electrical timing\n",
+  "msc_cases": 38,
+  "pio": {
+    "passed": true,
+    "checks": 11,
+    "source_sha256": "4d7ce5aa4dcc60442d9e9907332903617e0d95ec68451029ee54571952d9d20a",
+    "scope": "Production translation unit with includes replaced by mocks; cooperative core scheduling, not a hardware timing proof",
+    "output": "PIO acceptance: 11 checks passed\n"
+  },
+  "cache": {
+    "source_sha256": "8db18644dfc23367a155748ef7cd484505699533c3d753b51f173d599c3a59d5",
+    "cases": 532,
+    "passed": true,
+    "sanitizers": [
+      "address",
+      "undefined"
+    ],
+    "actual_source_extracted": true,
+    "usb_and_PIO_mocked": true,
+    "hardware_access_by_QA": false,
+    "legacy_cases_retained": 411,
+    "new_header_cases": 121
+  },
+  "generated_pio_exact_to_tested": true,
+  "images": {
+    "off": {
+      "uf2_bin_match": true,
+      "stacks_disjoint": true,
+      "bridge_linked": false
+    },
+    "on": {
+      "uf2_bin_match": true,
+      "stacks_disjoint": true,
+      "bridge_linked": true
+    }
+  }
+}

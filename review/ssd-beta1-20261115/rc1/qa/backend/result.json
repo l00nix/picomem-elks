@@ -1,0 +1,53 @@
+{
+  "complete": true,
+  "passed": true,
+  "created_utc": "2026-11-15T12:17:16.462068+00:00",
+  "source_sha256": {
+    "/Volumes/PMBeta1Build/final-source/elks/elks/arch/i86/drivers/block/ssd-picomem.c": "6bbcc85c5db880ec6ef2ee30462cf373d74b0eb911947e8e8c32fc6733c5784e",
+    "/Volumes/PMBeta1Build/final-source/elks/elks/arch/i86/drivers/block/ssd.h": "4c22586e819c7789ee806cd086148641594c8962cd663d6d6309e7e3e358ca5a",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/acceptance.c": "6e3f2e9e3ac31eb1b2e2b9822767574f906a33eae8e3a89557ebdbab3e058b66",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/include/mock.h": "6651f519630259e03487e67b1bc490af4cdd920193aadf6d182d33739616807a",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/run.py": "c73c9863c24b4b61781b5cee28fa2e828370c980ec3a212bf5bc46f2c3379823"
+  },
+  "input_unchanged": true,
+  "compiler_command": [
+    "clang",
+    "-DPM_BACKEND_SOURCE=\"/Volumes/PMBeta1Build/final-source/elks/elks/arch/i86/drivers/block/ssd-picomem.c\"",
+    "-std=c11",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Wno-unused-parameter",
+    "-fsanitize=address,undefined",
+    "-fno-sanitize-recover=all",
+    "-O1",
+    "-g",
+    "-I/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/include",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/acceptance.c",
+    "-o",
+    "/Users/arau/Documents/ChatGPT/ELKSWeb/work/pm-beta1-20261115/candidate/qa/backend/acceptance"
+  ],
+  "compile_exit": 0,
+  "run_exit": 0,
+  "case_count": 143,
+  "summary": "SUMMARY 143 checks passed",
+  "provenance": "Adapted retained read-only mock/harness in a separate qa/backend directory. Includes exact current target-build ssd-picomem.c directly, with no source rewriting. sector_t is uint32_t; host unsigned/unsigned long width differs from16-bit ELKS. Port/IRQ/segmented-copy effects are modeled; no hardware or target timing claims.",
+  "limitations": [
+    "Mock proves transaction sequence and polling bounds, not actual device removal, USB persistence or real IRQ timing.",
+    "Source-level no-retry latch does not repair inherited VFS buffered-write error reporting."
+  ],
+  "coverage": [
+    "Read/write byte-exact success and LBA little-endian encoding",
+    "One516-byte write input phase; exact counts and no premature success",
+    "Wrong stages and both count bytes at applicable init/read/write handshakes",
+    "Bounded300000 polls for pending/wrong stage and completed-error clear timeout",
+    "Own completed status2/3 cleared once; preexisting status1/2/3/ff never reset",
+    "Read caller buffer unchanged on every read failure including final status failure after512 bytes",
+    "Failed read/write latch prevents subsequent port I/O and copies",
+    "Out-of-range capacity andUINT32_MAX rejected with zero port I/O or copies",
+    "Missing counter, missing/busy port, malformed PM magic/sector size/zero capacity",
+    "Initialization first/final phase faults",
+    "Entry IRQ state restored for both enabled and already-disabled controls",
+    "ioctl unsupported returnsEINVAL"
+  ]
+}

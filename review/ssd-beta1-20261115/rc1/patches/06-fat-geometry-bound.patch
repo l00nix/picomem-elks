@@ -1,0 +1,50 @@
+--- a/elks/fs/msdos/inode.c
++++ b/elks/fs/msdos/inode.c
+@@ -175,6 +175,35 @@
+ }
+ 
+ /* Read the super block of an MS-DOS FS. */
++/* Reject layouts not representable by the native FAT superblock fields. */
++static int msdos_valid_geometry(struct super_block *s,
++                              struct msdos_boot_sector *b)
++{
++	unsigned long length = b->fat_length ? b->fat_length : b->fat32_length;
++	unsigned long total = b->sectors ? b->sectors : b->total_sect;
++	unsigned long data, clusters;
++
++	if (((unsigned char)b->ignored[11] |
++	     (unsigned char)b->ignored[12] << 8) != SECTOR_SIZE_SB(s) ||
++	    !b->reserved || !b->fats || !length || length > 0xffffUL ||
++	    !b->cluster_size ||
++	    b->cluster_size > 128 || (b->cluster_size & (b->cluster_size - 1)))
++		return 0;
++	data = b->reserved + (unsigned long)b->fats * length +
++		(b->dir_entries >> (SECTOR_BITS_SB(s) - MSDOS_DIR_BITS));
++	if (data > 0xffffUL || data >= total)
++		return 0;
++	clusters = (total - data) / b->cluster_size;
++	if (!clusters)
++		return 0;
++	if (!b->fat_length && ((b->flags & 0x80) || b->version[0] ||
++	    b->version[1] || b->dir_entries || b->root_cluster < 2 ||
++	    b->root_cluster >= clusters + 2 ||
++	    b->root_cluster >= length * (SECTOR_SIZE_SB(s) / 4)))
++		return 0;
++	return 1;
++}
++
+ static struct super_block *msdos_read_super(struct super_block *s, char *data,
+ 	int silent)
+ {
+@@ -216,6 +245,11 @@
+ 
+ 	map_buffer(bh);
+ 	b = (struct msdos_boot_sector *) bh->b_data;
++	if (!msdos_valid_geometry(s, b)) {
++		unmap_brelse(bh);
++		printk("FAT: Unsupported geometry\n");
++		return NULL;
++	}
+ 	sb->cluster_size = b->cluster_size;
+ 	sb->fats = b->fats;
+ 	sb->fat_start = b->reserved;

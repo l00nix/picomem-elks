@@ -1,0 +1,207 @@
+--- a/elks/arch/i86/drivers/block/Makefile
++++ b/elks/arch/i86/drivers/block/Makefile
+@@ -57,6 +57,10 @@
+   endif
+ endif
+ 
++ifdef CONFIG_BLK_DEV_SSD_PICOMEM
++OBJS += ssd.o ssd-picomem.o
++endif
++
+ ifdef CONFIG_BLK_DEV_SSD_TEST
+ OBJS += ssd.o ssd-test.o
+ endif
+--- a/elks/arch/i86/drivers/block/config.in
++++ b/elks/arch/i86/drivers/block/config.in
+@@ -24,6 +24,7 @@
+ 	choice 'SSD disk driver' \
+ 		"None CONFIG_BLK_DEV_SSD_NONE \
+ 		Test CONFIG_BLK_DEV_SSD_TEST \
++		PicoMEM CONFIG_BLK_DEV_SSD_PICOMEM \
+ 		SDCard CONFIG_BLK_DEV_SSD_SD" None
+ 
+ 	if [ "$CONFIG_BLK_DEV_SSD_SD" == "y" ] && [ "$CONFIG_ARCH_NECV25" == "y" ]; then
+--- a/elks/arch/i86/drivers/block/ll_rw_blk.c
++++ b/elks/arch/i86/drivers/block/ll_rw_blk.c
+@@ -376,7 +376,7 @@
+ #endif
+ 
+ #if defined(CONFIG_BLK_DEV_SSD_TEST) || defined(CONFIG_BLK_DEV_SSD_SD) || \
+-    defined(CONFIG_FS_XMS_RAMDISK)
++    defined(CONFIG_BLK_DEV_SSD_PICOMEM) || defined(CONFIG_FS_XMS_RAMDISK)
+     ssd_init();         /* SSD block device*/
+ #endif
+ 
+--- /dev/null
++++ b/elks/arch/i86/drivers/block/ssd-picomem.c
+@@ -0,0 +1,170 @@
++/* PicoMEM USB SSD subdriver. One boot-attached 512-byte device.
++ * Whole-device access through /dev/ssd; use native ELKS filesystems and mount.
++ * Requires the experimental PicoMEM 0x8e sector service, not stock firmware.
++ */
++#include <linuxmt/config.h>
++#include <linuxmt/fs.h>
++#include <linuxmt/kernel.h>
++#include <linuxmt/mm.h>
++#include <linuxmt/errno.h>
++#include <arch/io.h>
++#include <arch/irq.h>
++#include "ssd.h"
++
++#if !defined(CONFIG_ARCH_IBMPC) || defined(CONFIG_FS_XMS_RAMDISK)
++#error PicoMEM SSD requires IBM PC and XMS RAM disk disabled
++#endif
++
++#define PM_PORT         0x2a0
++#define PM_COMMAND      0x8e
++#define PM_READ         0x10
++#define PM_WRITE        0x11
++
++static unsigned char sector[512];
++static int failed;
++
++static int wait_status(unsigned char wanted)
++{
++    unsigned long polls = 300000UL;
++    unsigned char status;
++
++    do {
++        status = inb(PM_PORT);
++        if (status == wanted)
++            return 1;
++        if (status == 2 || status == 3 || status == 0xff)
++            break;
++    } while (--polls);
++    return 0;
++}
++
++static int transfer(unsigned char status, unsigned count)
++{
++    if (!wait_status(status))
++        return 0;
++    return inb(PM_PORT + 1) == (count & 255) &&
++        inb(PM_PORT + 2) == (count >> 8);
++}
++
++static int command(unsigned char operation)
++{
++    if (failed || inb(PM_PORT) != 0)
++        return 0;
++    outb(operation, PM_PORT + 1);
++    outb(0, PM_PORT + 2);
++    outb(PM_COMMAND, PM_PORT);
++    return 1;
++}
++
++/* Clear only our completed command error, so BIOS SD commands can continue.
++ * A pending exchange is never reset; the backend stays failed either way. */
++static void clear_error(int issued)
++{
++    unsigned char status = inb(PM_PORT);
++
++    if (issued && (status == 2 || status == 3)) {
++        outb(0, PM_PORT);
++        wait_status(0);
++    }
++}
++
++sector_t ssddev_init(void)
++{
++    unsigned flags, i;
++    unsigned char previous, next, info[8];
++    sector_t count = 0;
++    int issued = 0;
++
++    save_flags(flags);
++    clr_irq();
++    previous = inb(PM_PORT + 3);
++    for (i = 0; i < 16; ++i) {
++        next = inb(PM_PORT + 3);
++        if (next != (unsigned char)(previous + 1))
++            goto done;
++        previous = next;
++    }
++    issued = command(0);
++    if (!issued || !transfer(PM_READ, sizeof(info)))
++        goto done;
++    for (i = 0; i < sizeof(info); ++i)
++        info[i] = inb(PM_PORT + 4);
++    if (!wait_status(0) || info[0] != 'P' || info[1] != 'M' ||
++        info[6] != 0 || info[7] != 2)
++        goto done;
++    count = (sector_t)info[2] | (sector_t)info[3] << 8 |
++        (sector_t)info[4] << 16 | (sector_t)info[5] << 24;
++done:
++    failed = !count;
++    ssd_initialized = count != 0;
++    if (failed)
++        clear_error(issued);
++    restore_flags(flags);
++    return count;
++}
++
++int ssddev_read(sector_t start, char *buf, ramdesc_t seg)
++{
++    unsigned flags, i;
++    int ok = 0, issued;
++
++    if (failed || start >= ssd_num_sects)
++        return 0;
++    /* No scheduling/interrupt-driven BIOS command may share the ports during
++     * this bounded exchange. Copy into the request only after completion. */
++    save_flags(flags);
++    clr_irq();
++    issued = command(1);
++    if (!issued || !transfer(PM_WRITE, 4))
++        goto done;
++    for (i = 0; i < 4; ++i)
++        outb((unsigned char)(start >> (i * 8)), PM_PORT + 4);
++    if (!transfer(PM_READ, sizeof(sector)))
++        goto done;
++    for (i = 0; i < sizeof(sector); ++i)
++        sector[i] = inb(PM_PORT + 4);
++    ok = wait_status(0);
++done:
++    if (!ok) {
++        failed = 1;             /* no retry/reuse after an uncertain exchange */
++        clear_error(issued);
++    }
++    if (ok)
++        xms_fmemcpyw(buf, seg, sector, kernel_ds, sizeof(sector) / 2);
++    restore_flags(flags);
++    return ok;
++}
++
++int ssddev_write(sector_t start, char *buf, ramdesc_t seg)
++{
++    unsigned flags, i;
++    int ok = 0, issued;
++
++    if (failed || start >= ssd_num_sects)
++        return 0;
++    save_flags(flags);
++    clr_irq();
++    xms_fmemcpyw(sector, kernel_ds, buf, seg, sizeof(sector) / 2);
++    issued = command(2);
++    /* One input phase avoids mistaking the preceding LBA count for data. */
++    if (!issued || !transfer(PM_WRITE, sizeof(sector) + 4))
++        goto done;
++    for (i = 0; i < 4; ++i)
++        outb((unsigned char)(start >> (i * 8)), PM_PORT + 4);
++    for (i = 0; i < sizeof(sector); ++i)
++        outb(sector[i], PM_PORT + 4);
++    ok = wait_status(0);         /* firmware completes the device flush first */
++done:
++    if (!ok) {
++        failed = 1;
++        clear_error(issued);
++    }
++    restore_flags(flags);
++    return ok;
++}
++
++int ssddev_ioctl(struct inode *inode, struct file *file,
++                unsigned int cmd, unsigned int arg)
++{
++    return -EINVAL;
++}

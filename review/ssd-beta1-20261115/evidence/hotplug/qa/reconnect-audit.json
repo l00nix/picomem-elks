@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "seven_files_exact": true,
+  "bytes_verified": 43275,
+  "local_comparisons": 6,
+  "command_groups": 11,
+  "zero_exit_markers": 18,
+  "read_only_mount_succeeded": true,
+  "final_root_only": true,
+  "clean_unmount_no_recorded_storage_or_invalidation_errors": true,
+  "user_reported_same_device_reconnection_without_reboot": true,
+  "qualified": "One same-device orderly removal/reinsertion without reboot, followed by RO mount/read/release.",
+  "not_yet_qualified": [
+    "Different-medium swap",
+    "Writes on this hotplug pair",
+    "Surprise removal recovery"
+  ],
+  "hardware_access_by_qa": false
+}

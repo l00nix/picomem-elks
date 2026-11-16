@@ -1,3 +1,5 @@
+> **Historical snapshot — superseded.** For the current minimal SSD Beta 1 review candidate, including the superfloppy limitation and separate hotplug/FAT patches, see the [latest review index](../ssd-beta1-20261115/README.md). The architecture and test results below remain a record of the older implementation.
+
 # Native ELKS/PicoMEM block-device review — 8 November 2026
 
 This is a source review snapshot of the experimental implementation tested on an Amstrad PPC512 with PicoMEM 2. It replaces the earlier `picofs` file-service architecture. It is not a release candidate, a request to merge the complete series, or evidence of maintainer approval. The source includes AI-assisted development and physical-machine testing.
@@ -95,3 +97,4 @@ The transport harness extracts the actual host-control functions and combines ac
 The next review gate is agreement on the native SSD/block architecture, provisional mailbox interface and ownership/error policies. Generic FAT fixes can be reviewed independently where dependencies permit. Full native long-filename work and release qualification remain follow-ups.
 
 This work builds on [FreddyV's PicoMEM](https://github.com/FreddyVRetro/ISA-PicoMEM), [ELKS](https://github.com/ghaerr/elks), [TinyUSB](https://github.com/hathach/tinyusb) and the earlier utility references from [jdredd87's PicoMEM tools](https://github.com/jdredd87/CH375USBTools/tree/main/PicoMEM). Modified and imported code retains its originating project's licensing; this repository's GPL notice does not replace third-party license terms.
+
