@@ -6,14 +6,6 @@
 
 The work builds on the published interfaces and examples from [FreddyV’s PicoMEM project](https://github.com/FreddyVRetro/ISA-PicoMEM) and [jdredd87’s PicoMEM tools](https://github.com/jdredd87/CH375USBTools/tree/main/PicoMEM). The ELKS utilities are implemented separately in C using those projects as references.
 
-## Public USB integration discontinued — 16 November 2026
-
-The public USB filesystem integration and upstream-integration effort has been discontinued. This repository now focuses on PicoMEM configuration and diagnostic utilities. Experimental USB development will continue privately.
-
-USB filesystem drivers, custom kernels, PicoMEM/TinyUSB storage patches and their test packages have been removed from the current branch. Previously published material remains in Git history and may exist in external copies; it is historical and is not a supported USB release. [Scope of the repository split](docs/USB-INTEGRATION-STATUS.md).
-
-The utilities below do not require the experimental USB storage kernel or sector-service firmware. They use existing PicoMEM interfaces on the documented board/firmware profile. `pmstat --usb` remains a diagnostic inventory query; it does not mount USB storage or provide an ELKS USB driver.
-
 ## Commands and Usage
 
 | Command | Current function |
@@ -116,7 +108,7 @@ Restore the matching ELKS NIC boot option before rebooting.
 
 ## Current limits
 
-- Firmware acknowledgment and warm-reboot behavior were tested with v0.2.
+- Firmware acknowledgment and warm-reboot behaviour were tested with v0.2.
   SD-file readback and full power-cycle persistence verification remain pending.
   The 0.4/0.5 hardware rounds exercised inspection, queries and staging; they
   did not repeat a configuration save or reboot.
@@ -162,6 +154,14 @@ The existing utility source and native binaries are unchanged by this split.
 - [USB inventory and disk-status queries](docs/HARDWARE-USB-20261023.md).
 
 These records describe tests on the identified PPC512/PicoMEM firmware profile; they do not establish compatibility with every firmware revision. USB inventory detection does not establish USB filesystem or input-driver support.
+
+## USB integration discontinued
+
+The USB filesystem integration and upstream-integration effort has been discontinued. This repository now focuses on PicoMEM configuration and diagnostic utilities.
+
+USB filesystem drivers, custom kernels, PicoMEM/TinyUSB storage patches and their test packages have been removed from the current branch. Previously published material remains in Git history and may exist in external copies; it is historical and is not a supported USB release. [Scope of the repository split](docs/USB-INTEGRATION-STATUS.md).
+
+The current utilities do not require the experimental USB storage kernel or sector-service firmware. They use existing PicoMEM interfaces on the documented board/firmware profile. `pmstat --usb` remains a diagnostic inventory query; it does not mount USB storage or provide an ELKS USB driver.
 
 ## Relationship, credits and license
 
