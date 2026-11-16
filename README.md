@@ -19,6 +19,7 @@ cache, `mount`, `sync` and `umount` handle files. PicoMEM transfers sectors
 through its existing command/data ports.
 
 **[Current source, patch separation, test evidence and limits](review/ssd-beta1-20261115/README.md).**
+[Published upstream review updates](docs/USB-BETA1-UPSTREAM-20261115.md).
 This supersedes the [8 November partition-aware snapshot](review/native-block-20261108/README.md).
 The current candidate exposes one directly attached USB device with 512-byte
 sectors as **`/dev/ssd`**. It currently supports FAT volumes whose boot sector is at device LBA 0
