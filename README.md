@@ -2,7 +2,7 @@
 
 # PicoMEM tools for ELKS Linux
 
-`pmconfig` is a native 8086 PicoMEM configuration utility for ELKS, with small companion commands for support dumps, status and memory inspection. This is an independent experimental project.
+`pmconfig` is a native 8086 PicoMEM configuration utility for [ELKS Linux](https://github.com/ghaerr/elks) , with small companion commands for support dumps, status and memory inspection. This is an independent experimental project.
 
 The work builds on the published interfaces and examples from [FreddyV’s PicoMEM project](https://github.com/FreddyVRetro/ISA-PicoMEM) and [jdredd87’s PicoMEM tools](https://github.com/jdredd87/CH375USBTools/tree/main/PicoMEM). The ELKS utilities are implemented separately in C using those projects as references.
 
