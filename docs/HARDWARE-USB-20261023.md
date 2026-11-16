@@ -17,8 +17,8 @@ Copied 43 bounded bytes; ready after 2 status polls.
 
 This confirms PicoMEM's cached inventory classifies the connected receiver as
 a Logitech mouse. It does not prove pairing, movement/button delivery or input
-in ELKS applications. No mouse-enable command was sent. The next input work is
-the [ELKS driver integration described here](ELKS-MOUSE.md).
+in ELKS applications. No mouse-enable command was sent. Mouse and filesystem driver experiments are
+no longer part of this public repository; see the [scope notice](USB-INTEGRATION-STATUS.md).
 
 ## Disk metadata
 

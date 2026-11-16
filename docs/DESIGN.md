@@ -129,8 +129,8 @@ Implementation status and remaining work:
    validation, rollback and hardware testing. Keep memory and boot-image changes
    outside the initial scope.
 
-The [other-tools assessment](PORTING.md) identifies which DOS functionality can
-be adapted to ELKS and which needs kernel support or firmware changes.
+The [public tool scope and validation plan](PORTING.md) records the retained
+configuration utilities and pending persistence checks.
 
 ## References
 

@@ -1,2 +1,0 @@
-/dev/hda  (minix) blocks  65535 free  54574 mount /
-picomem-sd (picofs, ro) mount /mnt/sd

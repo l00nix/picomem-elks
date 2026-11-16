@@ -130,7 +130,7 @@ scratch initialization and copying; they are not elapsed-time measurements.
 This establishes the tested profile, not universal firmware latency. There is
 no automatic retry, firmware-discovery query or background polling.
 
-[Hardware results](HARDWARE-USB-20261023.md) · [ELKS mouse integration audit](ELKS-MOUSE.md)
+[Hardware results](HARDWARE-USB-20261023.md) · [Public integration scope](USB-INTEGRATION-STATUS.md)
 
 References: [definitions](https://github.com/FreddyVRetro/ISA-PicoMEM/blob/be7b2e6031ae93bb75733c363489aa9171a7205c/src/pm_defines.h),
 [handlers](https://github.com/FreddyVRetro/ISA-PicoMEM/blob/be7b2e6031ae93bb75733c363489aa9171a7205c/src/pm_cmd.cpp),

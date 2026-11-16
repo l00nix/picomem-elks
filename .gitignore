@@ -6,7 +6,3 @@ __pycache__/
 *.pmc
 *.uue
 
-/mouse/build/
-/usb/build/
-
-/kernel/build/
